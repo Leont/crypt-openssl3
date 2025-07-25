@@ -1,0 +1,4 @@
+/.build/
+/Crypt-OpenSSL3-*/
+/Crypt-OpenSSL3-*.tar.gz
+!/.gitignore
