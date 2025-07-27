@@ -114,12 +114,6 @@ char* S_grow_buffer(pTHX_ SV* buffer, size_t size) {
 
 #define set_buffer_length(buffer, result) STMT_START { if (result >= 0) SvCUR_set(buffer, result); } STMT_END
 
-// This will force byte semantics on all strings
-#undef SvPV
-#define SvPV(sv, len) SvPVbyte(sv, len)
-#undef SvPV_nolen
-#define SvPV_nolen(sv) SvPVbyte_nolen(sv)
-
 struct EVP_callback_data {
 #ifdef MULTIPLICITY
 	PerlInterpreter* interpreter;
@@ -157,6 +151,13 @@ void EVP_MD_provided_callback(EVP_MD* provided, void* vdata) {
 	SV* object = make_object(provided, &Crypt__OpenSSL3__MD_magic, "Crypt::OpenSSL3::MD");
 	call_callback(data->sv, object);
 }
+
+// This will force byte semantics on all strings
+// This should come as the last thing in the C section of this file
+#undef SvPV
+#define SvPV(sv, len) SvPVbyte(sv, len)
+#undef SvPV_nolen
+#define SvPV_nolen(sv) SvPVbyte_nolen(sv)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3
 
