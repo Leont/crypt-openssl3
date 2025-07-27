@@ -55,6 +55,14 @@ COUNTING_TYPE(SSL_CTX, Crypt__OpenSSL3__SSL__Context)
 COUNTING_TYPE(SSL, Crypt__OpenSSL3__SSL)
 COUNTING_TYPE(SSL_SESSION, Crypt__OpenSSL3__SSL__Session)
 
+SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
+	SV* result = newSV(0);
+	MAGIC* magic = sv_magicext(newSVrv(result, ntype), NULL, PERL_MAGIC_ext, mgvtbl, (const char*)var, 0);
+	magic->mg_flags |= MGf_DUP;
+	return result;
+}
+#define make_object(var, magic, name) S_make_object(aTHX_ var, magic, name)
+
 #define BIO_new_mem(class) BIO_new(BIO_s_mem())
 
 #define TLS(class) TLS_method()
@@ -73,6 +81,9 @@ COUNTING_TYPE(SSL_SESSION, Crypt__OpenSSL3__SSL__Session)
 
 #define SSL_SESSION_get_peer SSL_SESSION_get0_peer
 
+#define EVP_CIPHER_get_name EVP_CIPHER_get0_name
+#define EVP_CIPHER_get_description EVP_CIPHER_get0_description
+
 #define CONSTANT2(PREFIX, VALUE) newCONSTSUB(stash, #VALUE, newSVuv(PREFIX##VALUE))
 
 char* S_grow_buffer(pTHX_ SV* buffer, size_t size) {
@@ -90,6 +101,36 @@ char* S_grow_buffer(pTHX_ SV* buffer, size_t size) {
 #define SvPV(sv, len) SvPVbyte(sv, len)
 #undef SvPV_nolen
 #define SvPV_nolen(sv) SvPVbyte_nolen(sv)
+
+struct EVP_callback_data {
+#ifdef MULTIPLICITY
+	PerlInterpreter* interpreter;
+#endif
+	SV* sv;
+};
+
+void S_call_callback(pTHX_ SV* callback, SV* value) {
+	dSP;
+	PUSHMARK(SP);
+	mXPUSHs(value);
+	PUTBACK;
+	call_sv(callback, G_VOID | G_DISCARD);
+}
+#define call_callback(value, callback) S_call_callback(aTHX_ value, callback)
+
+void EVP_name_callback(const char* name, void* vdata) {
+	struct EVP_callback_data* data = vdata;
+	dTHXa(data->interpreter);
+	call_callback(data->sv, newSVpv(name, 0));
+}
+
+void EVP_CIPHER_provided_callback(EVP_CIPHER* provided, void* vdata) {
+	struct EVP_callback_data* data = vdata;
+	dTHXa(data->interpreter);
+	EVP_CIPHER_up_ref(provided);
+	SV* object = make_object(provided, &Crypt__OpenSSL3__Cipher_magic, "Crypt::OpenSSL3::Cipher");
+	call_callback(data->sv, object);
+}
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3
 
@@ -500,3 +541,51 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Session	PREFIX = SSL_SE
 Crypt::OpenSSL3::X509 SSL_SESSION_get_peer(Crypt::OpenSSL3::SSL::Session session)
 POSTCALL:
 	X509_up_ref(RETVAL);
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Cipher	PREFIX = EVP_CIPHER_
+
+Crypt::OpenSSL3::Cipher EVP_CIPHER_fetch(SV* class, const char* algorithm, const char* properties = "")
+C_ARGS:
+	NULL, algorithm, properties
+POSTCALL:
+	if (RETVAL == NULL)
+		XSRETURN_UNDEF;
+
+int EVP_CIPHER_get_nid(Crypt::OpenSSL3::Cipher e)
+
+int EVP_CIPHER_get_block_size(Crypt::OpenSSL3::Cipher e)
+
+int EVP_CIPHER_get_key_length(Crypt::OpenSSL3::Cipher e)
+
+int EVP_CIPHER_get_iv_length(Crypt::OpenSSL3::Cipher e)
+
+unsigned long EVP_CIPHER_get_mode(Crypt::OpenSSL3::Cipher e)
+
+int EVP_CIPHER_get_type(Crypt::OpenSSL3::Cipher ctx)
+
+int EVP_CIPHER_is_a(Crypt::OpenSSL3::Cipher cipher, const char *name)
+
+const char *EVP_CIPHER_get_name(Crypt::OpenSSL3::Cipher cipher)
+
+const char *EVP_CIPHER_get_description(Crypt::OpenSSL3::Cipher cipher)
+
+int EVP_CIPHER_names_do_all(Crypt::OpenSSL3::Cipher cipher, SV* callback)
+INIT:
+	struct EVP_callback_data data;
+#ifdef MULTIPLICITY
+	data.interpreter = aTHX;
+#endif
+	data.sv = callback;
+C_ARGS:
+	cipher, EVP_name_callback, &data
+
+void EVP_CIPHER_do_all_provided(SV* class, SV* callback)
+INIT:
+	struct EVP_callback_data data;
+#ifdef MULTIPLICITY
+	data.interpreter = aTHX;
+#endif
+	data.sv = callback;
+C_ARGS:
+	NULL, EVP_CIPHER_provided_callback, &data
