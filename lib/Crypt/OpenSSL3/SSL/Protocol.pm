@@ -9,16 +9,4 @@ use Crypt::OpenSSL3;
 
 #ABSTRACT: Connection methods for SSL connections
 
-=method TLS
-
-=method TLS_client
-
-=method TLS_server
-
-=method DTLS
-
-=method DTLS_client
-
-=method DTLS_server
-
 =method context

@@ -56,13 +56,13 @@ COUNTING_TYPE(SSL, Crypt__OpenSSL3__SSL)
 
 #define BIO_new_mem(class) BIO_new(BIO_s_mem())
 
-#define SSL_Method_TLS(class) TLS_method()
-#define SSL_Method_TLS_server(class) TLS_server_method()
-#define SSL_Method_TLS_client(class) TLS_client_method()
+#define TLS(class) TLS_method()
+#define TLS_server(class) TLS_server_method()
+#define TLS_client(class) TLS_client_method()
 
-#define SSL_Method_DTLS(class) DTLS_method()
-#define SSL_Method_DTLS_server(class) DTLS_server_method()
-#define SSL_Method_DTLS_client(class) DTLS_client_method()
+#define DTLS(class) DTLS_method()
+#define DTLS_server(class) DTLS_server_method()
+#define DTLS_client(class) DTLS_client_method()
 
 #define SSL_Method_context SSL_CTX_new
 #define SSL_set_host SSL_set1_host
@@ -108,6 +108,18 @@ Crypt::OpenSSL3::SSL::Protocol T_MAGICEXT
 Crypt::OpenSSL3::SSL::Context T_MAGICEXT
 Crypt::OpenSSL3::SSL T_MAGICEXT
 END
+
+Crypt::OpenSSL3::SSL::Protocol TLS(SV* class)
+
+Crypt::OpenSSL3::SSL::Protocol TLS_server(SV* class)
+
+Crypt::OpenSSL3::SSL::Protocol TLS_client(SV* class)
+
+Crypt::OpenSSL3::SSL::Protocol DTLS(SV* class)
+
+Crypt::OpenSSL3::SSL::Protocol DTLS_server(SV* class)
+
+Crypt::OpenSSL3::SSL::Protocol DTLS_client(SV* class)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BIO	PREFIX = BIO_
 
@@ -233,18 +245,6 @@ int X509_STORE_set_default_paths(Crypt::OpenSSL3::X509::Store ctx)
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Protocol	PREFIX = SSL_Method_
-
-Crypt::OpenSSL3::SSL::Protocol SSL_Method_TLS(SV* class)
-
-Crypt::OpenSSL3::SSL::Protocol SSL_Method_TLS_server(SV* class)
-
-Crypt::OpenSSL3::SSL::Protocol SSL_Method_TLS_client(SV* class)
-
-Crypt::OpenSSL3::SSL::Protocol SSL_Method_DTLS(SV* class)
-
-Crypt::OpenSSL3::SSL::Protocol SSL_Method_DTLS_server(SV* class)
-
-Crypt::OpenSSL3::SSL::Protocol SSL_Method_DTLS_client(SV* class)
 
 Crypt::OpenSSL3::SSL::Context SSL_Method_context(Crypt::OpenSSL3::SSL::Protocol method)
 
