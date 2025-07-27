@@ -13,6 +13,8 @@ use Crypt::OpenSSL3;
 
 =method add_extra_chain_cert
 
+=method add_session
+
 =method clear_extra_chain_certs
 
 =method clear_mode
@@ -26,6 +28,8 @@ use Crypt::OpenSSL3;
 =method get_options
 
 =method load_verify_locations
+
+=method remove_session
 
 =method set_alpn_protos
 

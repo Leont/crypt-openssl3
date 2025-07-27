@@ -35,6 +35,8 @@ use Crypt::OpenSSL3;
 
 =method get_rfd
 
+=method get_session
+
 =method get_servername
 
 =method get_servername_type
@@ -48,6 +50,8 @@ use Crypt::OpenSSL3;
 =method peek
 
 =method read
+
+=method session_reused
 
 =method set_accept_state
 
@@ -76,6 +80,8 @@ use Crypt::OpenSSL3;
 =method set_rbio
 
 =method set_rfd
+
+=method set_session
 
 =method set_session_id_context
 

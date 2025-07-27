@@ -53,6 +53,7 @@ COUNTING_TYPE(BIO, Crypt__OpenSSL3__BIO)
 CONSTPTR_TYPE(SSL_METHOD, Crypt__OpenSSL3__SSL__Protocol)
 COUNTING_TYPE(SSL_CTX, Crypt__OpenSSL3__SSL__Context)
 COUNTING_TYPE(SSL, Crypt__OpenSSL3__SSL)
+COUNTING_TYPE(SSL_SESSION, Crypt__OpenSSL3__SSL__Session)
 
 #define BIO_new_mem(class) BIO_new(BIO_s_mem())
 
@@ -65,10 +66,12 @@ COUNTING_TYPE(SSL, Crypt__OpenSSL3__SSL)
 #define DTLS_client(class) DTLS_client_method()
 
 #define SSL_Method_context SSL_CTX_new
-#define SSL_set_host SSL_set1_host
 
+#define SSL_set_host SSL_set1_host
 #define SSL_set_rbio SSL_set0_rbio
 #define SSL_set_wbio SSL_set0_wbio
+
+#define SSL_SESSION_get_peer SSL_SESSION_get0_peer
 
 #define CONSTANT2(PREFIX, VALUE) newCONSTSUB(stash, #VALUE, newSVuv(PREFIX##VALUE))
 
@@ -107,6 +110,7 @@ Crypt::OpenSSL3::X509::Name::Entry	T_MAGICEXT
 Crypt::OpenSSL3::SSL::Protocol T_MAGICEXT
 Crypt::OpenSSL3::SSL::Context T_MAGICEXT
 Crypt::OpenSSL3::SSL T_MAGICEXT
+Crypt::OpenSSL3::SSL::Session T_MAGICEXT
 END
 
 Crypt::OpenSSL3::SSL::Protocol TLS(SV* class)
@@ -320,6 +324,10 @@ int SSL_CTX_add_client_CA(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::X5
 POSTCALL:
 	X509_up_ref(cacert);
 
+bool SSL_CTX_add_session(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::SSL::Session c);
+
+bool SSL_CTX_remove_session(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::SSL::Session c);
+
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL	PREFIX = SSL_
@@ -478,3 +486,17 @@ POSTCALL:
 void SSL_set_wbio(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO bio);
 POSTCALL:
 	BIO_up_ref(bio);
+
+Crypt::OpenSSL3::SSL::Session SSL_get_session(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	SSL_SESSION_up_ref(RETVAL);
+
+bool SSL_set_session(Crypt::OpenSSL3::SSL ssl, Crypt::OpenSSL3::SSL::Session session)
+
+bool SSL_session_reused(Crypt::OpenSSL3::SSL ssl)
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Session	PREFIX = SSL_SESSION_
+
+Crypt::OpenSSL3::X509 SSL_SESSION_get_peer(Crypt::OpenSSL3::SSL::Session session)
+POSTCALL:
+	X509_up_ref(RETVAL);
