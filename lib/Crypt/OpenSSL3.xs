@@ -5,20 +5,54 @@
 
 #include <openssl/ssl.h>
 
-typedef EVP_MD* Crypt__OpenSSL3__Hash;
-typedef EVP_CIPHER* Crypt__OpenSSL3__Cipher;
-typedef EVP_PKEY* Crypt__OpenSSL3__PrivateKey;
+#define DUPLICATING_TYPE(c_prefix, xs_type)\
+typedef c_prefix *xs_type;\
+static int c_prefix ## _magic_dup(pTHX_ MAGIC* mg, CLONE_PARAMS* params) {\
+	mg->mg_ptr = (char*)c_prefix ## _dup((xs_type)mg->mg_ptr);\
+	return 0;\
+}\
+static int c_prefix ## _magic_free(pTHX_ SV* sv, MAGIC* mg) {\
+	c_prefix ## _free((xs_type)mg->mg_ptr);\
+	return 0;\
+}\
+static const MGVTBL xs_type ## _magic = {\
+	.svt_dup = c_prefix ## _magic_dup,\
+	.svt_free = c_prefix ## _magic_free,\
+};
 
-typedef X509* Crypt__OpenSSL3__X509;
-typedef X509_STORE* Crypt__OpenSSL3__X509__Store;
-typedef X509_NAME* Crypt__OpenSSL3__X509__Name;
-typedef X509_NAME_ENTRY* Crypt__OpenSSL3__X509__Name__Entry;
+#define COUNTING_TYPE(c_prefix, xs_type)\
+typedef c_prefix *xs_type;\
+static int c_prefix ## _magic_dup(pTHX_ MAGIC* mg, CLONE_PARAMS* params) {\
+	c_prefix ## _up_ref((xs_type)mg->mg_ptr);\
+	return 0;\
+}\
+static int c_prefix ## _magic_free(pTHX_ SV* sv, MAGIC* mg) {\
+	c_prefix ## _free((xs_type)mg->mg_ptr);\
+	return 0;\
+}\
+static const MGVTBL xs_type ## _magic = {\
+	.svt_dup = c_prefix ## _magic_dup,\
+	.svt_free = c_prefix ## _magic_free,\
+};
 
-typedef BIO* Crypt__OpenSSL3__BIO;
+#define CONSTPTR_TYPE(c_prefix, xs_type)\
+typedef const c_prefix *xs_type;\
+static const MGVTBL xs_type ## _magic = { NULL };
 
-typedef const SSL_METHOD* Crypt__OpenSSL3__SSL__Protocol;
-typedef SSL_CTX* Crypt__OpenSSL3__SSL__Context;
-typedef SSL* Crypt__OpenSSL3__SSL;
+COUNTING_TYPE(EVP_MD, Crypt__OpenSSL3__Hash)
+COUNTING_TYPE(EVP_CIPHER, Crypt__OpenSSL3__Cipher)
+COUNTING_TYPE(EVP_PKEY, Crypt__OpenSSL3__PrivateKey)
+
+COUNTING_TYPE(X509, Crypt__OpenSSL3__X509)
+COUNTING_TYPE(X509_STORE, Crypt__OpenSSL3__X509__Store)
+DUPLICATING_TYPE(X509_NAME, Crypt__OpenSSL3__X509__Name)
+DUPLICATING_TYPE(X509_NAME_ENTRY, Crypt__OpenSSL3__X509__Name__Entry)
+
+COUNTING_TYPE(BIO, Crypt__OpenSSL3__BIO)
+
+CONSTPTR_TYPE(SSL_METHOD, Crypt__OpenSSL3__SSL__Protocol)
+COUNTING_TYPE(SSL_CTX, Crypt__OpenSSL3__SSL__Context)
+COUNTING_TYPE(SSL, Crypt__OpenSSL3__SSL)
 
 #define BIO_new_mem(class) BIO_new(BIO_s_mem())
 
@@ -59,20 +93,20 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3
 TYPEMAP: <<END
 const unsigned char*	T_PV
 
-Crypt::OpenSSL3::Hash T_MAGIC
-Crypt::OpenSSL3::Cipher T_MAGIC
-Crypt::OpenSSL3::PrivateKey T_MAGIC
+Crypt::OpenSSL3::Hash T_MAGICEXT
+Crypt::OpenSSL3::Cipher T_MAGICEXT
+Crypt::OpenSSL3::PrivateKey T_MAGICEXT
 
-Crypt::OpenSSL3::BIO T_MAGIC
+Crypt::OpenSSL3::BIO T_MAGICEXT
 
-Crypt::OpenSSL3::X509	T_MAGIC
-Crypt::OpenSSL3::X509::Store	T_MAGIC
-Crypt::OpenSSL3::X509::Name	T_MAGIC
-Crypt::OpenSSL3::X509::Name::Entry	T_MAGIC
+Crypt::OpenSSL3::X509	T_MAGICEXT
+Crypt::OpenSSL3::X509::Store	T_MAGICEXT
+Crypt::OpenSSL3::X509::Name	T_MAGICEXT
+Crypt::OpenSSL3::X509::Name::Entry	T_MAGICEXT
 
-Crypt::OpenSSL3::SSL::Protocol T_MAGIC
-Crypt::OpenSSL3::SSL::Context T_MAGIC
-Crypt::OpenSSL3::SSL T_MAGIC
+Crypt::OpenSSL3::SSL::Protocol T_MAGICEXT
+Crypt::OpenSSL3::SSL::Context T_MAGICEXT
+Crypt::OpenSSL3::SSL T_MAGICEXT
 END
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BIO	PREFIX = BIO_
@@ -150,7 +184,7 @@ C_ARGS:
 POSTCALL:
 	set_buffer_length(buffer, output_length);
 
-int X509_pubkey_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::Hash type, unsigned char *md, len, OUTLIST SV* buffer)
+int X509_pubkey_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::Hash type, SV* buffer)
 INIT:
 	unsigned int output_length = EVP_MD_size(type);
 	char* ptr = grow_buffer(buffer, output_length);
@@ -182,10 +216,6 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Name::Entry	PREFIX = X
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Store	PREFIX = X509_STORE_
-
-void X509_STORE_DESTROY(Crypt::OpenSSL3::X509::Store object)
-CODE:
-	X509_STORE_free(object);
 
 int X509_STORE_add_cert(Crypt::OpenSSL3::X509::Store ctx, Crypt::OpenSSL3::X509 x)
 
@@ -219,10 +249,6 @@ Crypt::OpenSSL3::SSL::Protocol SSL_Method_DTLS_client(SV* class)
 Crypt::OpenSSL3::SSL::Context SSL_Method_context(Crypt::OpenSSL3::SSL::Protocol method)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Context	PREFIX = SSL_CTX_
-
-void SSL_CTX_DESTROY(Crypt::OpenSSL3::SSL::Context object)
-CODE:
-	SSL_CTX_free(object);
 
 long SSL_CTX_set_options(Crypt::OpenSSL3::SSL::Context ctx, long options)
 
@@ -334,10 +360,6 @@ BOOT:
 Crypt::OpenSSL3::SSL SSL_new(SV* class, Crypt::OpenSSL3::SSL::Context context)
 C_ARGS:
 	context
-
-void SSL_DESTROY(Crypt::OpenSSL3::SSL object)
-CODE:
-	SSL_free(object);
 
 Crypt::OpenSSL3::SSL::Protocol SSL_get_ssl_method(Crypt::OpenSSL3::SSL ssl)
 
