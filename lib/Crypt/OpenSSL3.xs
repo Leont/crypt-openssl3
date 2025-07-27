@@ -39,9 +39,10 @@ static const MGVTBL xs_type ## _magic = {\
 typedef const c_prefix *xs_type;\
 static const MGVTBL xs_type ## _magic = { NULL };
 
-COUNTING_TYPE(EVP_MD, Crypt__OpenSSL3__Hash)
 COUNTING_TYPE(EVP_CIPHER, Crypt__OpenSSL3__Cipher)
 DUPLICATING_TYPE(EVP_CIPHER_CTX, Crypt__OpenSSL3__Cipher__Context)
+COUNTING_TYPE(EVP_MD, Crypt__OpenSSL3__MD)
+DUPLICATING_TYPE(EVP_MD_CTX, Crypt__OpenSSL3__MD__Context)
 COUNTING_TYPE(EVP_PKEY, Crypt__OpenSSL3__PrivateKey)
 
 COUNTING_TYPE(X509, Crypt__OpenSSL3__X509)
@@ -86,6 +87,17 @@ SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 #define EVP_CIPHER_get_description EVP_CIPHER_get0_description
 #define EVP_CIPHER_CTX_get_name EVP_CIPHER_CTX_get0_name
 #define EVP_CIPHER_CTX_get_cipher EVP_CIPHER_CTX_get1_cipher
+
+#define EVP_MD_get_name EVP_MD_get0_name
+#define EVP_MD_get_description EVP_MD_get0_description
+#undef EVP_MD_CTX_init
+#define EVP_MD_CTX_get_md EVP_MD_CTX_get1_md
+#define EVP_MD_CTX_get_name EVP_MD_CTX_get0_name
+#define EVP_MD_CTX_init EVP_DigestInit_ex2
+#define EVP_MD_CTX_update EVP_DigestUpdate
+#define EVP_MD_CTX_final EVP_DigestFinal_ex
+#define EVP_MD_CTX_final_xof EVP_DigestFinalXOF
+#define EVP_MD_CTX_squeeze EVP_DigestSqueeze
 
 #define CONSTANT2(PREFIX, VALUE) newCONSTSUB(stash, #VALUE, newSVuv(PREFIX##VALUE))
 
@@ -135,14 +147,23 @@ void EVP_CIPHER_provided_callback(EVP_CIPHER* provided, void* vdata) {
 	call_callback(data->sv, object);
 }
 
+void EVP_MD_provided_callback(EVP_MD* provided, void* vdata) {
+	struct EVP_callback_data* data = vdata;
+	dTHXa(data->interpreter);
+	EVP_MD_up_ref(provided);
+	SV* object = make_object(provided, &Crypt__OpenSSL3__MD_magic, "Crypt::OpenSSL3::MD");
+	call_callback(data->sv, object);
+}
+
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3
 
 TYPEMAP: <<END
 const unsigned char*	T_PV
 
-Crypt::OpenSSL3::Hash T_MAGICEXT
 Crypt::OpenSSL3::Cipher T_MAGICEXT
 Crypt::OpenSSL3::Cipher::Context T_MAGICEXT
+Crypt::OpenSSL3::MD T_MAGICEXT
+Crypt::OpenSSL3::MD::Context T_MAGICEXT
 Crypt::OpenSSL3::PrivateKey T_MAGICEXT
 
 Crypt::OpenSSL3::BIO T_MAGICEXT
@@ -236,7 +257,7 @@ Crypt::OpenSSL3::X509::Name X509_get_issuer_name(Crypt::OpenSSL3::X509 x)
 
 bool X509_set_issuer_name(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::X509::Name name)
 
-bool X509_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::Hash type, SV* buffer)
+bool X509_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::MD type, SV* buffer)
 INIT:
 	unsigned int output_length = EVP_MD_size(type);
 	char* ptr = grow_buffer(buffer, output_length);
@@ -245,7 +266,7 @@ C_ARGS:
 POSTCALL:
 	set_buffer_length(buffer, output_length);
 
-bool X509_pubkey_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::Hash type, SV* buffer)
+bool X509_pubkey_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::MD type, SV* buffer)
 INIT:
 	unsigned int output_length = EVP_MD_size(type);
 	char* ptr = grow_buffer(buffer, output_length);
@@ -648,3 +669,102 @@ bool EVP_CIPHER_CTX_rand_key(Crypt::OpenSSL3::Cipher::Context ctx, unsigned char
 Crypt::OpenSSL3::Cipher EVP_CIPHER_CTX_get_cipher(Crypt::OpenSSL3::Cipher::Context ctx)
 
 const char *EVP_CIPHER_CTX_get_name(Crypt::OpenSSL3::Cipher::Context ctx)
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MD	PREFIX = EVP_MD_
+
+Crypt::OpenSSL3::MD EVP_MD_fetch(SV* class, const char* algorithm, const char* properties = "")
+C_ARGS:
+	NULL, algorithm, properties
+POSTCALL:
+	if (RETVAL == NULL)
+		XSRETURN_UNDEF;
+
+const char *EVP_MD_get_name(Crypt::OpenSSL3::MD md)
+
+const char *EVP_MD_get_description(Crypt::OpenSSL3::MD md)
+
+bool EVP_MD_is_a(Crypt::OpenSSL3::MD md, const char *name)
+
+int EVP_MD_names_do_all(Crypt::OpenSSL3::MD md, SV* callback)
+INIT:
+	struct EVP_callback_data data;
+#ifdef MULTIPLICITY
+	data.interpreter = aTHX;
+#endif
+	data.sv = callback;
+C_ARGS:
+	md, EVP_name_callback, &data
+
+int EVP_MD_get_type(Crypt::OpenSSL3::MD md)
+
+int EVP_MD_get_pkey_type(Crypt::OpenSSL3::MD md)
+
+int EVP_MD_get_size(Crypt::OpenSSL3::MD md)
+
+int EVP_MD_get_block_size(Crypt::OpenSSL3::MD md)
+
+unsigned long EVP_MD_get_flags(Crypt::OpenSSL3::MD md)
+
+bool EVP_MD_xof(Crypt::OpenSSL3::MD md)
+
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MD::Context	PREFIX = EVP_MD_CTX_
+
+Crypt::OpenSSL3::MD::Context EVP_MD_CTX_new(SV* class)
+C_ARGS:
+
+bool EVP_MD_CTX_reset(Crypt::OpenSSL3::MD::Context ctx)
+
+bool EVP_MD_CTX_init(Crypt::OpenSSL3::MD::Context ctx, Crypt::OpenSSL3::MD type)
+INIT:
+	OSSL_PARAM params[1] = { OSSL_PARAM_construct_end() };
+C_ARGS:
+	ctx, type, params
+
+bool EVP_MD_CTX_update(Crypt::OpenSSL3::MD::Context ctx, const char *d, size_t length(d))
+
+bool EVP_MD_CTX_final(Crypt::OpenSSL3::MD::Context ctx, SV* buffer)
+INIT:
+	unsigned int size = EVP_MD_CTX_size(ctx);
+	char* ptr = grow_buffer(buffer, size);
+C_ARGS:
+	ctx, ptr, &size
+POSTCALL:
+	set_buffer_length(buffer, size);
+
+bool EVP_MD_CTX_final_xof(Crypt::OpenSSL3::MD::Context ctx, SV* buffer, size_t outlen)
+INIT:
+	char* ptr = grow_buffer(buffer, outlen);
+C_ARGS:
+	ctx, ptr, outlen
+POSTCALL:
+	set_buffer_length(buffer, outlen);
+
+bool EVP_MD_CTX_squeeze(Crypt::OpenSSL3::MD::Context ctx, SV* buffer, size_t outlen)
+INIT:
+	char* ptr = grow_buffer(buffer, outlen);
+C_ARGS:
+	ctx, ptr, outlen
+POSTCALL:
+	set_buffer_length(buffer, outlen);
+
+void EVP_MD_CTX_ctrl(Crypt::OpenSSL3::MD::Context ctx, int cmd, int p1, char* p2);
+
+void EVP_MD_CTX_set_flags(Crypt::OpenSSL3::MD::Context ctx, int flags)
+
+void EVP_MD_CTX_clear_flags(Crypt::OpenSSL3::MD::Context ctx, int flags)
+
+int EVP_MD_CTX_test_flags(Crypt::OpenSSL3::MD::Context ctx, int flags)
+
+Crypt::OpenSSL3::MD EVP_MD_CTX_get_md(Crypt::OpenSSL3::MD::Context ctx)
+
+const char *EVP_MD_CTX_get_name(Crypt::OpenSSL3::MD::Context ctx)
+
+int EVP_MD_CTX_get_size(Crypt::OpenSSL3::MD::Context ctx)
+
+int EVP_MD_CTX_get_size_ex(Crypt::OpenSSL3::MD::Context ctx)
+
+int EVP_MD_CTX_get_block_size(Crypt::OpenSSL3::MD::Context ctx)
+
+int EVP_MD_CTX_get_type(Crypt::OpenSSL3::MD::Context ctx)
