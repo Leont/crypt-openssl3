@@ -41,6 +41,7 @@ static const MGVTBL xs_type ## _magic = { NULL };
 
 COUNTING_TYPE(EVP_MD, Crypt__OpenSSL3__Hash)
 COUNTING_TYPE(EVP_CIPHER, Crypt__OpenSSL3__Cipher)
+DUPLICATING_TYPE(EVP_CIPHER_CTX, Crypt__OpenSSL3__Cipher__Context)
 COUNTING_TYPE(EVP_PKEY, Crypt__OpenSSL3__PrivateKey)
 
 COUNTING_TYPE(X509, Crypt__OpenSSL3__X509)
@@ -83,6 +84,8 @@ SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 
 #define EVP_CIPHER_get_name EVP_CIPHER_get0_name
 #define EVP_CIPHER_get_description EVP_CIPHER_get0_description
+#define EVP_CIPHER_CTX_get_name EVP_CIPHER_CTX_get0_name
+#define EVP_CIPHER_CTX_get_cipher EVP_CIPHER_CTX_get1_cipher
 
 #define CONSTANT2(PREFIX, VALUE) newCONSTSUB(stash, #VALUE, newSVuv(PREFIX##VALUE))
 
@@ -139,6 +142,7 @@ const unsigned char*	T_PV
 
 Crypt::OpenSSL3::Hash T_MAGICEXT
 Crypt::OpenSSL3::Cipher T_MAGICEXT
+Crypt::OpenSSL3::Cipher::Context T_MAGICEXT
 Crypt::OpenSSL3::PrivateKey T_MAGICEXT
 
 Crypt::OpenSSL3::BIO T_MAGICEXT
@@ -589,3 +593,58 @@ INIT:
 	data.sv = callback;
 C_ARGS:
 	NULL, EVP_CIPHER_provided_callback, &data
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Cipher::Context	PREFIX = EVP_CIPHER_CTX_
+
+Crypt::OpenSSL3::Cipher::Context EVP_CIPHER_CTX_new(SV* class)
+C_ARGS:
+
+bool init(Crypt::OpenSSL3::Cipher::Context ctx, Crypt::OpenSSL3::Cipher cipher, const unsigned char* key, const unsigned char* iv, int enc)
+CODE:
+	OSSL_PARAM params[1] = { OSSL_PARAM_construct_end() };
+	RETVAL = EVP_CipherInit_ex2(ctx, cipher, key, iv, enc, params);
+OUTPUT:
+	RETVAL
+
+bool update(Crypt::OpenSSL3::Cipher::Context ctx, SV* output, const char* input, size_t length(input))
+CODE:
+	char* ptr = grow_buffer(output, STRLEN_length_of_input);
+	int outl = STRLEN_length_of_input;
+	RETVAL = EVP_CipherUpdate(ctx, ptr, &outl, input, STRLEN_length_of_input);
+	set_buffer_length(output, outl);
+OUTPUT:
+	RETVAL
+
+bool final(Crypt::OpenSSL3::Cipher::Context ctx, SV* output, int size = -1)
+CODE:
+	if (size == -1)
+		size = EVP_CIPHER_CTX_get_block_size(ctx);
+	char* ptr = grow_buffer(output, size);
+	RETVAL = EVP_CipherFinal_ex(ctx, ptr, &size);
+	set_buffer_length(output, size);
+OUTPUT:
+	RETVAL
+
+int EVP_CIPHER_CTX_get_nid(Crypt::OpenSSL3::Cipher::Context e)
+
+int EVP_CIPHER_CTX_get_block_size(Crypt::OpenSSL3::Cipher::Context e)
+
+int EVP_CIPHER_CTX_get_key_length(Crypt::OpenSSL3::Cipher::Context e)
+
+int EVP_CIPHER_CTX_get_iv_length(Crypt::OpenSSL3::Cipher::Context e)
+
+unsigned long EVP_CIPHER_CTX_get_mode(Crypt::OpenSSL3::Cipher::Context e)
+
+int EVP_CIPHER_CTX_type(Crypt::OpenSSL3::Cipher::Context ctx)
+
+bool EVP_CIPHER_CTX_set_padding(Crypt::OpenSSL3::Cipher::Context ctx, int padding)
+
+bool EVP_CIPHER_CTX_set_key_length(Crypt::OpenSSL3::Cipher::Context ctx, int keylen)
+
+int EVP_CIPHER_CTX_ctrl(Crypt::OpenSSL3::Cipher::Context ctx, int cmd, int p1, char *p2)
+
+bool EVP_CIPHER_CTX_rand_key(Crypt::OpenSSL3::Cipher::Context ctx, unsigned char *key)
+
+Crypt::OpenSSL3::Cipher EVP_CIPHER_CTX_get_cipher(Crypt::OpenSSL3::Cipher::Context ctx)
+
+const char *EVP_CIPHER_CTX_get_name(Crypt::OpenSSL3::Cipher::Context ctx)
