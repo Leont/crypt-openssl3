@@ -22,6 +22,9 @@ $ssl->set_tlsext_host_name($hostname) or die;
 $ssl->set_host($hostname) or die;
 
 $ssl->connect >= 0 or die;
+my $verify = $ssl->get_verify_result;
+die $verify->error_string if not $verify->ok;
+
 my $w_count = $ssl->write("GET / HTTP/1.1\r\nHost: www.google.com\r\n\r\n");
 die unless $w_count >= 0;
 my $count = $ssl->read(my $buffer, 2048);

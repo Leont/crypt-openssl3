@@ -43,6 +43,8 @@ use Crypt::OpenSSL3;
 
 =method get_ssl_method
 
+=method get_verify_result
+
 =method get_wfd
 
 =method is_server

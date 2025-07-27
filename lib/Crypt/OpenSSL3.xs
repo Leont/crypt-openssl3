@@ -49,6 +49,7 @@ COUNTING_TYPE(X509, Crypt__OpenSSL3__X509)
 COUNTING_TYPE(X509_STORE, Crypt__OpenSSL3__X509__Store)
 DUPLICATING_TYPE(X509_NAME, Crypt__OpenSSL3__X509__Name)
 DUPLICATING_TYPE(X509_NAME_ENTRY, Crypt__OpenSSL3__X509__Name__Entry)
+typedef long Crypt__OpenSSL3__X509__VerifyResult;
 
 COUNTING_TYPE(BIO, Crypt__OpenSSL3__BIO)
 
@@ -66,6 +67,8 @@ SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 #define make_object(var, magic, name) S_make_object(aTHX_ var, magic, name)
 
 #define BIO_new_mem(class) BIO_new(BIO_s_mem())
+#define X509_verify_cert_error_code(value) value
+#define X509_verify_cert_ok(value) (value == X509_V_OK)
 
 #define TLS(class) TLS_method()
 #define TLS_server(class) TLS_server_method()
@@ -172,6 +175,7 @@ Crypt::OpenSSL3::X509	T_MAGICEXT
 Crypt::OpenSSL3::X509::Store	T_MAGICEXT
 Crypt::OpenSSL3::X509::Name	T_MAGICEXT
 Crypt::OpenSSL3::X509::Name::Entry	T_MAGICEXT
+Crypt::OpenSSL3::X509::VerifyResult T_INTOBJ
 
 Crypt::OpenSSL3::SSL::Protocol T_MAGICEXT
 Crypt::OpenSSL3::SSL::Context T_MAGICEXT
@@ -275,6 +279,14 @@ C_ARGS:
 POSTCALL:
 	set_buffer_length(buffer, output_length);
 
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::VerifyResult	PREFIX = X509_verify_cert_
+
+IV X509_verify_cert_error_code(Crypt::OpenSSL3::X509::VerifyResult result)
+
+bool X509_verify_cert_ok(Crypt::OpenSSL3::X509::VerifyResult result)
+
+const char* X509_verify_cert_error_string(Crypt::OpenSSL3::X509::VerifyResult result)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Name	PREFIX = X509_NAME_
 
@@ -476,6 +488,8 @@ C_ARGS:
 	ctx, mode, NULL
 
 void SSL_set_verify_depth(Crypt::OpenSSL3::SSL ctx, int depth)
+
+Crypt::OpenSSL3::X509::VerifyResult SSL_get_verify_result(Crypt::OpenSSL3::SSL ssl);
 
 void SSL_set_post_handshake_auth(Crypt::OpenSSL3::SSL ctx, int val)
 
