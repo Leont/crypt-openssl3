@@ -129,17 +129,17 @@ C_ARGS:
 
 Crypt::OpenSSL3::BIO BIO_new_mem(SV* class);
 
-int BIO_reset(Crypt::OpenSSL3::BIO b)
+bool BIO_reset(Crypt::OpenSSL3::BIO b)
 
 int BIO_seek(Crypt::OpenSSL3::BIO b, int ofs)
 
 int BIO_tell(Crypt::OpenSSL3::BIO b)
 
-int BIO_flush(Crypt::OpenSSL3::BIO b)
+bool BIO_flush(Crypt::OpenSSL3::BIO b)
 
-int BIO_eof(Crypt::OpenSSL3::BIO b)
+bool BIO_eof(Crypt::OpenSSL3::BIO b)
 
-int BIO_set_close(Crypt::OpenSSL3::BIO b, long flag)
+bool BIO_set_close(Crypt::OpenSSL3::BIO b, long flag)
 
 int BIO_get_close(Crypt::OpenSSL3::BIO b)
 
@@ -181,13 +181,13 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509	PREFIX = X509_
 
 Crypt::OpenSSL3::X509::Name X509_get_subject_name(Crypt::OpenSSL3::X509 x)
 
-int X509_set_subject_name(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::X509::Name name)
+bool X509_set_subject_name(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::X509::Name name)
 
 Crypt::OpenSSL3::X509::Name X509_get_issuer_name(Crypt::OpenSSL3::X509 x)
 
-int X509_set_issuer_name(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::X509::Name name)
+bool X509_set_issuer_name(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::X509::Name name)
 
-int X509_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::Hash type, SV* buffer)
+bool X509_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::Hash type, SV* buffer)
 INIT:
 	unsigned int output_length = EVP_MD_size(type);
 	char* ptr = grow_buffer(buffer, output_length);
@@ -196,7 +196,7 @@ C_ARGS:
 POSTCALL:
 	set_buffer_length(buffer, output_length);
 
-int X509_pubkey_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::Hash type, SV* buffer)
+bool X509_pubkey_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::Hash type, SV* buffer)
 INIT:
 	unsigned int output_length = EVP_MD_size(type);
 	char* ptr = grow_buffer(buffer, output_length);
@@ -229,19 +229,19 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Name::Entry	PREFIX = X
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Store	PREFIX = X509_STORE_
 
-int X509_STORE_add_cert(Crypt::OpenSSL3::X509::Store ctx, Crypt::OpenSSL3::X509 x)
+bool X509_STORE_add_cert(Crypt::OpenSSL3::X509::Store ctx, Crypt::OpenSSL3::X509 x)
 
-int X509_STORE_set_depth(Crypt::OpenSSL3::X509::Store store, int depth)
+bool X509_STORE_set_depth(Crypt::OpenSSL3::X509::Store store, int depth)
 
-int X509_STORE_set_flags(Crypt::OpenSSL3::X509::Store ctx, unsigned long flags)
+bool X509_STORE_set_flags(Crypt::OpenSSL3::X509::Store ctx, unsigned long flags)
 
-int X509_STORE_set_purpose(Crypt::OpenSSL3::X509::Store ctx, int purpose)
+bool X509_STORE_set_purpose(Crypt::OpenSSL3::X509::Store ctx, int purpose)
 
-int X509_STORE_set_trust(Crypt::OpenSSL3::X509::Store ctx, int trust)
+bool X509_STORE_set_trust(Crypt::OpenSSL3::X509::Store ctx, int trust)
 
-int X509_STORE_load_locations(Crypt::OpenSSL3::X509::Store ctx, const char *file, const char *dir)
+bool X509_STORE_load_locations(Crypt::OpenSSL3::X509::Store ctx, const char *file, const char *dir)
 
-int X509_STORE_set_default_paths(Crypt::OpenSSL3::X509::Store ctx)
+bool X509_STORE_set_default_paths(Crypt::OpenSSL3::X509::Store ctx)
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Protocol	PREFIX = SSL_Method_
@@ -256,7 +256,7 @@ long SSL_CTX_clear_options(Crypt::OpenSSL3::SSL::Context ctx, long options)
 
 long SSL_CTX_get_options(Crypt::OpenSSL3::SSL::Context ctx)
 
-int SSL_CTX_set_session_id_context(Crypt::OpenSSL3::SSL::Context ctx, const unsigned char *sid_ctx, unsigned int sid_ctx_len)
+bool SSL_CTX_set_session_id_context(Crypt::OpenSSL3::SSL::Context ctx, const unsigned char *sid_ctx, unsigned int sid_ctx_len)
 
 long SSL_CTX_set_mode(Crypt::OpenSSL3::SSL::Context ctx, long mode)
 
@@ -264,11 +264,11 @@ long SSL_CTX_clear_mode(Crypt::OpenSSL3::SSL::Context ctx, long mode)
 
 long SSL_CTX_get_mode(Crypt::OpenSSL3::SSL::Context ctx)
 
-int SSL_CTX_set_min_proto_version(Crypt::OpenSSL3::SSL::Context ctx, int version)
+bool SSL_CTX_set_min_proto_version(Crypt::OpenSSL3::SSL::Context ctx, int version)
 
-int SSL_CTX_set_max_proto_version(Crypt::OpenSSL3::SSL::Context ctx, int version)
+bool SSL_CTX_set_max_proto_version(Crypt::OpenSSL3::SSL::Context ctx, int version)
 
-int SSL_CTX_set_alpn_protos(Crypt::OpenSSL3::SSL::Context ctx, const unsigned char *protos, unsigned int protos_len)
+bool SSL_CTX_set_alpn_protos(Crypt::OpenSSL3::SSL::Context ctx, const unsigned char *protos, unsigned int protos_len)
 
 Crypt::OpenSSL3::X509::Store SSL_CTX_get_cert_store(Crypt::OpenSSL3::SSL::Context ctx)
 POSTCALL:
@@ -278,31 +278,31 @@ void SSL_CTX_set_cert_store(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::
 POSTCALL:
 	X509_STORE_up_ref(store);
 
-int SSL_CTX_load_verify_locations(Crypt::OpenSSL3::SSL::Context ctx, const char *CAfile, const char *CApath)
+bool SSL_CTX_load_verify_locations(Crypt::OpenSSL3::SSL::Context ctx, const char *CAfile, const char *CApath)
 
-int SSL_CTX_set_default_verify_paths(Crypt::OpenSSL3::SSL::Context ctx)
+bool SSL_CTX_set_default_verify_paths(Crypt::OpenSSL3::SSL::Context ctx)
 
-int SSL_CTX_set_default_verify_dir(Crypt::OpenSSL3::SSL::Context ctx)
+bool SSL_CTX_set_default_verify_dir(Crypt::OpenSSL3::SSL::Context ctx)
 
-int SSL_CTX_set_default_verify_file(Crypt::OpenSSL3::SSL::Context ctx)
+bool SSL_CTX_set_default_verify_file(Crypt::OpenSSL3::SSL::Context ctx)
 
-int SSL_CTX_use_certificate(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::X509 x)
+bool SSL_CTX_use_certificate(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::X509 x)
 
-int SSL_CTX_use_certificate_ASN1(Crypt::OpenSSL3::SSL::Context ctx, int length(d), unsigned char *d)
+bool SSL_CTX_use_certificate_ASN1(Crypt::OpenSSL3::SSL::Context ctx, int length(d), unsigned char *d)
 
-int SSL_CTX_use_certificate_file(Crypt::OpenSSL3::SSL::Context ctx, const char *file, int type)
+bool SSL_CTX_use_certificate_file(Crypt::OpenSSL3::SSL::Context ctx, const char *file, int type)
 
-int SSL_CTX_use_certificate_chain_file(Crypt::OpenSSL3::SSL::Context ctx, const char *file)
+bool SSL_CTX_use_certificate_chain_file(Crypt::OpenSSL3::SSL::Context ctx, const char *file)
 
 long SSL_CTX_add_extra_chain_cert(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::X509 x509)
 
 long SSL_CTX_clear_extra_chain_certs(Crypt::OpenSSL3::SSL::Context ctx)
 
-int SSL_CTX_use_PrivateKey(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::PrivateKey pkey)
+bool SSL_CTX_use_PrivateKey(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::PrivateKey pkey)
 
-int SSL_CTX_use_PrivateKey_ASN1(int pk, Crypt::OpenSSL3::SSL::Context ctx, unsigned char *d, long length(d))
+bool SSL_CTX_use_PrivateKey_ASN1(int pk, Crypt::OpenSSL3::SSL::Context ctx, unsigned char *d, long length(d))
 
-int SSL_CTX_use_PrivateKey_file(Crypt::OpenSSL3::SSL::Context ctx, const char *file, int type)
+bool SSL_CTX_use_PrivateKey_file(Crypt::OpenSSL3::SSL::Context ctx, const char *file, int type)
 
 void SSL_CTX_set_verify(Crypt::OpenSSL3::SSL::Context ctx, int mode)
 C_ARGS:
@@ -312,9 +312,9 @@ void SSL_CTX_set_verify_depth(Crypt::OpenSSL3::SSL::Context ctx, int depth)
 
 void SSL_CTX_set_post_handshake_auth(Crypt::OpenSSL3::SSL::Context ctx, int val)
 
-int SSL_CTX_set_cipher_list(Crypt::OpenSSL3::SSL::Context ctx, const char *str)
+bool SSL_CTX_set_cipher_list(Crypt::OpenSSL3::SSL::Context ctx, const char *str)
 
-int SSL_CTX_set_ciphersuites(Crypt::OpenSSL3::SSL::Context ctx, const char *str)
+bool SSL_CTX_set_ciphersuites(Crypt::OpenSSL3::SSL::Context ctx, const char *str)
 
 int SSL_CTX_add_client_CA(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::X509 cacert)
 POSTCALL:
@@ -369,7 +369,7 @@ long SSL_clear_options(Crypt::OpenSSL3::SSL ctx, long options)
 
 long SSL_get_options(Crypt::OpenSSL3::SSL ctx)
 
-int SSL_set_session_id_context(Crypt::OpenSSL3::SSL ctx, const unsigned char *sid_ctx, unsigned int sid_ctx_len)
+bool SSL_set_session_id_context(Crypt::OpenSSL3::SSL ctx, const unsigned char *sid_ctx, unsigned int sid_ctx_len)
 
 long SSL_set_mode(Crypt::OpenSSL3::SSL ctx, long mode)
 
@@ -377,25 +377,25 @@ long SSL_clear_mode(Crypt::OpenSSL3::SSL ctx, long mode)
 
 long SSL_get_mode(Crypt::OpenSSL3::SSL ctx)
 
-int SSL_set_min_proto_version(Crypt::OpenSSL3::SSL ctx, int version)
+bool SSL_set_min_proto_version(Crypt::OpenSSL3::SSL ctx, int version)
 
-int SSL_set_max_proto_version(Crypt::OpenSSL3::SSL ctx, int version)
+bool SSL_set_max_proto_version(Crypt::OpenSSL3::SSL ctx, int version)
 
-int SSL_set_alpn_protos(Crypt::OpenSSL3::SSL ctx, const unsigned char *protos, unsigned int protos_len)
+bool SSL_set_alpn_protos(Crypt::OpenSSL3::SSL ctx, const unsigned char *protos, unsigned int protos_len)
 
-int SSL_use_certificate(Crypt::OpenSSL3::SSL ctx, Crypt::OpenSSL3::X509 x)
+bool SSL_use_certificate(Crypt::OpenSSL3::SSL ctx, Crypt::OpenSSL3::X509 x)
 
-int SSL_use_certificate_ASN1(Crypt::OpenSSL3::SSL ctx, const char *d, int length(d))
+bool SSL_use_certificate_ASN1(Crypt::OpenSSL3::SSL ctx, const char *d, int length(d))
 
-int SSL_use_certificate_file(Crypt::OpenSSL3::SSL ctx, const char *file, int type)
+bool SSL_use_certificate_file(Crypt::OpenSSL3::SSL ctx, const char *file, int type)
 
-int SSL_use_certificate_chain_file(Crypt::OpenSSL3::SSL ctx, const char *file)
+bool SSL_use_certificate_chain_file(Crypt::OpenSSL3::SSL ctx, const char *file)
 
-int SSL_use_PrivateKey(Crypt::OpenSSL3::SSL ctx, Crypt::OpenSSL3::PrivateKey pkey)
+bool SSL_use_PrivateKey(Crypt::OpenSSL3::SSL ctx, Crypt::OpenSSL3::PrivateKey pkey)
 
-int SSL_use_PrivateKey_ASN1(int pk, Crypt::OpenSSL3::SSL ctx, const char *d, long length(d))
+bool SSL_use_PrivateKey_ASN1(int pk, Crypt::OpenSSL3::SSL ctx, const char *d, long length(d))
 
-int SSL_use_PrivateKey_file(Crypt::OpenSSL3::SSL ctx, const char *file, int type)
+bool SSL_use_PrivateKey_file(Crypt::OpenSSL3::SSL ctx, const char *file, int type)
 
 void SSL_set_verify(Crypt::OpenSSL3::SSL ctx, int mode)
 C_ARGS:
@@ -405,25 +405,25 @@ void SSL_set_verify_depth(Crypt::OpenSSL3::SSL ctx, int depth)
 
 void SSL_set_post_handshake_auth(Crypt::OpenSSL3::SSL ctx, int val)
 
-int SSL_set_cipher_list(Crypt::OpenSSL3::SSL ctx, const char *str)
+bool SSL_set_cipher_list(Crypt::OpenSSL3::SSL ctx, const char *str)
 
-int SSL_set_ciphersuites(Crypt::OpenSSL3::SSL ctx, const char *str)
+bool SSL_set_ciphersuites(Crypt::OpenSSL3::SSL ctx, const char *str)
 
 int SSL_add_client_CA(Crypt::OpenSSL3::SSL ctx, Crypt::OpenSSL3::X509 cacert)
 POSTCALL:
 	X509_up_ref(cacert);
 
-int SSL_verify_client_post_handshake(Crypt::OpenSSL3::SSL ssl)
+bool SSL_verify_client_post_handshake(Crypt::OpenSSL3::SSL ssl)
 
 int SSL_get_error(Crypt::OpenSSL3::SSL ssl, int ret)
 
-int SSL_set_tlsext_host_name(Crypt::OpenSSL3::SSL s, const char *name)
+bool SSL_set_tlsext_host_name(Crypt::OpenSSL3::SSL s, const char *name)
 
 const char* SSL_get_servername(Crypt::OpenSSL3::SSL s, int type)
 
 int SSL_get_servername_type(Crypt::OpenSSL3::SSL s)
 
-int SSL_set_host(Crypt::OpenSSL3::SSL s, const char *hostname)
+bool SSL_set_host(Crypt::OpenSSL3::SSL s, const char *hostname)
 
 int SSL_connect(Crypt::OpenSSL3::SSL ssl)
 
@@ -437,7 +437,7 @@ void SSL_set_connect_state(Crypt::OpenSSL3::SSL ssl)
 
 void SSL_set_accept_state(Crypt::OpenSSL3::SSL ssl)
 
-int SSL_is_server(Crypt::OpenSSL3::SSL ssl)
+bool SSL_is_server(Crypt::OpenSSL3::SSL ssl)
 
 int SSL_read(Crypt::OpenSSL3::SSL ssl, SV* buffer, size_t size)
 INIT:
@@ -459,11 +459,11 @@ int SSL_write(Crypt::OpenSSL3::SSL ssl, const char* buf, int length(buf))
 
 int SSL_shutdown(Crypt::OpenSSL3::SSL ssl)
 
-int SSL_set_fd(Crypt::OpenSSL3::SSL ssl, int fd)
+bool SSL_set_fd(Crypt::OpenSSL3::SSL ssl, int fd)
 
-int SSL_set_rfd(Crypt::OpenSSL3::SSL ssl, int fd)
+bool SSL_set_rfd(Crypt::OpenSSL3::SSL ssl, int fd)
 
-int SSL_set_wfd(Crypt::OpenSSL3::SSL ssl, int fd)
+bool SSL_set_wfd(Crypt::OpenSSL3::SSL ssl, int fd)
 
 int SSL_get_fd(Crypt::OpenSSL3::SSL ssl)
 
