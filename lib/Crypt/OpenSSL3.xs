@@ -681,7 +681,8 @@ CODE:
 	char* ptr = grow_buffer(output, STRLEN_length_of_input);
 	int outl = STRLEN_length_of_input;
 	RETVAL = EVP_CipherUpdate(ctx, ptr, &outl, input, STRLEN_length_of_input);
-	set_buffer_length(output, outl);
+	if (RETVAL)
+		set_buffer_length(output, outl);
 OUTPUT:
 	RETVAL
 
@@ -691,7 +692,8 @@ CODE:
 		size = EVP_CIPHER_CTX_get_block_size(ctx);
 	char* ptr = grow_buffer(output, size);
 	RETVAL = EVP_CipherFinal_ex(ctx, ptr, &size);
-	set_buffer_length(output, size);
+	if (RETVAL)
+		set_buffer_length(output, size);
 OUTPUT:
 	RETVAL
 
@@ -790,7 +792,8 @@ INIT:
 C_ARGS:
 	ctx, ptr, &size
 POSTCALL:
-	set_buffer_length(buffer, size);
+	if (RETVAL)
+		set_buffer_length(buffer, size);
 
 bool EVP_MD_CTX_final_xof(Crypt::OpenSSL3::MD::Context ctx, SV* buffer, size_t outlen)
 INIT:
@@ -798,7 +801,8 @@ INIT:
 C_ARGS:
 	ctx, ptr, outlen
 POSTCALL:
-	set_buffer_length(buffer, outlen);
+	if (RETVAL)
+		set_buffer_length(buffer, outlen);
 
 bool EVP_MD_CTX_squeeze(Crypt::OpenSSL3::MD::Context ctx, SV* buffer, size_t outlen)
 INIT:
@@ -806,7 +810,8 @@ INIT:
 C_ARGS:
 	ctx, ptr, outlen
 POSTCALL:
-	set_buffer_length(buffer, outlen);
+	if (RETVAL)
+		set_buffer_length(buffer, outlen);
 
 void EVP_MD_CTX_ctrl(Crypt::OpenSSL3::MD::Context ctx, int cmd, int p1, char* p2);
 
