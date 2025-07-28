@@ -4,6 +4,7 @@
 #include "XSUB.h"
 
 #include <openssl/ssl.h>
+#include <openssl/param_build.h>
 
 #define DUPLICATING_TYPE(c_prefix, xs_type)\
 typedef c_prefix *xs_type;\
@@ -114,6 +115,42 @@ char* S_grow_buffer(pTHX_ SV* buffer, size_t size) {
 
 #define set_buffer_length(buffer, result) STMT_START { if (result >= 0) SvCUR_set(buffer, result); } STMT_END
 
+static const OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* sv) {
+	static const OSSL_PARAM empty_PARAMS = OSSL_PARAM_DEFN(NULL, 0, NULL, 0);
+	if (!SvROK(sv) || SvTYPE(SvRV(sv)) != SVt_PVHV)
+		return &empty_PARAMS;
+
+	OSSL_PARAM_BLD* builder = OSSL_PARAM_BLD_new();
+	HV* hash = (HV*)SvRV(sv);
+	while (settable->key) {
+		SV** sv_ptr = hv_fetch(hash, settable->key, strlen(settable->key), 0);
+		if (sv_ptr && *sv_ptr) {
+			if (settable->data_type == OSSL_PARAM_INTEGER)
+				OSSL_PARAM_BLD_push_int64(builder, settable->key, SvIV(*sv_ptr));
+			else if (settable->data_type == OSSL_PARAM_UNSIGNED_INTEGER)
+				OSSL_PARAM_BLD_push_uint64(builder, settable->key, SvUV(*sv_ptr));
+			else if (settable->data_type == OSSL_PARAM_REAL)
+				OSSL_PARAM_BLD_push_double(builder, settable->key, SvNV(*sv_ptr));
+			else if (settable->data_type == OSSL_PARAM_UTF8_STRING) {
+				STRLEN length;
+				const char* ptr = SvPVutf8(*sv_ptr, length);
+				OSSL_PARAM_BLD_push_utf8_string(builder, settable->key, ptr, length);
+			} else if (settable->data_type == OSSL_PARAM_OCTET_STRING) {
+				STRLEN length;
+				const char* ptr = SvPVbyte(*sv_ptr, length);
+				OSSL_PARAM_BLD_push_octet_string(builder, settable->key, ptr, length);
+			}
+		}
+		settable++;
+	}
+
+	OSSL_PARAM* result = OSSL_PARAM_BLD_to_param(builder);
+	OSSL_PARAM_BLD_free(builder);
+	SAVEDESTRUCTOR(OSSL_PARAM_free, result);
+	return result;
+}
+#define params_for(settable, sv) S_params_for(aTHX_ settable, sv)
+
 struct EVP_callback_data {
 #ifdef MULTIPLICITY
 	PerlInterpreter* interpreter;
@@ -151,6 +188,8 @@ void EVP_MD_provided_callback(EVP_MD* provided, void* vdata) {
 	SV* object = make_object(provided, &Crypt__OpenSSL3__MD_magic, "Crypt::OpenSSL3::MD");
 	call_callback(data->sv, object);
 }
+
+#define undef &PL_sv_undef
 
 // This will force byte semantics on all strings
 // This should come as the last thing in the C section of this file
@@ -635,9 +674,9 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Cipher::Context	PREFIX = EVP
 Crypt::OpenSSL3::Cipher::Context EVP_CIPHER_CTX_new(SV* class)
 C_ARGS:
 
-bool init(Crypt::OpenSSL3::Cipher::Context ctx, Crypt::OpenSSL3::Cipher cipher, const unsigned char* key, const unsigned char* iv, int enc)
+bool init(Crypt::OpenSSL3::Cipher::Context ctx, Crypt::OpenSSL3::Cipher cipher, const unsigned char* key, const unsigned char* iv, int enc, SV* args = undef)
 CODE:
-	OSSL_PARAM params[1] = { OSSL_PARAM_construct_end() };
+	const OSSL_PARAM* params = params_for(EVP_CIPHER_settable_ctx_params(cipher), args);
 	RETVAL = EVP_CipherInit_ex2(ctx, cipher, key, iv, enc, params);
 OUTPUT:
 	RETVAL
@@ -731,9 +770,9 @@ C_ARGS:
 
 bool EVP_MD_CTX_reset(Crypt::OpenSSL3::MD::Context ctx)
 
-bool EVP_MD_CTX_init(Crypt::OpenSSL3::MD::Context ctx, Crypt::OpenSSL3::MD type)
+bool EVP_MD_CTX_init(Crypt::OpenSSL3::MD::Context ctx, Crypt::OpenSSL3::MD type, SV* args = undef)
 INIT:
-	OSSL_PARAM params[1] = { OSSL_PARAM_construct_end() };
+	const OSSL_PARAM* params = params_for(EVP_MD_CTX_settable_params(ctx), args);
 C_ARGS:
 	ctx, type, params
 
