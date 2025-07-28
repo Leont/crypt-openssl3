@@ -173,21 +173,16 @@ void EVP_name_callback(const char* name, void* vdata) {
 	call_callback(data->sv, newSVpv(name, 0));
 }
 
-void EVP_CIPHER_provided_callback(EVP_CIPHER* provided, void* vdata) {
-	struct EVP_callback_data* data = vdata;
-	dTHXa(data->interpreter);
-	EVP_CIPHER_up_ref(provided);
-	SV* object = make_object(provided, &Crypt__OpenSSL3__Cipher_magic, "Crypt::OpenSSL3::Cipher");
-	call_callback(data->sv, object);
+#define DEFINE_PROVIDED_CALLBACK(c_type, name)\
+static void c_type ## _provided_callback(c_type* provided, void* vdata) {\
+	struct EVP_callback_data* data = vdata;\
+	dTHXa(data->interpreter);\
+	c_type ## _up_ref(provided);\
+	SV* object = make_object(provided, &Crypt__OpenSSL3__ ## name ## _magic, "Crypt::OpenSSL3::" #name);\
+	call_callback(data->sv, object);\
 }
-
-void EVP_MD_provided_callback(EVP_MD* provided, void* vdata) {
-	struct EVP_callback_data* data = vdata;
-	dTHXa(data->interpreter);
-	EVP_MD_up_ref(provided);
-	SV* object = make_object(provided, &Crypt__OpenSSL3__MD_magic, "Crypt::OpenSSL3::MD");
-	call_callback(data->sv, object);
-}
+DEFINE_PROVIDED_CALLBACK(EVP_CIPHER, Cipher)
+DEFINE_PROVIDED_CALLBACK(EVP_MD, MD)
 
 #define undef &PL_sv_undef
 
@@ -748,6 +743,16 @@ INIT:
 	data.sv = callback;
 C_ARGS:
 	md, EVP_name_callback, &data
+
+void EVP_MD_do_all_provided(SV* class, SV* callback)
+INIT:
+	struct EVP_callback_data data;
+#ifdef MULTIPLICITY
+	data.interpreter = aTHX;
+#endif
+	data.sv = callback;
+C_ARGS:
+	NULL, EVP_MD_provided_callback, &data
 
 int EVP_MD_get_type(Crypt::OpenSSL3::MD md)
 

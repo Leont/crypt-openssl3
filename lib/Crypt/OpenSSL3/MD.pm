@@ -9,6 +9,8 @@ use warnings;
 
 =method fetch
 
+=method do_all_provided
+
 =method get_block_size
 
 =method get_description
