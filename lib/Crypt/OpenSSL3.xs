@@ -5,6 +5,7 @@
 
 #include <openssl/ssl.h>
 #include <openssl/param_build.h>
+#include <openssl/kdf.h>
 
 #define DUPLICATING_TYPE(c_prefix, xs_type)\
 typedef c_prefix * Crypt__OpenSSL3__ ## xs_type;\
@@ -46,6 +47,8 @@ COUNTING_TYPE(EVP_MD, MD)
 DUPLICATING_TYPE(EVP_MD_CTX, MD__Context)
 COUNTING_TYPE(EVP_MAC, MAC)
 DUPLICATING_TYPE(EVP_MAC_CTX, MAC__Context)
+COUNTING_TYPE(EVP_KDF, KDF)
+DUPLICATING_TYPE(EVP_KDF_CTX, KDF__Context)
 COUNTING_TYPE(EVP_PKEY, PrivateKey)
 
 typedef BIGNUM BN;
@@ -116,6 +119,10 @@ SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 #define EVP_MAC_get_description EVP_MAC_get0_description
 #define EVP_MAC_CTX_get_mac EVP_MAC_CTX_get0_mac
 #define EVP_MAC_CTX_get_name EVP_MAC_CTX_get0_name
+
+#define EVP_KDF_get_name EVP_KDF_get0_name
+#define EVP_KDF_get_description EVP_KDF_get0_description
+#define EVP_KDF_CTX_get_name EVP_KDF_CTX_get0_name
 
 #define CONSTANT2(PREFIX, VALUE) newCONSTSUB(stash, #VALUE, newSVuv(PREFIX##VALUE))
 
@@ -198,6 +205,7 @@ static void c_type ## _provided_callback(c_type* provided, void* vdata) {\
 DEFINE_PROVIDED_CALLBACK(EVP_CIPHER, Cipher)
 DEFINE_PROVIDED_CALLBACK(EVP_MD, MD)
 DEFINE_PROVIDED_CALLBACK(EVP_MAC, MAC)
+DEFINE_PROVIDED_CALLBACK(EVP_KDF, KDF)
 
 #define undef &PL_sv_undef
 
@@ -219,6 +227,8 @@ Crypt::OpenSSL3::MD T_MAGICEXT
 Crypt::OpenSSL3::MD::Context T_MAGICEXT
 Crypt::OpenSSL3::MAC T_MAGICEXT
 Crypt::OpenSSL3::MAC::Context T_MAGICEXT
+Crypt::OpenSSL3::KDF T_MAGICEXT
+Crypt::OpenSSL3::KDF::Context T_MAGICEXT
 Crypt::OpenSSL3::PrivateKey T_MAGICEXT
 
 Crypt::OpenSSL3::BIO T_MAGICEXT
@@ -1138,3 +1148,60 @@ C_ARGS:
 POSTCALL:
 	if (RETVAL)
 		set_buffer_length(buffer, outsize);
+
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF	PREFIX = EVP_KDF_
+
+Crypt::OpenSSL3::KDF EVP_KDF_fetch(SV* class, const char* algorithm, const char* properties = "")
+C_ARGS:
+	NULL, algorithm, properties
+POSTCALL:
+	if (RETVAL == NULL)
+		XSRETURN_UNDEF;
+
+const char *EVP_KDF_get_name(Crypt::OpenSSL3::KDF kdf)
+
+const char *EVP_KDF_get_description(Crypt::OpenSSL3::KDF kdf)
+
+bool EVP_KDF_is_a(Crypt::OpenSSL3::KDF kdf, const char *name)
+
+bool EVP_KDF_names_do_all(Crypt::OpenSSL3::KDF kdf, SV* callback)
+INIT:
+	struct EVP_callback_data data;
+#ifdef MULTIPLICITY
+	data.interpreter = aTHX;
+#endif
+	data.sv = callback;
+C_ARGS:
+	kdf, EVP_name_callback, &data
+
+void EVP_KDF_do_all_provided(SV* class, SV* callback)
+INIT:
+	struct EVP_callback_data data;
+#ifdef MULTIPLICITY
+	data.interpreter = aTHX;
+#endif
+	data.sv = callback;
+C_ARGS:
+	NULL, EVP_KDF_provided_callback, &data
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF::Context	PREFIX = EVP_KDF_CTX_
+
+Crypt::OpenSSL3::KDF::Context EVP_KDF_CTX_new(SV* class, Crypt::OpenSSL3::KDF ctx)
+C_ARGS:
+	ctx
+
+size_t EVP_KDF_CTX_get_kdf_size(Crypt::OpenSSL3::KDF::Context ctx)
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF::Context	PREFIX = EVP_KDF_
+
+bool EVP_KDF_derive(Crypt::OpenSSL3::KDF::Context ctx, SV* buffer, size_t keylen, SV* args = undef)
+INIT:
+	const OSSL_PARAM* params = params_for(EVP_KDF_CTX_settable_params(ctx), args);
+	char* ptr = grow_buffer(buffer, keylen);
+C_ARGS:
+	ctx, ptr, keylen, params
+POSTCALL:
+	if (RETVAL)
+		set_buffer_length(buffer, keylen);
