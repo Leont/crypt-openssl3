@@ -48,6 +48,10 @@ COUNTING_TYPE(EVP_MAC, MAC)
 DUPLICATING_TYPE(EVP_MAC_CTX, MAC__Context)
 COUNTING_TYPE(EVP_PKEY, PrivateKey)
 
+typedef BIGNUM BN;
+DUPLICATING_TYPE(BN, BigNum);
+#define BN_CTX_dup(old) BN_CTX_new()
+DUPLICATING_TYPE(BN_CTX, BigNum__Context)
 COUNTING_TYPE(X509, X509)
 COUNTING_TYPE(X509_STORE, X509__Store)
 DUPLICATING_TYPE(X509_NAME, X509__Name)
@@ -61,6 +65,8 @@ COUNTING_TYPE(SSL_CTX, SSL__Context)
 COUNTING_TYPE(SSL, SSL)
 COUNTING_TYPE(SSL_SESSION, SSL__Session)
 
+typedef long SysRet;
+
 SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 	SV* result = newSV(0);
 	MAGIC* magic = sv_magicext(newSVrv(result, ntype), NULL, PERL_MAGIC_ext, mgvtbl, (const char*)var, 0);
@@ -70,6 +76,7 @@ SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 #define make_object(var, magic, name) S_make_object(aTHX_ var, magic, name)
 
 #define BIO_new_mem(class) BIO_new(BIO_s_mem())
+#define BN_generate_prime BN_generate_prime_ex2
 #define X509_verify_cert_error_code(value) value
 #define X509_verify_cert_ok(value) (value == X509_V_OK)
 
@@ -216,6 +223,9 @@ Crypt::OpenSSL3::PrivateKey T_MAGICEXT
 
 Crypt::OpenSSL3::BIO T_MAGICEXT
 
+Crypt::OpenSSL3::BigNum T_MAGICEXT
+Crypt::OpenSSL3::BigNum::Context T_MAGICEXT
+
 Crypt::OpenSSL3::X509	T_MAGICEXT
 Crypt::OpenSSL3::X509::Store	T_MAGICEXT
 Crypt::OpenSSL3::X509::Name	T_MAGICEXT
@@ -295,6 +305,208 @@ POSTCALL:
 	set_buffer_length(buffer, RETVAL);
 
 int BIO_write(Crypt::OpenSSL3::BIO b, const char *data, int length(data))
+
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BigNum	PREFIX = BN_
+
+BOOT:
+{
+	HV* stash = get_hv("Crypt::OpenSSL3::BigNum", TRUE);
+	CONSTANT2(BN_, RAND_TOP_ANY);
+	CONSTANT2(BN_, RAND_TOP_ONE);
+	CONSTANT2(BN_, RAND_TOP_TWO);
+
+	CONSTANT2(BN_, RAND_BOTTOM_ANY);
+	CONSTANT2(BN_, RAND_BOTTOM_ODD);
+}
+
+
+Crypt::OpenSSL3::BigNum BN_new(SV* class)
+C_ARGS:
+
+Crypt::OpenSSL3::BigNum BN_secure_new(SV* class)
+C_ARGS:
+
+void BN_clear(Crypt::OpenSSL3::BigNum a)
+
+bool BN_add(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum b)
+
+bool BN_sub(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum b)
+
+bool BN_mul(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum b, Crypt::OpenSSL3::BigNum::Context ctx)
+
+bool BN_sqr(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum::Context ctx)
+
+bool BN_div(Crypt::OpenSSL3::BigNum dv, Crypt::OpenSSL3::BigNum rem, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum d, Crypt::OpenSSL3::BigNum::Context ctx)
+
+bool BN_mod(Crypt::OpenSSL3::BigNum rem, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum m, Crypt::OpenSSL3::BigNum::Context ctx)
+
+bool BN_nnmod(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum m, Crypt::OpenSSL3::BigNum::Context ctx)
+
+bool BN_mod_add(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum b, Crypt::OpenSSL3::BigNum m, Crypt::OpenSSL3::BigNum::Context ctx)
+
+bool BN_mod_sub(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum b, Crypt::OpenSSL3::BigNum m, Crypt::OpenSSL3::BigNum::Context ctx)
+
+bool BN_mod_mul(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum b, Crypt::OpenSSL3::BigNum m, Crypt::OpenSSL3::BigNum::Context ctx)
+
+bool BN_mod_sqr(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum m, Crypt::OpenSSL3::BigNum::Context ctx)
+
+Crypt::OpenSSL3::BigNum BN_mod_sqrt(Crypt::OpenSSL3::BigNum in, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum p, Crypt::OpenSSL3::BigNum::Context ctx)
+
+bool BN_exp(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum p, Crypt::OpenSSL3::BigNum::Context ctx)
+
+bool BN_mod_exp(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum p, Crypt::OpenSSL3::BigNum m, Crypt::OpenSSL3::BigNum::Context ctx)
+
+bool BN_gcd(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum b, Crypt::OpenSSL3::BigNum::Context ctx)
+
+int BN_num_bytes(Crypt::OpenSSL3::BigNum a)
+
+int BN_num_bits(Crypt::OpenSSL3::BigNum a)
+
+int BN_bn2bin(Crypt::OpenSSL3::BigNum a, SV* buffer)
+INIT:
+	char* ptr = grow_buffer(buffer, BN_num_bytes(a));
+C_ARGS:
+	a, ptr
+POSTCALL:
+	set_buffer_length(buffer, RETVAL);
+
+SysRet BN_bn2binpad(Crypt::OpenSSL3::BigNum a, SV* buffer, int tolen)
+INIT:
+	char* ptr = grow_buffer(buffer, tolen);
+C_ARGS:
+	a, ptr, tolen
+POSTCALL:
+	if (RETVAL >= 0)
+		set_buffer_length(buffer, RETVAL);
+
+Crypt::OpenSSL3::BigNum BN_bin2bn(const unsigned char *s, int len)
+C_ARGS: s, len, NULL
+
+
+SysRet BN_bn2lebinpad(Crypt::OpenSSL3::BigNum a, SV* buffer, int tolen)
+INIT:
+	char* ptr = grow_buffer(buffer, tolen);
+C_ARGS:
+	a, ptr, tolen
+POSTCALL:
+	if (RETVAL >= 0)
+		set_buffer_length(buffer, RETVAL);
+
+Crypt::OpenSSL3::BigNum BN_lebin2bn(const unsigned char *s, int len, Crypt::OpenSSL3::BigNum ret)
+C_ARGS: s, len, NULL
+
+
+SysRet BN_bn2nativepad(Crypt::OpenSSL3::BigNum a, SV* buffer, int tolen)
+INIT:
+	char* ptr = grow_buffer(buffer, tolen);
+C_ARGS:
+	a, ptr, tolen
+POSTCALL:
+	if (RETVAL >= 0)
+		set_buffer_length(buffer, RETVAL);
+
+Crypt::OpenSSL3::BigNum BN_native2bn(const unsigned char *s, int len, Crypt::OpenSSL3::BigNum ret)
+C_ARGS: s, len, NULL
+
+
+char *BN_bn2hex(Crypt::OpenSSL3::BigNum a)
+CLEANUP:
+	OPENSSL_free(RETVAL);
+
+char *BN_bn2dec(Crypt::OpenSSL3::BigNum a)
+CLEANUP:
+	OPENSSL_free(RETVAL);
+
+int BN_hex2bn(Crypt::OpenSSL3::BigNum a, const char *str)
+C_ARGS:
+	&a, str
+
+int BN_dec2bn(Crypt::OpenSSL3::BigNum a, const char *str)
+C_ARGS:
+	&a, str
+
+bool BN_print(Crypt::OpenSSL3::BIO fp, Crypt::OpenSSL3::BigNum a)
+
+
+int BN_bn2mpi(Crypt::OpenSSL3::BigNum a, SV* buffer)
+INIT:
+	char* ptr = grow_buffer(buffer, BN_bn2mpi(a, NULL));
+C_ARGS:
+	a, ptr
+POSTCALL:
+	set_buffer_length(buffer, RETVAL);
+
+Crypt::OpenSSL3::BigNum BN_mpi2bn(unsigned char *s, int len)
+C_ARGS:
+	s, len, NULL
+
+bool BN_check_prime(Crypt::OpenSSL3::BigNum p, Crypt::OpenSSL3::BigNum::Context ctx)
+C_ARGS:
+	p, ctx, NULL
+
+bool BN_generate_prime(Crypt::OpenSSL3::BigNum ret, int bits, int safe, Crypt::OpenSSL3::BigNum add, Crypt::OpenSSL3::BigNum rem, Crypt::OpenSSL3::BigNum::Context ctx)
+C_ARGS:
+	ret, bits, safe, add, rem, NULL, ctx
+
+bool BN_set_word(Crypt::OpenSSL3::BigNum a, UV w)
+
+UV BN_get_word(Crypt::OpenSSL3::BigNum a)
+
+bool BN_add_word(Crypt::OpenSSL3::BigNum a, UV w)
+
+bool BN_sub_word(Crypt::OpenSSL3::BigNum a, UV w)
+
+bool BN_mul_word(Crypt::OpenSSL3::BigNum a, UV w)
+
+UV BN_div_word(Crypt::OpenSSL3::BigNum a, UV w)
+
+UV BN_mod_word(Crypt::OpenSSL3::BigNum a, UV w)
+
+int BN_cmp(Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum b)
+
+int BN_ucmp(Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum b)
+
+bool BN_is_zero(Crypt::OpenSSL3::BigNum a)
+
+bool BN_is_one(Crypt::OpenSSL3::BigNum a)
+
+bool BN_is_word(Crypt::OpenSSL3::BigNum a, UV w)
+
+bool BN_abs_is_word(Crypt::OpenSSL3::BigNum a, UV w)
+
+bool BN_is_odd(Crypt::OpenSSL3::BigNum a)
+
+bool BN_are_coprime(Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum b, Crypt::OpenSSL3::BigNum::Context ctx);
+
+
+bool BN_clear_bit(Crypt::OpenSSL3::BigNum a, int n)
+
+bool BN_is_bit_set(Crypt::OpenSSL3::BigNum a, int n)
+
+bool BN_mask_bits(Crypt::OpenSSL3::BigNum a, int n)
+
+bool BN_lshift(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, int n)
+
+bool BN_lshift1(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a)
+
+bool BN_rshift(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, int n)
+
+bool BN_rshift1(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a)
+
+bool BN_rand_ex(Crypt::OpenSSL3::BigNum rnd, int bits, int top, int bottom, unsigned int strength, Crypt::OpenSSL3::BigNum::Context ctx)
+
+bool BN_rand(Crypt::OpenSSL3::BigNum rnd, int bits, int top, int bottom)
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BigNum::Context	PREFIX = BN_CTX_
+
+Crypt::OpenSSL3::BigNum::Context BN_CTX_new(SV* class)
+C_ARGS:
+
+Crypt::OpenSSL3::BigNum::Context BN_CTX_secure_new()
+C_ARGS:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509	PREFIX = X509_
 

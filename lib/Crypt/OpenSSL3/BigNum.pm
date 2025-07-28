@@ -1,0 +1,128 @@
+package Crypt::OpenSSL3::BigNum;
+
+use strict;
+use warnings;
+
+1;
+
+# ABSTRACT: Big Numbers
+
+=method new
+
+=method abs_is_word
+
+=method add
+
+=method add_word
+
+=method are_coprime
+
+=method bin2bn
+
+=method bn2bin
+
+=method bn2binpad
+
+=method bn2dec
+
+=method bn2hex
+
+=method bn2lebinpad
+
+=method bn2mpi
+
+=method bn2nativepad
+
+=method check_prime
+
+=method clear
+
+=method clear_bit
+
+=method cmp
+
+=method dec2bn
+
+=method div
+
+=method div_word
+
+=method exp
+
+=method gcd
+
+=method generate_prime
+
+=method get_word
+
+=method hex2bn
+
+=method is_bit_set
+
+=method is_odd
+
+=method is_one
+
+=method is_word
+
+=method is_zero
+
+=method lebin2bn
+
+=method lshift
+
+=method lshift1
+
+=method mask_bits
+
+=method mod
+
+=method mod_add
+
+=method mod_exp
+
+=method mod_mul
+
+=method mod_sqr
+
+=method mod_sqrt
+
+=method mod_sub
+
+=method mod_word
+
+=method mpi2bn
+
+=method mul
+
+=method mul_word
+
+=method native2bn
+
+=method nnmod
+
+=method num_bits
+
+=method num_bytes
+
+=method print
+
+=method rand
+
+=method rand_ex
+
+=method rshift
+
+=method rshift1
+
+=method secure_new
+
+=method set_word
+
+=method sqr
+
+=method sub
+
+=method sub_word
+
+=method ucmp
