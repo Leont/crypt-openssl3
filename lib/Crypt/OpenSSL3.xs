@@ -44,6 +44,8 @@ COUNTING_TYPE(EVP_CIPHER, Cipher)
 DUPLICATING_TYPE(EVP_CIPHER_CTX, Cipher__Context)
 COUNTING_TYPE(EVP_MD, MD)
 DUPLICATING_TYPE(EVP_MD_CTX, MD__Context)
+COUNTING_TYPE(EVP_MAC, MAC)
+DUPLICATING_TYPE(EVP_MAC_CTX, MAC__Context)
 COUNTING_TYPE(EVP_PKEY, PrivateKey)
 
 COUNTING_TYPE(X509, X509)
@@ -102,6 +104,11 @@ SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 #define EVP_MD_CTX_final EVP_DigestFinal_ex
 #define EVP_MD_CTX_final_xof EVP_DigestFinalXOF
 #define EVP_MD_CTX_squeeze EVP_DigestSqueeze
+
+#define EVP_MAC_get_name EVP_MAC_get0_name
+#define EVP_MAC_get_description EVP_MAC_get0_description
+#define EVP_MAC_CTX_get_mac EVP_MAC_CTX_get0_mac
+#define EVP_MAC_CTX_get_name EVP_MAC_CTX_get0_name
 
 #define CONSTANT2(PREFIX, VALUE) newCONSTSUB(stash, #VALUE, newSVuv(PREFIX##VALUE))
 
@@ -183,6 +190,7 @@ static void c_type ## _provided_callback(c_type* provided, void* vdata) {\
 }
 DEFINE_PROVIDED_CALLBACK(EVP_CIPHER, Cipher)
 DEFINE_PROVIDED_CALLBACK(EVP_MD, MD)
+DEFINE_PROVIDED_CALLBACK(EVP_MAC, MAC)
 
 #define undef &PL_sv_undef
 
@@ -202,6 +210,8 @@ Crypt::OpenSSL3::Cipher T_MAGICEXT
 Crypt::OpenSSL3::Cipher::Context T_MAGICEXT
 Crypt::OpenSSL3::MD T_MAGICEXT
 Crypt::OpenSSL3::MD::Context T_MAGICEXT
+Crypt::OpenSSL3::MAC T_MAGICEXT
+Crypt::OpenSSL3::MAC::Context T_MAGICEXT
 Crypt::OpenSSL3::PrivateKey T_MAGICEXT
 
 Crypt::OpenSSL3::BIO T_MAGICEXT
@@ -832,3 +842,87 @@ int EVP_MD_CTX_get_size_ex(Crypt::OpenSSL3::MD::Context ctx)
 int EVP_MD_CTX_get_block_size(Crypt::OpenSSL3::MD::Context ctx)
 
 int EVP_MD_CTX_get_type(Crypt::OpenSSL3::MD::Context ctx)
+
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC	PREFIX = EVP_MAC_
+
+Crypt::OpenSSL3::MAC EVP_MAC_fetch(SV* class, const char* algorithm, const char* properties = "")
+C_ARGS:
+	NULL, algorithm, properties
+POSTCALL:
+	if (RETVAL == NULL)
+		XSRETURN_UNDEF;
+
+const char *EVP_MAC_get_name(Crypt::OpenSSL3::MAC mac)
+
+const char *EVP_MAC_get_description(Crypt::OpenSSL3::MAC mac)
+
+bool EVP_MAC_is_a(Crypt::OpenSSL3::MAC mac, const char *name)
+
+bool EVP_MAC_names_do_all(Crypt::OpenSSL3::MAC mac, SV* callback)
+INIT:
+	struct EVP_callback_data data;
+#ifdef MULTIPLICITY
+	data.interpreter = aTHX;
+#endif
+	data.sv = callback;
+C_ARGS:
+	mac, EVP_name_callback, &data
+
+void EVP_MAC_do_all_provided(SV* class, SV* callback)
+INIT:
+	struct EVP_callback_data data;
+#ifdef MULTIPLICITY
+	data.interpreter = aTHX;
+#endif
+	data.sv = callback;
+C_ARGS:
+	NULL, EVP_MAC_provided_callback, &data
+
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC::Context	PREFIX = EVP_MAC_CTX_
+
+Crypt::OpenSSL3::MAC::Context EVP_MAC_CTX_new(SV* class, Crypt::OpenSSL3::MAC ctx)
+C_ARGS:
+	ctx
+
+Crypt::OpenSSL3::MAC EVP_MAC_CTX_get_mac(Crypt::OpenSSL3::MAC::Context ctx);
+POSTCALL:
+	EVP_MAC_up_ref(RETVAL);
+
+size_t EVP_MAC_CTX_get_mac_size(Crypt::OpenSSL3::MAC::Context ctx)
+
+size_t EVP_MAC_CTX_get_block_size(Crypt::OpenSSL3::MAC::Context ctx)
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC::Context	PREFIX = EVP_MAC_
+
+bool EVP_MAC_init(Crypt::OpenSSL3::MAC::Context ctx, const unsigned char *key, size_t length(key), SV* args = undef)
+INIT:
+	const OSSL_PARAM* params = params_for(EVP_MAC_CTX_settable_params(ctx), args);
+C_ARGS:
+	ctx, key, STRLEN_length_of_key, params
+
+bool EVP_MAC_update(Crypt::OpenSSL3::MAC::Context ctx, const unsigned char *data, size_t length(data))
+
+bool EVP_MAC_final(Crypt::OpenSSL3::MAC::Context ctx, SV* buffer, ssize_t outsize = -1)
+CODE:
+	if (outsize == -1)
+		EVP_MAC_final(ctx, NULL, &outsize, 0);
+	char* ptr = grow_buffer(buffer, outsize);
+	RETVAL = EVP_MAC_final(ctx, ptr, &outsize, outsize);
+	if (RETVAL)
+		set_buffer_length(buffer, outsize);
+OUTPUT:
+	RETVAL
+
+int EVP_MAC_finalXOF(Crypt::OpenSSL3::MAC::Context ctx, SV* buffer, size_t outsize)
+INIT:
+	char* ptr = grow_buffer(buffer, outsize);
+C_ARGS:
+	ctx, ptr, outsize
+POSTCALL:
+	if (RETVAL)
+		set_buffer_length(buffer, outsize);
