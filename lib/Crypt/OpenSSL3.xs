@@ -876,7 +876,7 @@ const char *EVP_CIPHER_get_name(Crypt::OpenSSL3::Cipher cipher)
 
 const char *EVP_CIPHER_get_description(Crypt::OpenSSL3::Cipher cipher)
 
-int EVP_CIPHER_names_do_all(Crypt::OpenSSL3::Cipher cipher, SV* callback)
+bool EVP_CIPHER_names_do_all(Crypt::OpenSSL3::Cipher cipher, SV* callback)
 INIT:
 	struct EVP_callback_data data;
 #ifdef MULTIPLICITY
@@ -968,7 +968,7 @@ const char *EVP_MD_get_description(Crypt::OpenSSL3::MD md)
 
 bool EVP_MD_is_a(Crypt::OpenSSL3::MD md, const char *name)
 
-int EVP_MD_names_do_all(Crypt::OpenSSL3::MD md, SV* callback)
+bool EVP_MD_names_do_all(Crypt::OpenSSL3::MD md, SV* callback)
 INIT:
 	struct EVP_callback_data data;
 #ifdef MULTIPLICITY
