@@ -7,57 +7,57 @@
 #include <openssl/param_build.h>
 
 #define DUPLICATING_TYPE(c_prefix, xs_type)\
-typedef c_prefix *xs_type;\
+typedef c_prefix * Crypt__OpenSSL3__ ## xs_type;\
 static int c_prefix ## _magic_dup(pTHX_ MAGIC* mg, CLONE_PARAMS* params) {\
-	mg->mg_ptr = (char*)c_prefix ## _dup((xs_type)mg->mg_ptr);\
+	mg->mg_ptr = (char*)c_prefix ## _dup((c_prefix*)mg->mg_ptr);\
 	return 0;\
 }\
 static int c_prefix ## _magic_free(pTHX_ SV* sv, MAGIC* mg) {\
-	c_prefix ## _free((xs_type)mg->mg_ptr);\
+	c_prefix ## _free((c_prefix*)mg->mg_ptr);\
 	return 0;\
 }\
-static const MGVTBL xs_type ## _magic = {\
+static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = {\
 	.svt_dup = c_prefix ## _magic_dup,\
 	.svt_free = c_prefix ## _magic_free,\
 };
 
 #define COUNTING_TYPE(c_prefix, xs_type)\
-typedef c_prefix *xs_type;\
+typedef c_prefix * Crypt__OpenSSL3__ ## xs_type;\
 static int c_prefix ## _magic_dup(pTHX_ MAGIC* mg, CLONE_PARAMS* params) {\
-	c_prefix ## _up_ref((xs_type)mg->mg_ptr);\
+	c_prefix ## _up_ref((c_prefix*)mg->mg_ptr);\
 	return 0;\
 }\
 static int c_prefix ## _magic_free(pTHX_ SV* sv, MAGIC* mg) {\
-	c_prefix ## _free((xs_type)mg->mg_ptr);\
+	c_prefix ## _free((c_prefix*)mg->mg_ptr);\
 	return 0;\
 }\
-static const MGVTBL xs_type ## _magic = {\
+static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = {\
 	.svt_dup = c_prefix ## _magic_dup,\
 	.svt_free = c_prefix ## _magic_free,\
 };
 
-#define CONSTPTR_TYPE(c_prefix, xs_type)\
-typedef const c_prefix *xs_type;\
-static const MGVTBL xs_type ## _magic = { NULL };
+#define SIMPLE_TYPE(c_prefix, xs_type, modifier)\
+typedef modifier c_prefix * Crypt__OpenSSL3__ ## xs_type;\
+static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = { NULL };
 
-COUNTING_TYPE(EVP_CIPHER, Crypt__OpenSSL3__Cipher)
-DUPLICATING_TYPE(EVP_CIPHER_CTX, Crypt__OpenSSL3__Cipher__Context)
-COUNTING_TYPE(EVP_MD, Crypt__OpenSSL3__MD)
-DUPLICATING_TYPE(EVP_MD_CTX, Crypt__OpenSSL3__MD__Context)
-COUNTING_TYPE(EVP_PKEY, Crypt__OpenSSL3__PrivateKey)
+COUNTING_TYPE(EVP_CIPHER, Cipher)
+DUPLICATING_TYPE(EVP_CIPHER_CTX, Cipher__Context)
+COUNTING_TYPE(EVP_MD, MD)
+DUPLICATING_TYPE(EVP_MD_CTX, MD__Context)
+COUNTING_TYPE(EVP_PKEY, PrivateKey)
 
-COUNTING_TYPE(X509, Crypt__OpenSSL3__X509)
-COUNTING_TYPE(X509_STORE, Crypt__OpenSSL3__X509__Store)
-DUPLICATING_TYPE(X509_NAME, Crypt__OpenSSL3__X509__Name)
-DUPLICATING_TYPE(X509_NAME_ENTRY, Crypt__OpenSSL3__X509__Name__Entry)
+COUNTING_TYPE(X509, X509)
+COUNTING_TYPE(X509_STORE, X509__Store)
+DUPLICATING_TYPE(X509_NAME, X509__Name)
+DUPLICATING_TYPE(X509_NAME_ENTRY, X509__Name__Entry)
 typedef long Crypt__OpenSSL3__X509__VerifyResult;
 
-COUNTING_TYPE(BIO, Crypt__OpenSSL3__BIO)
+COUNTING_TYPE(BIO, BIO)
 
-CONSTPTR_TYPE(SSL_METHOD, Crypt__OpenSSL3__SSL__Protocol)
-COUNTING_TYPE(SSL_CTX, Crypt__OpenSSL3__SSL__Context)
-COUNTING_TYPE(SSL, Crypt__OpenSSL3__SSL)
-COUNTING_TYPE(SSL_SESSION, Crypt__OpenSSL3__SSL__Session)
+SIMPLE_TYPE(SSL_METHOD, SSL__Protocol, const)
+COUNTING_TYPE(SSL_CTX, SSL__Context)
+COUNTING_TYPE(SSL, SSL)
+COUNTING_TYPE(SSL_SESSION, SSL__Session)
 
 SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 	SV* result = newSV(0);
