@@ -5,7 +5,7 @@ use warnings;
 
 1;
 
-# The result of an X509 verification
+# ABSTRACT: The result of an X509 verification
 
 =method error_code
 
