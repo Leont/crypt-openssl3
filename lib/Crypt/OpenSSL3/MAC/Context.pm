@@ -21,4 +21,6 @@ use warnings;
 
 =method get_mac_size
 
+=method set_params
+
 =method update

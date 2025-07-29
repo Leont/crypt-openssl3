@@ -12,3 +12,5 @@ use warnings;
 =method derive
 
 =method get_kdf_size
+
+=method set_params

@@ -35,6 +35,8 @@ use warnings;
 
 =method set_flags
 
+=method set_params
+
 =method squeeze
 
 =method test_flags

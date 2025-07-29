@@ -35,6 +35,8 @@ use warnings;
 
 =method set_padding
 
+=method set_params
+
 =method type
 
 =method update

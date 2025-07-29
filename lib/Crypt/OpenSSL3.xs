@@ -929,6 +929,12 @@ CODE:
 OUTPUT:
 	RETVAL
 
+bool EVP_CIPHER_CTX_set_params(Crypt::OpenSSL3::Cipher::Context ctx, SV* args = undef)
+INIT:
+	const OSSL_PARAM* params = params_for(EVP_CIPHER_CTX_settable_params(ctx), args);
+C_ARGS:
+	ctx, params
+
 int EVP_CIPHER_CTX_get_nid(Crypt::OpenSSL3::Cipher::Context e)
 
 int EVP_CIPHER_CTX_get_block_size(Crypt::OpenSSL3::Cipher::Context e)
@@ -1045,6 +1051,12 @@ POSTCALL:
 	if (RETVAL)
 		set_buffer_length(buffer, outlen);
 
+bool EVP_MD_CTX_set_params(Crypt::OpenSSL3::MD::Context ctx, SV* args = undef)
+INIT:
+	const OSSL_PARAM* params = params_for(EVP_MD_CTX_settable_params(ctx), args);
+C_ARGS:
+	ctx, params
+
 void EVP_MD_CTX_ctrl(Crypt::OpenSSL3::MD::Context ctx, int cmd, int p1, char* p2);
 
 void EVP_MD_CTX_set_flags(Crypt::OpenSSL3::MD::Context ctx, int flags)
@@ -1117,6 +1129,12 @@ POSTCALL:
 size_t EVP_MAC_CTX_get_mac_size(Crypt::OpenSSL3::MAC::Context ctx)
 
 size_t EVP_MAC_CTX_get_block_size(Crypt::OpenSSL3::MAC::Context ctx)
+
+bool EVP_MAC_CTX_set_params(Crypt::OpenSSL3::MAC::Context ctx, SV* args = undef)
+INIT:
+	const OSSL_PARAM* params = params_for(EVP_MAC_CTX_settable_params(ctx), args);
+C_ARGS:
+	ctx, params
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC::Context	PREFIX = EVP_MAC_
@@ -1193,6 +1211,12 @@ C_ARGS:
 	ctx
 
 size_t EVP_KDF_CTX_get_kdf_size(Crypt::OpenSSL3::KDF::Context ctx)
+
+bool EVP_KDF_CTX_set_params(Crypt::OpenSSL3::KDF::Context ctx, SV* args = undef)
+INIT:
+	const OSSL_PARAM* params = params_for(EVP_KDF_CTX_settable_params(ctx), args);
+C_ARGS:
+	ctx, params
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF::Context	PREFIX = EVP_KDF_
 
