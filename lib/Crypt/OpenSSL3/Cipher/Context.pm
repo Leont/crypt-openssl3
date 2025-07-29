@@ -11,6 +11,12 @@ use warnings;
 
 =method init
 
+=method set_aead_ivlen
+
+=method get_aead_tag
+
+=method set_aead_tag
+
 =method ctrl
 
 =method final

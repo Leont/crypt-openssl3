@@ -101,6 +101,9 @@ SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 
 #define EVP_CIPHER_get_name EVP_CIPHER_get0_name
 #define EVP_CIPHER_get_description EVP_CIPHER_get0_description
+#define EVP_CIPHER_CTX_set_aead_ivlen(ctx, length) EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, length, NULL)
+#define EVP_CIPHER_CTX_get_aead_tag(ctx, ptr, length) EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, length, ptr)
+#define EVP_CIPHER_CTX_set_aead_tag(ctx, ptr, length) EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, length, ptr)
 #define EVP_CIPHER_CTX_get_name EVP_CIPHER_CTX_get0_name
 #define EVP_CIPHER_CTX_get_cipher EVP_CIPHER_CTX_get1_cipher
 
@@ -1061,6 +1064,20 @@ Crypt::OpenSSL3::Cipher EVP_CIPHER_CTX_get_cipher(Crypt::OpenSSL3::Cipher::Conte
 const char *EVP_CIPHER_CTX_get_name(Crypt::OpenSSL3::Cipher::Context ctx)
 
 bool EVP_CIPHER_CTX_is_encrypting(Crypt::OpenSSL3::Cipher::Context ctx)
+
+bool EVP_CIPHER_CTX_set_aead_ivlen(Crypt::OpenSSL3::Cipher::Context ctx, int length)
+
+bool EVP_CIPHER_CTX_get_aead_tag(Crypt::OpenSSL3::Cipher::Context ctx, SV* buffer, int length)
+INIT:
+	char* ptr = grow_buffer(buffer, length);
+C_ARGS:
+	ctx, ptr, length
+POSTCALL:
+	if (RETVAL)
+		set_buffer_length(buffer, length);
+
+bool EVP_CIPHER_CTX_set_aead_tag(Crypt::OpenSSL3::Cipher::Context ctx, char* ptr, int length(ptr))
+
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MD	PREFIX = EVP_MD_
 
