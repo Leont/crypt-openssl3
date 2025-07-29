@@ -31,7 +31,11 @@ use warnings;
 
 =method get_params
 
+=method is_encrypting
+
 =method rand_key
+
+=method reset
 
 =method set_key_length
 

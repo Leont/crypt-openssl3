@@ -15,4 +15,6 @@ use warnings;
 
 =method get_params
 
+=method reset
+
 =method set_params

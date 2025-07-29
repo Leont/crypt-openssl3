@@ -104,6 +104,7 @@ SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 #define EVP_CIPHER_CTX_get_name EVP_CIPHER_CTX_get0_name
 #define EVP_CIPHER_CTX_get_cipher EVP_CIPHER_CTX_get1_cipher
 
+#define EVP_MD_digest EVP_Digest
 #define EVP_MD_get_name EVP_MD_get0_name
 #define EVP_MD_get_description EVP_MD_get0_description
 #undef EVP_MD_CTX_init
@@ -942,7 +943,7 @@ unsigned long EVP_CIPHER_get_mode(Crypt::OpenSSL3::Cipher e)
 
 int EVP_CIPHER_get_type(Crypt::OpenSSL3::Cipher cipher)
 
-int EVP_CIPHER_is_a(Crypt::OpenSSL3::Cipher cipher, const char *name)
+bool EVP_CIPHER_is_a(Crypt::OpenSSL3::Cipher cipher, const char *name)
 
 const char *EVP_CIPHER_get_name(Crypt::OpenSSL3::Cipher cipher)
 
@@ -985,6 +986,8 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Cipher::Context	PREFIX = EVP
 
 Crypt::OpenSSL3::Cipher::Context EVP_CIPHER_CTX_new(SV* class)
 C_ARGS:
+
+bool EVP_CIPHER_CTX_reset(Crypt::OpenSSL3::Cipher::Context ctx)
 
 bool init(Crypt::OpenSSL3::Cipher::Context ctx, Crypt::OpenSSL3::Cipher cipher, const unsigned char* key, const unsigned char* iv, int enc, SV* args = undef)
 CODE:
@@ -1057,6 +1060,8 @@ Crypt::OpenSSL3::Cipher EVP_CIPHER_CTX_get_cipher(Crypt::OpenSSL3::Cipher::Conte
 
 const char *EVP_CIPHER_CTX_get_name(Crypt::OpenSSL3::Cipher::Context ctx)
 
+bool EVP_CIPHER_CTX_is_encrypting(Crypt::OpenSSL3::Cipher::Context ctx)
+
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MD	PREFIX = EVP_MD_
 
 Crypt::OpenSSL3::MD EVP_MD_fetch(SV* class, const char* algorithm, const char* properties = "")
@@ -1115,6 +1120,16 @@ CODE:
 	}
 OUTPUT:
 	RETVAL
+
+bool EVP_MD_digest(Crypt::OpenSSL3::MD md, const char* input, size_t length(input), SV* buffer)
+INIT:
+	unsigned int size = EVP_MD_get_size(md);
+	char* ptr = grow_buffer(buffer, size);
+C_ARGS:
+	input, STRLEN_length_of_input, ptr, &size, md, NULL
+POSTCALL:
+	if (RETVAL)
+		set_buffer_length(buffer, size);
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MD::Context	PREFIX = EVP_MD_CTX_
@@ -1371,6 +1386,8 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF::Context	PREFIX = EVP_KD
 Crypt::OpenSSL3::KDF::Context EVP_KDF_CTX_new(SV* class, Crypt::OpenSSL3::KDF ctx)
 C_ARGS:
 	ctx
+
+void EVP_KDF_CTX_reset(Crypt::OpenSSL3::KDF::Context ctx)
 
 size_t EVP_KDF_CTX_get_kdf_size(Crypt::OpenSSL3::KDF::Context ctx)
 
