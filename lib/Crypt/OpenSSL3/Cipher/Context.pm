@@ -29,6 +29,8 @@ use warnings;
 
 =method get_nid
 
+=method get_params
+
 =method rand_key
 
 =method set_key_length

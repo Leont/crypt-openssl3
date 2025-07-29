@@ -15,6 +15,8 @@ use warnings;
 
 =method get_name
 
+=method get_params
+
 =method is_a
 
 =method names_do_all

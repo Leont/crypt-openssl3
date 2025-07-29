@@ -25,6 +25,8 @@ use warnings;
 
 =method get_name
 
+=method get_params
+
 =method get_size
 
 =method get_size_ex

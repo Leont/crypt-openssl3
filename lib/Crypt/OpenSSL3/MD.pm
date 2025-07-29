@@ -19,6 +19,8 @@ use warnings;
 
 =method get_name
 
+=method get_params
+
 =method get_pkey_type
 
 =method get_size

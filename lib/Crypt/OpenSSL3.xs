@@ -172,6 +172,78 @@ static const OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* sv) 
 }
 #define params_for(settable, sv) S_params_for(aTHX_ settable, sv)
 
+static OSSL_PARAM* S_params_dup(pTHX_ const OSSL_PARAM* input) {
+	size_t counter = 0;
+	for (const OSSL_PARAM* iter = input; iter->key; iter++)
+		counter++;
+
+	OSSL_PARAM* result = OPENSSL_zalloc((counter + 1) * sizeof(OSSL_PARAM));
+
+	for (size_t index = 0; index < counter; ++index) {
+		result[index].key = input[index].key;
+		result[index].data_type = input[index].data_type;
+		result[index].data = NULL;
+		result[index].data_size = SIZE_MAX;
+		result[index].return_size = 0;
+	}
+	result[counter].key = NULL;
+	result[counter].data_type = 0;
+
+	SAVEDESTRUCTOR(OSSL_PARAM_free, result);
+
+	return result;
+}
+#define params_dup(params) S_params_dup(aTHX_ params)
+
+
+static HV* S_reallocate_get_params(pTHX_ OSSL_PARAM* gettable) {
+	HV* hash = newHV();
+
+	while (gettable->key) {
+		SV* sv = NULL;
+		if (gettable->data_type == OSSL_PARAM_INTEGER) {
+			sv = newSViv(0);
+			gettable->data_size = IVSIZE;
+			gettable->data = &SvIVX(sv);
+		}
+		else if (gettable->data_type == OSSL_PARAM_UNSIGNED_INTEGER) {
+			sv = newSVuv(UV_MAX);
+			gettable->data_size = UVSIZE;
+			gettable->data = &SvIVX(sv);
+		}
+		else if (gettable->data_type == OSSL_PARAM_REAL) {
+			sv = newSVnv(0);
+			gettable->data_size = NVSIZE;
+			gettable->data = &SvNVX(sv);
+		}
+		else if (gettable->data_type == OSSL_PARAM_UTF8_STRING) {
+			sv = newSV(gettable->return_size ? gettable->return_size : 1);
+			SvCUR_set(sv, gettable->return_size);
+			SvUTF8_on(sv);
+			SvPOK_only_UTF8(sv);
+			gettable->data_size = gettable->return_size + 1;
+			gettable->data = SvPVX(sv);
+		}
+		else if (gettable->data_type == OSSL_PARAM_OCTET_STRING) {
+			sv = newSV(gettable->return_size);
+			SvCUR_set(sv, gettable->return_size);
+			SvPOK_only(sv);
+			gettable->data_size = gettable->return_size;
+			gettable->data = SvPVX(sv);
+		}
+
+		if (sv)
+			hv_store(hash, gettable->key, strlen(gettable->key), sv, 0);
+
+		gettable++;
+	}
+	sv_2mortal((SV*)hash);
+
+	return hash;
+}
+#define reallocate_get_params(params) S_reallocate_get_params(aTHX_ params)
+
+
 struct EVP_callback_data {
 #ifdef MULTIPLICITY
 	PerlInterpreter* interpreter;
@@ -896,6 +968,19 @@ INIT:
 C_ARGS:
 	NULL, EVP_CIPHER_provided_callback, &data
 
+SV* EVP_CIPHER_get_params(Crypt::OpenSSL3::Cipher cipher)
+CODE:
+	RETVAL = &PL_sv_undef;
+	OSSL_PARAM* params = params_dup(EVP_CIPHER_gettable_params(cipher));
+	if (EVP_CIPHER_get_params(cipher, params)) {
+		HV* hash = reallocate_get_params(params);
+		if (EVP_CIPHER_get_params(cipher, params))
+			RETVAL = newRV_inc((SV*)hash);
+	}
+OUTPUT:
+	RETVAL
+
+
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Cipher::Context	PREFIX = EVP_CIPHER_CTX_
 
 Crypt::OpenSSL3::Cipher::Context EVP_CIPHER_CTX_new(SV* class)
@@ -934,6 +1019,19 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_CIPHER_CTX_settable_params(ctx), args);
 C_ARGS:
 	ctx, params
+
+SV* EVP_CIPHER_CTX_get_params(Crypt::OpenSSL3::Cipher::Context ctx)
+CODE:
+	RETVAL = &PL_sv_undef;
+	OSSL_PARAM* params = params_dup(EVP_CIPHER_CTX_gettable_params(ctx));
+	if (EVP_CIPHER_CTX_get_params(ctx, params)) {
+		HV* hash = reallocate_get_params(params);
+		if (EVP_CIPHER_CTX_get_params(ctx, params))
+			RETVAL = newRV_inc((SV*)hash);
+	}
+OUTPUT:
+	RETVAL
+
 
 int EVP_CIPHER_CTX_get_nid(Crypt::OpenSSL3::Cipher::Context e)
 
@@ -1006,6 +1104,17 @@ unsigned long EVP_MD_get_flags(Crypt::OpenSSL3::MD md)
 
 bool EVP_MD_xof(Crypt::OpenSSL3::MD md)
 
+SV* EVP_MD_get_params(Crypt::OpenSSL3::MD md)
+CODE:
+	RETVAL = &PL_sv_undef;
+	OSSL_PARAM* params = params_dup(EVP_MD_gettable_params(md));
+	if (EVP_MD_get_params(md, params)) {
+		HV* hash = reallocate_get_params(params);
+		if (EVP_MD_get_params(md, params))
+			RETVAL = newRV_inc((SV*)hash);
+	}
+OUTPUT:
+	RETVAL
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MD::Context	PREFIX = EVP_MD_CTX_
@@ -1056,6 +1165,19 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_MD_CTX_settable_params(ctx), args);
 C_ARGS:
 	ctx, params
+
+SV* EVP_MD_CTX_get_params(Crypt::OpenSSL3::MD::Context ctx)
+CODE:
+	RETVAL = &PL_sv_undef;
+	OSSL_PARAM* params = params_dup(EVP_MD_CTX_gettable_params(ctx));
+	if (EVP_MD_CTX_get_params(ctx, params)) {
+		HV* hash = reallocate_get_params(params);
+		if (EVP_MD_CTX_get_params(ctx, params))
+			RETVAL = newRV_inc((SV*)hash);
+	}
+OUTPUT:
+	RETVAL
+
 
 void EVP_MD_CTX_ctrl(Crypt::OpenSSL3::MD::Context ctx, int cmd, int p1, char* p2);
 
@@ -1114,6 +1236,19 @@ INIT:
 C_ARGS:
 	NULL, EVP_MAC_provided_callback, &data
 
+SV* EVP_MAC_get_params(Crypt::OpenSSL3::MAC mac)
+CODE:
+	RETVAL = &PL_sv_undef;
+	OSSL_PARAM* params = params_dup(EVP_MAC_gettable_params(mac));
+	int result = EVP_MAC_get_params(mac, params);
+	if (result) {
+		HV* hash = reallocate_get_params(params);
+		if (EVP_MAC_get_params(mac, params))
+			RETVAL = newRV_inc((SV*)hash);
+	}
+OUTPUT:
+	RETVAL
+
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC::Context	PREFIX = EVP_MAC_CTX_
@@ -1135,6 +1270,19 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_MAC_CTX_settable_params(ctx), args);
 C_ARGS:
 	ctx, params
+
+SV* EVP_MAC_CTX_get_params(Crypt::OpenSSL3::MAC::Context ctx)
+CODE:
+	RETVAL = &PL_sv_undef;
+	OSSL_PARAM* params = params_dup(EVP_MAC_CTX_gettable_params(ctx));
+	if (EVP_MAC_CTX_get_params(ctx, params)) {
+		HV* hash = reallocate_get_params(params);
+		if (EVP_MAC_CTX_get_params(ctx, params))
+			RETVAL = newRV_inc((SV*)hash);
+	}
+OUTPUT:
+	RETVAL
+
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC::Context	PREFIX = EVP_MAC_
@@ -1204,6 +1352,20 @@ INIT:
 C_ARGS:
 	NULL, EVP_KDF_provided_callback, &data
 
+SV* EVP_KDF_get_params(Crypt::OpenSSL3::KDF kdf)
+CODE:
+	RETVAL = &PL_sv_undef;
+	OSSL_PARAM* params = params_dup(EVP_KDF_gettable_params(kdf));
+	int result = EVP_KDF_get_params(kdf, params);
+	if (result) {
+		HV* hash = reallocate_get_params(params);
+		if (EVP_KDF_get_params(kdf, params))
+			RETVAL = newRV_inc((SV*)hash);
+	}
+OUTPUT:
+	RETVAL
+
+
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF::Context	PREFIX = EVP_KDF_CTX_
 
 Crypt::OpenSSL3::KDF::Context EVP_KDF_CTX_new(SV* class, Crypt::OpenSSL3::KDF ctx)
@@ -1217,6 +1379,19 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_KDF_CTX_settable_params(ctx), args);
 C_ARGS:
 	ctx, params
+
+SV* EVP_KDF_CTX_get_params(Crypt::OpenSSL3::KDF::Context ctx)
+CODE:
+	RETVAL = &PL_sv_undef;
+	OSSL_PARAM* params = params_dup(EVP_KDF_CTX_gettable_params(ctx));
+	if (EVP_KDF_CTX_get_params(ctx, params)) {
+		HV* hash = reallocate_get_params(params);
+		if (EVP_KDF_CTX_get_params(ctx, params))
+			RETVAL = newRV_inc((SV*)hash);
+	}
+OUTPUT:
+	RETVAL
+
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF::Context	PREFIX = EVP_KDF_
 

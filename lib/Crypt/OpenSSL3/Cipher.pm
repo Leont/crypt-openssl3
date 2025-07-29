@@ -25,6 +25,8 @@ use warnings;
 
 =method get_nid
 
+=method get_params
+
 =method get_type
 
 =method is_a
