@@ -87,4 +87,4 @@ use warnings;
 
 =method type
 
-=method type_names_do_all
+=method type_names_list_all

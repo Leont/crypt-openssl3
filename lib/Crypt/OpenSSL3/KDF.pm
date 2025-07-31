@@ -9,8 +9,6 @@ use warnings;
 
 =method fetch
 
-=method do_all_provided
-
 =method get_description
 
 =method get_name
@@ -19,4 +17,6 @@ use warnings;
 
 =method is_a
 
-=method names_do_all
+=method list_all_provided
+
+=method names_list_all

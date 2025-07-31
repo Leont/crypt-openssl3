@@ -278,35 +278,27 @@ static HV* S_reallocate_get_params(pTHX_ OSSL_PARAM* gettable) {
 #define reallocate_get_params(params) S_reallocate_get_params(aTHX_ params)
 
 
-struct EVP_callback_data {
 #ifdef MULTIPLICITY
-	PerlInterpreter* interpreter;
+#define iTHX aTHX
+#else
+#define iTHX NULL
 #endif
-	SV* sv;
-};
-
-void S_call_callback(pTHX_ SV* callback, SV* value) {
-	dSP;
-	PUSHMARK(SP);
-	mXPUSHs(value);
-	PUTBACK;
-	call_sv(callback, G_VOID | G_DISCARD);
-}
-#define call_callback(value, callback) S_call_callback(aTHX_ value, callback)
 
 void EVP_name_callback(const char* name, void* vdata) {
-	struct EVP_callback_data* data = vdata;
-	dTHXa(data->interpreter);
-	call_callback(data->sv, newSVpv(name, 0));
+	dTHXa((PerlInterpreter*)vdata);
+	dSP;
+	mXPUSHp(name, strlen(name));
+	PUTBACK;
 }
 
 #define DEFINE_PROVIDED_CALLBACK(c_type, name)\
 static void c_type ## _provided_callback(c_type* provided, void* vdata) {\
-	struct EVP_callback_data* data = vdata;\
-	dTHXa(data->interpreter);\
+	dTHXa((PerlInterpreter*)vdata);\
 	c_type ## _up_ref(provided);\
 	SV* object = make_object(provided, &Crypt__OpenSSL3__ ## name ## _magic, "Crypt::OpenSSL3::" #name);\
-	call_callback(data->sv, object);\
+	dSP;\
+	mXPUSHs(object);\
+	PUTBACK;\
 }
 DEFINE_PROVIDED_CALLBACK(EVP_CIPHER, Cipher)
 DEFINE_PROVIDED_CALLBACK(EVP_MD, MD)
@@ -986,25 +978,17 @@ const char *EVP_CIPHER_get_name(Crypt::OpenSSL3::Cipher cipher)
 
 const char *EVP_CIPHER_get_description(Crypt::OpenSSL3::Cipher cipher)
 
-bool EVP_CIPHER_names_do_all(Crypt::OpenSSL3::Cipher cipher, SV* callback)
-INIT:
-	struct EVP_callback_data data;
-#ifdef MULTIPLICITY
-	data.interpreter = aTHX;
-#endif
-	data.sv = callback;
-C_ARGS:
-	cipher, EVP_name_callback, &data
+void EVP_CIPHER_names_list_all(Crypt::OpenSSL3::Cipher cipher)
+PPCODE:
+	PUTBACK;
+	EVP_CIPHER_names_do_all(cipher, EVP_name_callback, iTHX);
+	SPAGAIN;
 
-void EVP_CIPHER_do_all_provided(SV* class, SV* callback)
-INIT:
-	struct EVP_callback_data data;
-#ifdef MULTIPLICITY
-	data.interpreter = aTHX;
-#endif
-	data.sv = callback;
-C_ARGS:
-	NULL, EVP_CIPHER_provided_callback, &data
+void EVP_CIPHER_list_all_provided(SV* class)
+PPCODE:
+	PUTBACK;
+	EVP_CIPHER_do_all_provided(NULL, EVP_CIPHER_provided_callback, iTHX);
+	SPAGAIN;
 
 SV* EVP_CIPHER_get_params(Crypt::OpenSSL3::Cipher cipher)
 CODE:
@@ -1128,25 +1112,17 @@ const char *EVP_MD_get_description(Crypt::OpenSSL3::MD md)
 
 bool EVP_MD_is_a(Crypt::OpenSSL3::MD md, const char *name)
 
-bool EVP_MD_names_do_all(Crypt::OpenSSL3::MD md, SV* callback)
-INIT:
-	struct EVP_callback_data data;
-#ifdef MULTIPLICITY
-	data.interpreter = aTHX;
-#endif
-	data.sv = callback;
-C_ARGS:
-	md, EVP_name_callback, &data
+void EVP_MD_names_list_all(Crypt::OpenSSL3::MD md)
+PPCODE:
+	PUTBACK;
+	EVP_MD_names_do_all(md, EVP_name_callback, iTHX);
+	SPAGAIN;
 
-void EVP_MD_do_all_provided(SV* class, SV* callback)
-INIT:
-	struct EVP_callback_data data;
-#ifdef MULTIPLICITY
-	data.interpreter = aTHX;
-#endif
-	data.sv = callback;
-C_ARGS:
-	NULL, EVP_MD_provided_callback, &data
+void EVP_MD_list_all_provided(SV* class)
+PPCODE:
+	PUTBACK;
+	EVP_MD_do_all_provided(NULL, EVP_MD_provided_callback, iTHX);
+	SPAGAIN;
 
 int EVP_MD_get_type(Crypt::OpenSSL3::MD md)
 
@@ -1282,25 +1258,17 @@ const char *EVP_MAC_get_description(Crypt::OpenSSL3::MAC mac)
 
 bool EVP_MAC_is_a(Crypt::OpenSSL3::MAC mac, const char *name)
 
-bool EVP_MAC_names_do_all(Crypt::OpenSSL3::MAC mac, SV* callback)
-INIT:
-	struct EVP_callback_data data;
-#ifdef MULTIPLICITY
-	data.interpreter = aTHX;
-#endif
-	data.sv = callback;
-C_ARGS:
-	mac, EVP_name_callback, &data
+void EVP_MAC_names_list_all(Crypt::OpenSSL3::MAC mac, SV* callback)
+PPCODE:
+	PUTBACK;
+	EVP_MAC_names_do_all(mac, EVP_name_callback, iTHX);
+	SPAGAIN;
 
-void EVP_MAC_do_all_provided(SV* class, SV* callback)
-INIT:
-	struct EVP_callback_data data;
-#ifdef MULTIPLICITY
-	data.interpreter = aTHX;
-#endif
-	data.sv = callback;
-C_ARGS:
-	NULL, EVP_MAC_provided_callback, &data
+void EVP_MAC_list_all_provided(SV* class)
+PPCODE:
+	PUTBACK;
+	EVP_MAC_do_all_provided(NULL, EVP_MAC_provided_callback, iTHX);
+	SPAGAIN;
 
 SV* EVP_MAC_get_params(Crypt::OpenSSL3::MAC mac)
 CODE:
@@ -1398,25 +1366,17 @@ const char *EVP_KDF_get_description(Crypt::OpenSSL3::KDF kdf)
 
 bool EVP_KDF_is_a(Crypt::OpenSSL3::KDF kdf, const char *name)
 
-bool EVP_KDF_names_do_all(Crypt::OpenSSL3::KDF kdf, SV* callback)
-INIT:
-	struct EVP_callback_data data;
-#ifdef MULTIPLICITY
-	data.interpreter = aTHX;
-#endif
-	data.sv = callback;
-C_ARGS:
-	kdf, EVP_name_callback, &data
+void EVP_KDF_names_list_all(Crypt::OpenSSL3::KDF kdf)
+PPCODE:
+	PUTBACK;
+	EVP_KDF_names_do_all(kdf, EVP_name_callback, iTHX);
+	SPAGAIN;
 
-void EVP_KDF_do_all_provided(SV* class, SV* callback)
-INIT:
-	struct EVP_callback_data data;
-#ifdef MULTIPLICITY
-	data.interpreter = aTHX;
-#endif
-	data.sv = callback;
-C_ARGS:
-	NULL, EVP_KDF_provided_callback, &data
+void EVP_KDF_list_all_provided(SV* class)
+PPCODE:
+	PUTBACK;
+	EVP_KDF_do_all_provided(NULL, EVP_KDF_provided_callback, iTHX);
+	SPAGAIN;
 
 SV* EVP_KDF_get_params(Crypt::OpenSSL3::KDF kdf)
 CODE:
@@ -1490,25 +1450,17 @@ const char *EVP_SIGNATURE_get_description(Crypt::OpenSSL3::Signature signature)
 
 bool EVP_SIGNATURE_is_a(Crypt::OpenSSL3::Signature signature, const char *name)
 
-bool EVP_SIGNATURE_names_do_all(Crypt::OpenSSL3::Signature signature, SV* callback)
-INIT:
-	struct EVP_callback_data data;
-#ifdef MULTIPLICITY
-	data.interpreter = aTHX;
-#endif
-	data.sv = callback;
-C_ARGS:
-	signature, EVP_name_callback, &data
+void EVP_SIGNATURE_names_list_all(Crypt::OpenSSL3::Signature signature)
+PPCODE:
+	PUTBACK;
+	EVP_SIGNATURE_names_do_all(signature, EVP_name_callback, iTHX);
+	SPAGAIN;
 
-void EVP_SIGNATURE_do_all_provided(SV* class, SV* callback)
-INIT:
-	struct EVP_callback_data data;
-#ifdef MULTIPLICITY
-	data.interpreter = aTHX;
-#endif
-	data.sv = callback;
-C_ARGS:
-	NULL, EVP_SIGNATURE_provided_callback, &data
+void EVP_SIGNATURE_list_all_provided(SV* class)
+PPCODE:
+	PUTBACK;
+	EVP_SIGNATURE_do_all_provided(NULL, EVP_SIGNATURE_provided_callback, iTHX);
+	SPAGAIN;
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKey	PREFIX = EVP_PKEY_
@@ -1571,15 +1523,11 @@ bool EVP_PKEY_is_a(Crypt::OpenSSL3::PKey pkey, const char *name)
 
 bool EVP_PKEY_can_sign(Crypt::OpenSSL3::PKey pkey)
 
-bool EVP_PKEY_type_names_do_all(Crypt::OpenSSL3::PKey pkey, SV* callback)
-INIT:
-	struct EVP_callback_data data;
-#ifdef MULTIPLICITY
-	data.interpreter = aTHX;
-#endif
-	data.sv = callback;
-C_ARGS:
-	pkey, EVP_name_callback, &data
+void EVP_PKEY_type_names_list_all(Crypt::OpenSSL3::PKey pkey)
+PPCODE:
+	PUTBACK;
+	EVP_PKEY_type_names_do_all(pkey, EVP_name_callback, iTHX);
+	SPAGAIN;
 
 const char *EVP_PKEY_get_type_name(Crypt::OpenSSL3::PKey key)
 

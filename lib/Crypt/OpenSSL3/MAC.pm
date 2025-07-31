@@ -7,8 +7,6 @@ use warnings;
 
 # ABSTRACT: Message authentication code algorithms
 
-=method do_all_provided
-
 =method fetch
 
 =method get_description
@@ -19,4 +17,6 @@ use warnings;
 
 =method is_a
 
-=method names_do_all
+=method list_all_provided
+
+=method names_list_all

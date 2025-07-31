@@ -11,8 +11,6 @@ use warnings;
 
 =method digest
 
-=method do_all_provided
-
 =method get_block_size
 
 =method get_description
@@ -31,6 +29,8 @@ use warnings;
 
 =method is_a
 
-=method names_do_all
+=method list_all_provided
+
+=method names_list_all
 
 =method xof

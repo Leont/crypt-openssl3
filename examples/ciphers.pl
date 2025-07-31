@@ -3,9 +3,7 @@ use 5.036;
 use Crypt::OpenSSL3;
 use Data::Dumper;
 
-Crypt::OpenSSL3::Cipher->do_all_provided(sub ($cipher) {
-	say $cipher->get_name;
-});
+say $_->get_name for Crypt::OpenSSL3::Cipher->list_all_provided;
 
 my $key = "0123456789ABCDEF";
 my $iv = $key;
