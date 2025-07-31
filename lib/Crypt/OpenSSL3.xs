@@ -78,7 +78,7 @@ COUNTING_TYPE(SSL_SESSION, SSL__Session)
 
 typedef long SysRet;
 
-SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
+static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 	SV* result = newSV(0);
 	MAGIC* magic = sv_magicext(newSVrv(result, ntype), NULL, PERL_MAGIC_ext, mgvtbl, (const char*)var, 0);
 	magic->mg_flags |= MGf_DUP;
@@ -160,7 +160,7 @@ SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 
 #define CONSTANT2(PREFIX, VALUE) newCONSTSUB(stash, #VALUE, newSVuv(PREFIX##VALUE))
 
-char* S_grow_buffer(pTHX_ SV* buffer, size_t size) {
+static char* S_grow_buffer(pTHX_ SV* buffer, size_t size) {
 	SvUPGRADE(buffer, SVt_PV);
 	SV_CHECK_THINKFIRST(buffer);
 	SvPOK_only(buffer);
@@ -284,7 +284,7 @@ static HV* S_reallocate_get_params(pTHX_ OSSL_PARAM* gettable) {
 #define iTHX NULL
 #endif
 
-void EVP_name_callback(const char* name, void* vdata) {
+static void EVP_name_callback(const char* name, void* vdata) {
 	dTHXa((PerlInterpreter*)vdata);
 	dSP;
 	mXPUSHp(name, strlen(name));
