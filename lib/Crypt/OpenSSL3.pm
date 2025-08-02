@@ -22,3 +22,11 @@ XSLoader::load(__PACKAGE__, __PACKAGE__->VERSION);
 =method DTLS_client
 
 =method DTLS_server
+
+=method clear_error
+
+=method get_error
+
+=method peek_error
+
+=method error_string

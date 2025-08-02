@@ -7,6 +7,7 @@
 #include <openssl/param_build.h>
 #include <openssl/kdf.h>
 #include <openssl/rand.h>
+#include <openssl/err.h>
 
 #include <openssl/rsa.h>
 #include <openssl/dsa.h>
@@ -47,6 +48,7 @@ static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = {\
 typedef modifier c_prefix * Crypt__OpenSSL3__ ## xs_type;\
 static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = { NULL };
 
+typedef unsigned long Crypt__OpenSSL3__Error;
 COUNTING_TYPE(EVP_RAND, Random)
 COUNTING_TYPE(EVP_RAND_CTX, Random__Context)
 COUNTING_TYPE(EVP_CIPHER, Cipher)
@@ -355,6 +357,7 @@ Crypt::OpenSSL3::PKey T_MAGICEXT
 Crypt::OpenSSL3::PKey::Context T_MAGICEXT
 
 Crypt::OpenSSL3::BIO T_MAGICEXT
+Crypt::OpenSSL3::Error T_INTOBJ
 
 Crypt::OpenSSL3::BigNum T_MAGICEXT
 Crypt::OpenSSL3::BigNum::Context T_MAGICEXT
@@ -383,6 +386,27 @@ Crypt::OpenSSL3::SSL::Protocol DTLS(SV* class)
 Crypt::OpenSSL3::SSL::Protocol DTLS_server(SV* class)
 
 Crypt::OpenSSL3::SSL::Protocol DTLS_client(SV* class)
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3	PREFIX = ERR_
+
+Crypt::OpenSSL3::Error ERR_get_error(SV* class)
+C_ARGS:
+
+Crypt::OpenSSL3::Error ERR_peek_error(SV* class)
+C_ARGS:
+
+void ERR_clear_error(SV* class)
+C_ARGS:
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Error	PREFIX = ERR_
+
+SV* ERR_error_string(unsigned long e, size_t length = 64)
+CODE:
+	char* ptr = make_buffer(&RETVAL, length);
+	ERR_error_string_n(e, ptr, length);
+	set_buffer_length(RETVAL, strlen(ptr));
+OUTPUT:
+	RETVAL
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BIO	PREFIX = BIO_
 
