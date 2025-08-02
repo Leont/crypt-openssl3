@@ -6,6 +6,7 @@
 #include <openssl/ssl.h>
 #include <openssl/param_build.h>
 #include <openssl/kdf.h>
+#include <openssl/rand.h>
 
 #include <openssl/rsa.h>
 #include <openssl/dsa.h>
@@ -46,6 +47,8 @@ static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = {\
 typedef modifier c_prefix * Crypt__OpenSSL3__ ## xs_type;\
 static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = { NULL };
 
+COUNTING_TYPE(EVP_RAND, Random)
+COUNTING_TYPE(EVP_RAND_CTX, Random__Context)
 COUNTING_TYPE(EVP_CIPHER, Cipher)
 DUPLICATING_TYPE(EVP_CIPHER_CTX, Cipher__Context)
 COUNTING_TYPE(EVP_MD, MD)
@@ -105,6 +108,14 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 
 #define SSL_SESSION_get_peer SSL_SESSION_get0_peer
 
+#define RAND_get_primary(class) RAND_get0_primary(NULL)
+#define RAND_get_public(class) RAND_get0_public(NULL)
+#define RAND_get_private(class) RAND_get0_private(NULL)
+#define RAND_set_public(class, rand) RAND_set0_public(NULL, rand)
+#define RAND_set_private(class, rand) RAND_set0_private(NULL, rand)
+#define EVP_RAND_get_name EVP_RAND_get0_name
+#define EVP_RAND_get_description EVP_RAND_get0_description
+#define EVP_RAND_CTX_get_rand EVP_RAND_CTX_get0_rand
 #define EVP_CIPHER_get_name EVP_CIPHER_get0_name
 #define EVP_CIPHER_get_description EVP_CIPHER_get0_description
 #define EVP_CIPHER_CTX_set_aead_ivlen(ctx, length) EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, length, NULL)
@@ -308,6 +319,7 @@ static void c_type ## _provided_callback(c_type* provided, void* vdata) {\
 	mXPUSHs(object);\
 	PUTBACK;\
 }
+DEFINE_PROVIDED_CALLBACK(EVP_RAND, Random)
 DEFINE_PROVIDED_CALLBACK(EVP_CIPHER, Cipher)
 DEFINE_PROVIDED_CALLBACK(EVP_MD, MD)
 DEFINE_PROVIDED_CALLBACK(EVP_MAC, MAC)
@@ -328,6 +340,8 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3
 TYPEMAP: <<END
 const unsigned char*	T_PV
 
+Crypt::OpenSSL3::Random T_MAGICEXT
+Crypt::OpenSSL3::Random::Context T_MAGICEXT
 Crypt::OpenSSL3::Cipher T_MAGICEXT
 Crypt::OpenSSL3::Cipher::Context T_MAGICEXT
 Crypt::OpenSSL3::MD T_MAGICEXT
@@ -940,6 +954,124 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Session	PREFIX = SSL_SE
 Crypt::OpenSSL3::X509 SSL_SESSION_get_peer(Crypt::OpenSSL3::SSL::Session session)
 POSTCALL:
 	X509_up_ref(RETVAL);
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random	PREFIX = EVP_RAND_
+
+Crypt::OpenSSL3::Random EVP_RAND_fetch(SV* class, const char* algorithm, const char* properties = "")
+C_ARGS: NULL, algorithm, properties
+POSTCALL:
+	if (RETVAL == NULL)
+		XSRETURN_UNDEF;
+
+bool EVP_RAND_is_a(Crypt::OpenSSL3::Random rand, const char *name)
+
+const char *EVP_RAND_get_name(Crypt::OpenSSL3::Random rand)
+
+const char *EVP_RAND_get_description(Crypt::OpenSSL3::Random rand)
+
+void EVP_RAND_names_list_all(Crypt::OpenSSL3::Random rand)
+PPCODE:
+	PUTBACK;
+	EVP_RAND_names_do_all(rand, EVP_name_callback, iTHX);
+	SPAGAIN;
+
+void EVP_RAND_list_all_provided(SV* class)
+PPCODE:
+	PUTBACK;
+	EVP_RAND_do_all_provided(NULL, EVP_RAND_provided_callback, iTHX);
+	SPAGAIN;
+
+SV* EVP_RAND_get_params(Crypt::OpenSSL3::Random rand)
+CODE:
+	RETVAL = &PL_sv_undef;
+	OSSL_PARAM* params = params_dup(EVP_RAND_gettable_params(rand));
+	if (EVP_RAND_get_params(rand, params)) {
+		HV* hash = reallocate_get_params(params);
+		if (EVP_RAND_get_params(rand, params))
+			RETVAL = newRV_inc((SV*)hash);
+	}
+OUTPUT:
+	RETVAL
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random	PREFIX = RAND_
+
+NO_OUTPUT int RAND_bytes(SV* class, OUTLIST SV* buffer, int num)
+INIT:
+	char* ptr = make_buffer(&buffer, num);
+	set_buffer_length(buffer, num);
+C_ARGS: ptr, num
+
+NO_OUTPUT int RAND_priv_bytes(SV* class, OUTLIST SV* buffer, int num);
+INIT:
+	char* ptr = make_buffer(&buffer, num);
+	set_buffer_length(buffer, num);
+C_ARGS: ptr, num
+
+Crypt::OpenSSL3::Random::Context RAND_get_primary(SV* class)
+POSTCALL:
+	EVP_RAND_CTX_up_ref(RETVAL);
+
+Crypt::OpenSSL3::Random::Context RAND_get_public(SV* class)
+POSTCALL:
+	EVP_RAND_CTX_up_ref(RETVAL);
+
+Crypt::OpenSSL3::Random::Context RAND_get_private(SV* class)
+POSTCALL:
+	EVP_RAND_CTX_up_ref(RETVAL);
+
+bool RAND_set_public(SV* class, Crypt::OpenSSL3::Random::Context rand)
+POSTCALL:
+	if (RETVAL)
+		EVP_RAND_CTX_up_ref(rand);
+
+bool RAND_set_private(SV* class, Crypt::OpenSSL3::Random::Context rand)
+POSTCALL:
+	if (RETVAL)
+		EVP_RAND_CTX_up_ref(rand);
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random::Context	PREFIX = EVP_RAND_CTX_
+
+Crypt::OpenSSL3::Random::Context EVP_RAND_CTX_new(SV* class, Crypt::OpenSSL3::Random type, Crypt::OpenSSL3::Random::Context parent = NULL)
+C_ARGS: type, parent
+
+Crypt::OpenSSL3::Random EVP_RAND_CTX_get_rand(Crypt::OpenSSL3::Random::Context ctx)
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random::Context	PREFIX = EVP_RAND_
+
+bool EVP_RAND_instantiate(Crypt::OpenSSL3::Random::Context ctx, unsigned int strength, int prediction_resistance, const unsigned char *pstr, size_t length(pstr), SV* args = undef)
+INIT:
+	const OSSL_PARAM* params = params_for(EVP_RAND_CTX_settable_params(ctx), args);
+C_ARGS: ctx, strength, prediction_resistance, pstr, STRLEN_length_of_pstr, params
+
+bool EVP_RAND_uninstantiate(Crypt::OpenSSL3::Random::Context ctx)
+
+NO_OUTPUT int EVP_RAND_generate(Crypt::OpenSSL3::Random::Context ctx, OUTLIST SV* buffer, size_t outlen, unsigned int strength, int prediction_resistance, const unsigned char *addin, size_t length(addin))
+INIT:
+	char* ptr = make_buffer(&buffer, outlen);
+C_ARGS: ctx, ptr, outlen, strength, prediction_resistance, addin, STRLEN_length_of_addin
+POSTCALL:
+	if (RETVAL)
+		set_buffer_length(buffer, outlen);
+
+int EVP_RAND_reseed(Crypt::OpenSSL3::Random::Context ctx, int prediction_resistance, const unsigned char *ent, size_t ent_len, const unsigned char *addin, size_t addin_len)
+
+NO_OUTPUT int EVP_RAND_nonce(Crypt::OpenSSL3::Random::Context ctx, OUTLIST SV* buffer, size_t outlen)
+INIT:
+	char* ptr = make_buffer(&buffer, outlen);
+C_ARGS: ctx, ptr, outlen
+POSTCALL:
+	set_buffer_length(buffer, RETVAL);
+
+bool EVP_RAND_enable_locking(Crypt::OpenSSL3::Random::Context ctx)
+
+bool EVP_RAND_verify_zeroization(Crypt::OpenSSL3::Random::Context ctx)
+
+unsigned int EVP_RAND_get_strength(Crypt::OpenSSL3::Random::Context ctx)
+
+int EVP_RAND_get_state(Crypt::OpenSSL3::Random::Context ctx)
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Cipher	PREFIX = EVP_CIPHER_
