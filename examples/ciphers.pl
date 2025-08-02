@@ -17,16 +17,18 @@ $context->init($cipher, $key, $iv, 1, { padding => 0 }) or die;
 
 my $plain = "Hello, World!";
 
-$context->update(my $enc1, $plain) or die;
-$context->final(my $enc2) or die;
+my $enc1 = $context->update($plain) // die;
+my $enc2 = $context->final // die;
 my $ciphertext = $enc1 . $enc2;
 say length $ciphertext;
+
+print Dumper($context->get_params);
 
 my $context2 = Crypt::OpenSSL3::Cipher::Context->new;
 $context2->init($cipher, $key, $iv, 0) or die;
 
-$context2->update(my $dec1, $ciphertext) or die;
-$context2->final(my $dec2) or die;
+my $dec1 = $context2->update($ciphertext) // die;
+my $dec2 = $context2->final // die;
 
 my $decoded = $dec1 . $dec2;
 
