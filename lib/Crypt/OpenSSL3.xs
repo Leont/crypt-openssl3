@@ -373,8 +373,7 @@ Crypt::OpenSSL3::SSL::Protocol DTLS_client(SV* class)
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BIO	PREFIX = BIO_
 
 Crypt::OpenSSL3::BIO BIO_new_file(SV* class, const char *filename, const char *mode)
-C_ARGS:
-	filename, mode
+C_ARGS: filename, mode
 
 Crypt::OpenSSL3::BIO BIO_new_mem(SV* class);
 
@@ -536,12 +535,10 @@ CLEANUP:
 	OPENSSL_free(RETVAL);
 
 int BN_hex2bn(Crypt::OpenSSL3::BigNum a, const char *str)
-C_ARGS:
-	&a, str
+C_ARGS: &a, str
 
 int BN_dec2bn(Crypt::OpenSSL3::BigNum a, const char *str)
-C_ARGS:
-	&a, str
+C_ARGS: &a, str
 
 bool BN_print(Crypt::OpenSSL3::BIO fp, Crypt::OpenSSL3::BigNum a)
 
@@ -549,22 +546,18 @@ bool BN_print(Crypt::OpenSSL3::BIO fp, Crypt::OpenSSL3::BigNum a)
 NO_OUTPUT int BN_bn2mpi(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out)
 INIT:
 	char* ptr = make_buffer(&out, BN_bn2mpi(a, NULL));
-C_ARGS:
-	a, ptr
+C_ARGS: a, ptr
 POSTCALL:
 	set_buffer_length(out, RETVAL);
 
 Crypt::OpenSSL3::BigNum BN_mpi2bn(unsigned char *s, int len)
-C_ARGS:
-	s, len, NULL
+C_ARGS: s, len, NULL
 
 bool BN_check_prime(Crypt::OpenSSL3::BigNum p, Crypt::OpenSSL3::BigNum::Context ctx)
-C_ARGS:
-	p, ctx, NULL
+C_ARGS: p, ctx, NULL
 
 bool BN_generate_prime(Crypt::OpenSSL3::BigNum ret, int bits, int safe, Crypt::OpenSSL3::BigNum add, Crypt::OpenSSL3::BigNum rem, Crypt::OpenSSL3::BigNum::Context ctx)
-C_ARGS:
-	ret, bits, safe, add, rem, NULL, ctx
+C_ARGS: ret, bits, safe, add, rem, NULL, ctx
 
 bool BN_set_word(Crypt::OpenSSL3::BigNum a, UV w)
 
@@ -672,8 +665,7 @@ int X509_NAME_entry_count(Crypt::OpenSSL3::X509::Name name)
 Crypt::OpenSSL3::X509::Name::Entry X509_NAME_get_entry(Crypt::OpenSSL3::X509::Name name, int loc)
 
 char* X509_NAME_oneline(Crypt::OpenSSL3::X509::Name a)
-	C_ARGS:
-		a, NULL, 0
+	C_ARGS: a, NULL, 0
 	CLEANUP:
 		if (RETVAL)
 			OPENSSL_free(RETVAL);
@@ -760,8 +752,7 @@ bool SSL_CTX_use_PrivateKey_ASN1(int pk, Crypt::OpenSSL3::SSL::Context ctx, unsi
 bool SSL_CTX_use_PrivateKey_file(Crypt::OpenSSL3::SSL::Context ctx, const char *file, int type)
 
 void SSL_CTX_set_verify(Crypt::OpenSSL3::SSL::Context ctx, int mode)
-C_ARGS:
-	ctx, mode, NULL
+C_ARGS: ctx, mode, NULL
 
 void SSL_CTX_set_verify_depth(Crypt::OpenSSL3::SSL::Context ctx, int depth)
 
@@ -817,8 +808,7 @@ BOOT:
 }
 
 Crypt::OpenSSL3::SSL SSL_new(SV* class, Crypt::OpenSSL3::SSL::Context context)
-C_ARGS:
-	context
+C_ARGS: context
 
 Crypt::OpenSSL3::SSL::Protocol SSL_get_ssl_method(Crypt::OpenSSL3::SSL ssl)
 
@@ -857,8 +847,7 @@ bool SSL_use_PrivateKey_ASN1(int pk, Crypt::OpenSSL3::SSL ssl, const char *d, lo
 bool SSL_use_PrivateKey_file(Crypt::OpenSSL3::SSL ssl, const char *file, int type)
 
 void SSL_set_verify(Crypt::OpenSSL3::SSL ssl, int mode)
-C_ARGS:
-	ssl, mode, NULL
+C_ARGS: ssl, mode, NULL
 
 void SSL_set_verify_depth(Crypt::OpenSSL3::SSL ssl, int depth)
 
@@ -903,16 +892,14 @@ bool SSL_is_server(Crypt::OpenSSL3::SSL ssl)
 int SSL_read(Crypt::OpenSSL3::SSL ssl, SV* buffer, size_t size)
 INIT:
 	char* ptr = grow_buffer(buffer, size);
-C_ARGS:
-	ssl, ptr, size
+C_ARGS: ssl, ptr, size
 POSTCALL:
 	set_buffer_length(buffer, RETVAL);
 
 int SSL_peek(Crypt::OpenSSL3::SSL ssl, SV* buffer, size_t size)
 INIT:
 	char* ptr = grow_buffer(buffer, size);
-C_ARGS:
-	ssl, ptr, size
+C_ARGS: ssl, ptr, size
 POSTCALL:
 	set_buffer_length(buffer, RETVAL);
 
@@ -958,8 +945,7 @@ POSTCALL:
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Cipher	PREFIX = EVP_CIPHER_
 
 Crypt::OpenSSL3::Cipher EVP_CIPHER_fetch(SV* class, const char* algorithm, const char* properties = "")
-C_ARGS:
-	NULL, algorithm, properties
+C_ARGS: NULL, algorithm, properties
 POSTCALL:
 	if (RETVAL == NULL)
 		XSRETURN_UNDEF;
@@ -1044,8 +1030,7 @@ OUTPUT:
 bool EVP_CIPHER_CTX_set_params(Crypt::OpenSSL3::Cipher::Context ctx, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_CIPHER_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, params
+C_ARGS: ctx, params
 
 SV* EVP_CIPHER_CTX_get_params(Crypt::OpenSSL3::Cipher::Context ctx)
 CODE:
@@ -1109,8 +1094,7 @@ bool EVP_CIPHER_CTX_set_aead_tag(Crypt::OpenSSL3::Cipher::Context ctx, char* ptr
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MD	PREFIX = EVP_MD_
 
 Crypt::OpenSSL3::MD EVP_MD_fetch(SV* class, const char* algorithm, const char* properties = "")
-C_ARGS:
-	NULL, algorithm, properties
+C_ARGS: NULL, algorithm, properties
 POSTCALL:
 	if (RETVAL == NULL)
 		XSRETURN_UNDEF;
@@ -1177,8 +1161,7 @@ bool EVP_MD_CTX_reset(Crypt::OpenSSL3::MD::Context ctx)
 bool EVP_MD_CTX_init(Crypt::OpenSSL3::MD::Context ctx, Crypt::OpenSSL3::MD type, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_MD_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, type, params
+C_ARGS: ctx, type, params
 
 bool EVP_MD_CTX_update(Crypt::OpenSSL3::MD::Context ctx, const char *d, size_t length(d))
 
@@ -1210,8 +1193,7 @@ POSTCALL:
 bool EVP_MD_CTX_set_params(Crypt::OpenSSL3::MD::Context ctx, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_MD_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, params
+C_ARGS: ctx, params
 
 SV* EVP_MD_CTX_get_params(Crypt::OpenSSL3::MD::Context ctx)
 CODE:
@@ -1251,8 +1233,7 @@ int EVP_MD_CTX_get_type(Crypt::OpenSSL3::MD::Context ctx)
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC	PREFIX = EVP_MAC_
 
 Crypt::OpenSSL3::MAC EVP_MAC_fetch(SV* class, const char* algorithm, const char* properties = "")
-C_ARGS:
-	NULL, algorithm, properties
+C_ARGS: NULL, algorithm, properties
 POSTCALL:
 	if (RETVAL == NULL)
 		XSRETURN_UNDEF;
@@ -1293,8 +1274,7 @@ OUTPUT:
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC::Context	PREFIX = EVP_MAC_CTX_
 
 Crypt::OpenSSL3::MAC::Context EVP_MAC_CTX_new(SV* class, Crypt::OpenSSL3::MAC ctx)
-C_ARGS:
-	ctx
+C_ARGS: ctx
 
 Crypt::OpenSSL3::MAC EVP_MAC_CTX_get_mac(Crypt::OpenSSL3::MAC::Context ctx);
 POSTCALL:
@@ -1307,8 +1287,7 @@ size_t EVP_MAC_CTX_get_block_size(Crypt::OpenSSL3::MAC::Context ctx)
 bool EVP_MAC_CTX_set_params(Crypt::OpenSSL3::MAC::Context ctx, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_MAC_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, params
+C_ARGS: ctx, params
 
 SV* EVP_MAC_CTX_get_params(Crypt::OpenSSL3::MAC::Context ctx)
 CODE:
@@ -1329,8 +1308,7 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC::Context	PREFIX = EVP_MA
 bool EVP_MAC_init(Crypt::OpenSSL3::MAC::Context ctx, const unsigned char *key, size_t length(key), SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_MAC_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, key, STRLEN_length_of_key, params
+C_ARGS: ctx, key, STRLEN_length_of_key, params
 
 bool EVP_MAC_update(Crypt::OpenSSL3::MAC::Context ctx, const unsigned char *data, size_t length(data))
 
@@ -1356,8 +1334,7 @@ POSTCALL:
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF	PREFIX = EVP_KDF_
 
 Crypt::OpenSSL3::KDF EVP_KDF_fetch(SV* class, const char* algorithm, const char* properties = "")
-C_ARGS:
-	NULL, algorithm, properties
+C_ARGS: NULL, algorithm, properties
 POSTCALL:
 	if (RETVAL == NULL)
 		XSRETURN_UNDEF;
@@ -1397,8 +1374,7 @@ OUTPUT:
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF::Context	PREFIX = EVP_KDF_CTX_
 
 Crypt::OpenSSL3::KDF::Context EVP_KDF_CTX_new(SV* class, Crypt::OpenSSL3::KDF ctx)
-C_ARGS:
-	ctx
+C_ARGS: ctx
 
 void EVP_KDF_CTX_reset(Crypt::OpenSSL3::KDF::Context ctx)
 
@@ -1407,8 +1383,7 @@ size_t EVP_KDF_CTX_get_kdf_size(Crypt::OpenSSL3::KDF::Context ctx)
 bool EVP_KDF_CTX_set_params(Crypt::OpenSSL3::KDF::Context ctx, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_KDF_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, params
+C_ARGS: ctx, params
 
 SV* EVP_KDF_CTX_get_params(Crypt::OpenSSL3::KDF::Context ctx)
 CODE:
@@ -1439,8 +1414,7 @@ POSTCALL:
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Signature	PREFIX = EVP_SIGNATURE_
 
 Crypt::OpenSSL3::Signature EVP_SIGNATURE_fetch(SV* class, const char* algorithm, const char* properties = "")
-C_ARGS:
-	NULL, algorithm, properties
+C_ARGS: NULL, algorithm, properties
 POSTCALL:
 	if (RETVAL == NULL)
 		XSRETURN_UNDEF;
@@ -1470,12 +1444,10 @@ Crypt::OpenSSL3::PKey EVP_PKEY_new(SV* class)
 C_ARGS:
 
 Crypt::OpenSSL3::PKey EVP_PKEY_new_raw_private_key_ex(SV* class, const char *keytype, const char *propq, const unsigned char *key, size_t length(key))
-C_ARGS:
-	NULL, keytype, propq, key, STRLEN_length_of_key
+C_ARGS: NULL, keytype, propq, key, STRLEN_length_of_key
 
 Crypt::OpenSSL3::PKey EVP_PKEY_new_raw_public_key_ex(SV* class, const char *keytype, const char *propq, const unsigned char *key, size_t length(key))
-C_ARGS:
-	NULL, keytype, propq, key, STRLEN_length_of_key
+C_ARGS: NULL, keytype, propq, key, STRLEN_length_of_key
 
 NO_OUTPUT void EVP_PKEY_get_raw_private_key(Crypt::OpenSSL3::PKey pkey, OUTLIST SV* key)
 CODE:
@@ -1531,8 +1503,7 @@ const char *EVP_PKEY_get_type_name(Crypt::OpenSSL3::PKey key)
 const char *EVP_PKEY_get_description(Crypt::OpenSSL3::PKey key)
 
 bool EVP_PKEY_digestsign_supports_digest(Crypt::OpenSSL3::PKey pkey, const char *name, const char *propq)
-C_ARGS:
-	pkey, NULL, name, propq
+C_ARGS: pkey, NULL, name, propq
 
 NO_OUTPUT int EVP_PKEY_get_default_digest_name(Crypt::OpenSSL3::PKey pkey, OUTLIST SV* mdname)
 INIT:
@@ -1584,8 +1555,7 @@ bool EVP_PKEY_get_octet_string_param(Crypt::OpenSSL3::PKey pkey, const char *key
 bool EVP_PKEY_set_params(Crypt::OpenSSL3::PKey pkey, SV* args = undef)
 INIT:
 	OSSL_PARAM* params = (OSSL_PARAM*)params_for(EVP_PKEY_settable_params(pkey), args);
-C_ARGS:
-	pkey, params
+C_ARGS: pkey, params
 
 bool EVP_PKEY_set_int_param(Crypt::OpenSSL3::PKey pkey, const char *key_name, int in)
 
@@ -1598,40 +1568,32 @@ bool EVP_PKEY_set_utf8_string_param(Crypt::OpenSSL3::PKey pkey, const char *key_
 bool EVP_PKEY_set_octet_string_param(Crypt::OpenSSL3::PKey pkey, const char *key_name, const unsigned char *buf, size_t bsize)
 
 bool EVP_PKEY_print_public(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::PKey pkey, int indent)
-C_ARGS:
-	out, pkey, indent, NULL
+C_ARGS: out, pkey, indent, NULL
 
 bool EVP_PKEY_print_private(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::PKey pkey, int indent)
-C_ARGS:
-	out, pkey, indent, NULL
+C_ARGS: out, pkey, indent, NULL
 
 bool EVP_PKEY_print_params(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::PKey pkey, int indent)
-C_ARGS:
-	out, pkey, indent, NULL
+C_ARGS: out, pkey, indent, NULL
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKey::Context	PREFIX = EVP_PKEY_CTX_
 
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new(SV* class, Crypt::OpenSSL3::PKey pkey)
-C_ARGS:
-	pkey, NULL
+C_ARGS: pkey, NULL
 
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_id(SV* class, int id)
-C_ARGS:
-	id, NULL
+C_ARGS: id, NULL
 
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_from_name(SV* class, const char *name, const char *propquery = "")
-C_ARGS:
-	NULL, name, propquery
+C_ARGS: NULL, name, propquery
 
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_from_pkey(SV* class, Crypt::OpenSSL3::PKey pkey, const char *propquery = "")
-C_ARGS:
-	NULL, pkey, propquery
+C_ARGS: NULL, pkey, propquery
 
 bool EVP_PKEY_CTX_set_params(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, params
+C_ARGS: ctx, params
 
 SV* EVP_PKEY_CTX_get_params(Crypt::OpenSSL3::PKey::Context ctx)
 CODE:
@@ -1651,8 +1613,7 @@ bool EVP_PKEY_CTX_is_a(Crypt::OpenSSL3::PKey::Context ctx, const char *keytype)
 bool EVP_PKEY_CTX_set_signature_md(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::MD md)
 
 void EVP_PKEY_CTX_get_signature_md(Crypt::OpenSSL3::PKey::Context ctx, OUTLIST Crypt::OpenSSL3::MD md)
-C_ARGS:
-	ctx, (const EVP_MD**)&md
+C_ARGS: ctx, (const EVP_MD**)&md
 
 bool EVP_PKEY_CTX_set_mac_key(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *key, int len)
 
@@ -1661,8 +1622,7 @@ bool EVP_PKEY_CTX_set_group_name(Crypt::OpenSSL3::PKey::Context ctx, const char 
 NO_OUTPUT bool EVP_PKEY_CTX_get_group_name(Crypt::OpenSSL3::PKey::Context ctx, OUTLIST SV* name, size_t size = 32)
 INIT:
 	char* ptr = make_buffer(&name, size);
-C_ARGS:
-	ctx, ptr, size + 1
+C_ARGS: ctx, ptr, size + 1
 POSTCALL:
 	if (RETVAL)
 		set_buffer_length(name, strlen(ptr));
@@ -1687,8 +1647,7 @@ bool EVP_PKEY_CTX_set_rsa_mgf1_md_name(Crypt::OpenSSL3::PKey::Context ctx, const
 bool EVP_PKEY_CTX_set_rsa_mgf1_md(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::MD md)
 
 bool EVP_PKEY_CTX_get_rsa_mgf1_md(Crypt::OpenSSL3::PKey::Context ctx, OUT Crypt::OpenSSL3::MD md)
-C_ARGS:
-	ctx, (const EVP_MD**)&md
+C_ARGS: ctx, (const EVP_MD**)&md
 
 bool EVP_PKEY_CTX_get_rsa_mgf1_md_name(Crypt::OpenSSL3::PKey::Context ctx, char *name, size_t namelen)
 
@@ -1697,8 +1656,7 @@ bool EVP_PKEY_CTX_set_rsa_oaep_md_name(Crypt::OpenSSL3::PKey::Context ctx, const
 bool EVP_PKEY_CTX_set_rsa_oaep_md(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::MD md)
 
 bool EVP_PKEY_CTX_get_rsa_oaep_md(Crypt::OpenSSL3::PKey::Context ctx, OUT Crypt::OpenSSL3::MD md)
-C_ARGS:
-	ctx, (const EVP_MD**)&md
+C_ARGS: ctx, (const EVP_MD**)&md
 
 bool EVP_PKEY_CTX_get_rsa_oaep_md_name(Crypt::OpenSSL3::PKey::Context ctx, char *name, size_t namelen)
 
@@ -1753,8 +1711,7 @@ bool EVP_PKEY_CTX_get_dh_kdf_oid(Crypt::OpenSSL3::PKey::Context ctx, OUT Crypt::
 bool EVP_PKEY_CTX_set_dh_kdf_md(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::MD md)
 
 bool EVP_PKEY_CTX_get_dh_kdf_md(Crypt::OpenSSL3::PKey::Context ctx, OUT Crypt::OpenSSL3::MD md)
-C_ARGS:
-	ctx, (const EVP_MD**)&md
+C_ARGS: ctx, (const EVP_MD**)&md
 
 bool EVP_PKEY_CTX_set_dh_kdf_outlen(Crypt::OpenSSL3::PKey::Context ctx, int len)
 
@@ -1776,8 +1733,7 @@ bool EVP_PKEY_CTX_get_ecdh_kdf_type(Crypt::OpenSSL3::PKey::Context ctx)
 bool EVP_PKEY_CTX_set_ecdh_kdf_md(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::MD md)
 
 bool EVP_PKEY_CTX_get_ecdh_kdf_md(Crypt::OpenSSL3::PKey::Context ctx, OUT Crypt::OpenSSL3::MD md)
-C_ARGS:
-	ctx, (const EVP_MD**)&md
+C_ARGS: ctx, (const EVP_MD**)&md
 
 bool EVP_PKEY_CTX_set_ecdh_kdf_outlen(Crypt::OpenSSL3::PKey::Context ctx, int len)
 
@@ -1831,14 +1787,12 @@ bool EVP_PKEY_eq(Crypt::OpenSSL3::PKey a, Crypt::OpenSSL3::PKey b)
 bool EVP_PKEY_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, params
+C_ARGS: ctx, params
 
 bool EVP_PKEY_auth_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpriv, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, authpriv, params
+C_ARGS: ctx, authpriv, params
 
 void EVP_PKEY_encapsulate(Crypt::OpenSSL3::PKey::Context ctx, OUTLIST SV* wrapped_key, OUTLIST SV* gen_key)
 CODE:
@@ -1858,14 +1812,12 @@ CODE:
 bool EVP_PKEY_decapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, params
+C_ARGS: ctx, params
 
 bool EVP_PKEY_auth_decapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpub, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, authpub, params
+C_ARGS: ctx, authpub, params
 
 SV* EVP_PKEY_decapsulate(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *wrapped, size_t length(wrapped))
 CODE:
@@ -1884,8 +1836,7 @@ OUTPUT:
 bool EVP_PKEY_encrypt_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, params
+C_ARGS: ctx, params
 
 SV* EVP_PKEY_encrypt(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *in, size_t length(in))
 CODE:
@@ -1905,8 +1856,7 @@ OUTPUT:
 bool EVP_PKEY_decrypt_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, params
+C_ARGS: ctx, params
 
 SV* EVP_PKEY_decrypt(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *in, size_t length(in))
 CODE:
@@ -1926,8 +1876,7 @@ OUTPUT:
 bool EVP_PKEY_derive_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, params
+C_ARGS: ctx, params
 
 bool EVP_PKEY_derive_set_peer(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey peer, bool validate_peer = false)
 
@@ -1949,14 +1898,12 @@ OUTPUT:
 bool EVP_PKEY_sign_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef, Crypt::OpenSSL3::Signature algo = NULL)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, algo, params
+C_ARGS: ctx, algo, params
 
 bool EVP_PKEY_sign_message_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef, Crypt::OpenSSL3::Signature algo = NULL)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, algo, params
+C_ARGS: ctx, algo, params
 
 bool EVP_PKEY_sign_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
 
@@ -1992,14 +1939,12 @@ OUTPUT:
 bool EVP_PKEY_verify_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef, Crypt::OpenSSL3::Signature algo = NULL)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, algo, params
+C_ARGS: ctx, algo, params
 
 bool EVP_PKEY_verify_message_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef, Crypt::OpenSSL3::Signature algo = NULL)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS:
-	ctx, algo, params
+C_ARGS: ctx, algo, params
 
 bool EVP_PKEY_verify_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
 
