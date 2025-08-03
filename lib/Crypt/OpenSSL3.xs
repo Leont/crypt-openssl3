@@ -298,6 +298,14 @@ static HV* S_reallocate_get_params(pTHX_ OSSL_PARAM* gettable) {
 }
 #define reallocate_get_params(params) S_reallocate_get_params(aTHX_ params)
 
+#define GENERATE_GET_PARAMS(prefix, arg)\
+	RETVAL = &PL_sv_undef;\
+	OSSL_PARAM* params = params_dup(prefix ## _gettable_params(arg));\
+	if (prefix ## _get_params(arg, params)) {\
+		HV* hash = reallocate_get_params(params);\
+		if (prefix ## _get_params(arg, params))\
+			RETVAL = newRV_inc((SV*)hash);\
+	}
 
 #ifdef MULTIPLICITY
 #define iTHX aTHX
@@ -1008,13 +1016,7 @@ PPCODE:
 
 SV* EVP_RAND_get_params(Crypt::OpenSSL3::Random rand)
 CODE:
-	RETVAL = &PL_sv_undef;
-	OSSL_PARAM* params = params_dup(EVP_RAND_gettable_params(rand));
-	if (EVP_RAND_get_params(rand, params)) {
-		HV* hash = reallocate_get_params(params);
-		if (EVP_RAND_get_params(rand, params))
-			RETVAL = newRV_inc((SV*)hash);
-	}
+	GENERATE_GET_PARAMS(EVP_RAND, rand)
 OUTPUT:
 	RETVAL
 
@@ -1138,13 +1140,7 @@ PPCODE:
 
 SV* EVP_CIPHER_get_params(Crypt::OpenSSL3::Cipher cipher)
 CODE:
-	RETVAL = &PL_sv_undef;
-	OSSL_PARAM* params = params_dup(EVP_CIPHER_gettable_params(cipher));
-	if (EVP_CIPHER_get_params(cipher, params)) {
-		HV* hash = reallocate_get_params(params);
-		if (EVP_CIPHER_get_params(cipher, params))
-			RETVAL = newRV_inc((SV*)hash);
-	}
+	GENERATE_GET_PARAMS(EVP_CIPHER, cipher)
 OUTPUT:
 	RETVAL
 
@@ -1190,13 +1186,7 @@ C_ARGS: ctx, params
 
 SV* EVP_CIPHER_CTX_get_params(Crypt::OpenSSL3::Cipher::Context ctx)
 CODE:
-	RETVAL = &PL_sv_undef;
-	OSSL_PARAM* params = params_dup(EVP_CIPHER_CTX_gettable_params(ctx));
-	if (EVP_CIPHER_CTX_get_params(ctx, params)) {
-		HV* hash = reallocate_get_params(params);
-		if (EVP_CIPHER_CTX_get_params(ctx, params))
-			RETVAL = newRV_inc((SV*)hash);
-	}
+	GENERATE_GET_PARAMS(EVP_CIPHER_CTX, ctx)
 OUTPUT:
 	RETVAL
 
@@ -1287,13 +1277,7 @@ bool EVP_MD_xof(Crypt::OpenSSL3::MD md)
 
 SV* EVP_MD_get_params(Crypt::OpenSSL3::MD md)
 CODE:
-	RETVAL = &PL_sv_undef;
-	OSSL_PARAM* params = params_dup(EVP_MD_gettable_params(md));
-	if (EVP_MD_get_params(md, params)) {
-		HV* hash = reallocate_get_params(params);
-		if (EVP_MD_get_params(md, params))
-			RETVAL = newRV_inc((SV*)hash);
-	}
+	GENERATE_GET_PARAMS(EVP_MD, md)
 OUTPUT:
 	RETVAL
 
@@ -1353,13 +1337,7 @@ C_ARGS: ctx, params
 
 SV* EVP_MD_CTX_get_params(Crypt::OpenSSL3::MD::Context ctx)
 CODE:
-	RETVAL = &PL_sv_undef;
-	OSSL_PARAM* params = params_dup(EVP_MD_CTX_gettable_params(ctx));
-	if (EVP_MD_CTX_get_params(ctx, params)) {
-		HV* hash = reallocate_get_params(params);
-		if (EVP_MD_CTX_get_params(ctx, params))
-			RETVAL = newRV_inc((SV*)hash);
-	}
+	GENERATE_GET_PARAMS(EVP_MD_CTX, ctx)
 OUTPUT:
 	RETVAL
 
@@ -1414,14 +1392,7 @@ PPCODE:
 
 SV* EVP_MAC_get_params(Crypt::OpenSSL3::MAC mac)
 CODE:
-	RETVAL = &PL_sv_undef;
-	OSSL_PARAM* params = params_dup(EVP_MAC_gettable_params(mac));
-	int result = EVP_MAC_get_params(mac, params);
-	if (result) {
-		HV* hash = reallocate_get_params(params);
-		if (EVP_MAC_get_params(mac, params))
-			RETVAL = newRV_inc((SV*)hash);
-	}
+	GENERATE_GET_PARAMS(EVP_MAC, mac)
 OUTPUT:
 	RETVAL
 
@@ -1447,13 +1418,7 @@ C_ARGS: ctx, params
 
 SV* EVP_MAC_CTX_get_params(Crypt::OpenSSL3::MAC::Context ctx)
 CODE:
-	RETVAL = &PL_sv_undef;
-	OSSL_PARAM* params = params_dup(EVP_MAC_CTX_gettable_params(ctx));
-	if (EVP_MAC_CTX_get_params(ctx, params)) {
-		HV* hash = reallocate_get_params(params);
-		if (EVP_MAC_CTX_get_params(ctx, params))
-			RETVAL = newRV_inc((SV*)hash);
-	}
+	GENERATE_GET_PARAMS(EVP_MAC_CTX, ctx)
 OUTPUT:
 	RETVAL
 
@@ -1515,14 +1480,7 @@ PPCODE:
 
 SV* EVP_KDF_get_params(Crypt::OpenSSL3::KDF kdf)
 CODE:
-	RETVAL = &PL_sv_undef;
-	OSSL_PARAM* params = params_dup(EVP_KDF_gettable_params(kdf));
-	int result = EVP_KDF_get_params(kdf, params);
-	if (result) {
-		HV* hash = reallocate_get_params(params);
-		if (EVP_KDF_get_params(kdf, params))
-			RETVAL = newRV_inc((SV*)hash);
-	}
+	GENERATE_GET_PARAMS(EVP_KDF, kdf)
 OUTPUT:
 	RETVAL
 
@@ -1543,13 +1501,7 @@ C_ARGS: ctx, params
 
 SV* EVP_KDF_CTX_get_params(Crypt::OpenSSL3::KDF::Context ctx)
 CODE:
-	RETVAL = &PL_sv_undef;
-	OSSL_PARAM* params = params_dup(EVP_KDF_CTX_gettable_params(ctx));
-	if (EVP_KDF_CTX_get_params(ctx, params)) {
-		HV* hash = reallocate_get_params(params);
-		if (EVP_KDF_CTX_get_params(ctx, params))
-			RETVAL = newRV_inc((SV*)hash);
-	}
+	GENERATE_GET_PARAMS(EVP_KDF_CTX, ctx)
 OUTPUT:
 	RETVAL
 
@@ -1688,13 +1640,7 @@ CLEANUP:
 
 SV* EVP_PKEY_get_params(Crypt::OpenSSL3::PKey pkey)
 CODE:
-	RETVAL = &PL_sv_undef;
-	OSSL_PARAM* params = params_dup(EVP_PKEY_gettable_params(pkey));
-	if (EVP_PKEY_get_params(pkey, params)) {
-		HV* hash = reallocate_get_params(params);
-		if (EVP_PKEY_get_params(pkey, params))
-			RETVAL = newRV_inc((SV*)hash);
-	}
+	GENERATE_GET_PARAMS(EVP_PKEY, pkey)
 OUTPUT:
 	RETVAL
 
@@ -1753,13 +1699,7 @@ C_ARGS: ctx, params
 
 SV* EVP_PKEY_CTX_get_params(Crypt::OpenSSL3::PKey::Context ctx)
 CODE:
-	RETVAL = &PL_sv_undef;
-	OSSL_PARAM* params = params_dup(EVP_PKEY_CTX_gettable_params(ctx));
-	if (EVP_PKEY_CTX_get_params(ctx, params)) {
-		HV* hash = reallocate_get_params(params);
-		if (EVP_PKEY_CTX_get_params(ctx, params))
-			RETVAL = newRV_inc((SV*)hash);
-	}
+	GENERATE_GET_PARAMS(EVP_PKEY_CTX, ctx)
 OUTPUT:
 	RETVAL
 
