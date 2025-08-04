@@ -1,4 +1,4 @@
-package Crypt::OpenSSL3::SSL::Protocol;
+package Crypt::OpenSSL3::SSL::Method;
 
 use strict;
 use warnings;

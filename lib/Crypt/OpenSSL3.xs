@@ -76,7 +76,7 @@ typedef long Crypt__OpenSSL3__X509__VerifyResult;
 
 COUNTING_TYPE(BIO, BIO)
 
-SIMPLE_TYPE(SSL_METHOD, SSL__Protocol, const)
+SIMPLE_TYPE(SSL_METHOD, SSL__Method, const)
 COUNTING_TYPE(SSL_CTX, SSL__Context)
 COUNTING_TYPE(SSL, SSL)
 COUNTING_TYPE(SSL_SESSION, SSL__Session)
@@ -375,7 +375,7 @@ Crypt::OpenSSL3::X509::Name	T_MAGICEXT
 Crypt::OpenSSL3::X509::Name::Entry	T_MAGICEXT
 Crypt::OpenSSL3::X509::VerifyResult T_INTOBJ
 
-Crypt::OpenSSL3::SSL::Protocol T_MAGICEXT
+Crypt::OpenSSL3::SSL::Method T_MAGICEXT
 Crypt::OpenSSL3::SSL::Context T_MAGICEXT
 Crypt::OpenSSL3::SSL T_MAGICEXT
 Crypt::OpenSSL3::SSL::Session T_MAGICEXT
@@ -723,23 +723,23 @@ bool X509_STORE_load_locations(Crypt::OpenSSL3::X509::Store store, const char *f
 bool X509_STORE_set_default_paths(Crypt::OpenSSL3::X509::Store store)
 
 
-MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Protocol	PREFIX = SSL_Method_
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Method	PREFIX = SSL_Method_
 
-Crypt::OpenSSL3::SSL::Protocol TLS(SV* class)
+Crypt::OpenSSL3::SSL::Method TLS(SV* class)
 
-Crypt::OpenSSL3::SSL::Protocol TLS_server(SV* class)
+Crypt::OpenSSL3::SSL::Method TLS_server(SV* class)
 
-Crypt::OpenSSL3::SSL::Protocol TLS_client(SV* class)
+Crypt::OpenSSL3::SSL::Method TLS_client(SV* class)
 
-Crypt::OpenSSL3::SSL::Protocol DTLS(SV* class)
+Crypt::OpenSSL3::SSL::Method DTLS(SV* class)
 
-Crypt::OpenSSL3::SSL::Protocol DTLS_server(SV* class)
+Crypt::OpenSSL3::SSL::Method DTLS_server(SV* class)
 
-Crypt::OpenSSL3::SSL::Protocol DTLS_client(SV* class)
+Crypt::OpenSSL3::SSL::Method DTLS_client(SV* class)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Context	PREFIX = SSL_CTX_
 
-Crypt::OpenSSL3::SSL::Context SSL_CTX_new(SV* class, Crypt::OpenSSL3::SSL::Protocol method)
+Crypt::OpenSSL3::SSL::Context SSL_CTX_new(SV* class, Crypt::OpenSSL3::SSL::Method method)
 C_ARGS: method
 
 long SSL_CTX_set_options(Crypt::OpenSSL3::SSL::Context ctx, long options)
@@ -855,7 +855,7 @@ BOOT:
 Crypt::OpenSSL3::SSL SSL_new(SV* class, Crypt::OpenSSL3::SSL::Context context)
 C_ARGS: context
 
-Crypt::OpenSSL3::SSL::Protocol SSL_get_ssl_method(Crypt::OpenSSL3::SSL ssl)
+Crypt::OpenSSL3::SSL::Method SSL_get_ssl_method(Crypt::OpenSSL3::SSL ssl)
 
 long SSL_set_options(Crypt::OpenSSL3::SSL ssl, long options)
 
