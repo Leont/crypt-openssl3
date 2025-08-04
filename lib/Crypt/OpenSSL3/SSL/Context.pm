@@ -9,6 +9,8 @@ use Crypt::OpenSSL3;
 
 #ABSTRACT: A context for SSL connections
 
+=method new
+
 =method add_client_CA
 
 =method add_extra_chain_cert

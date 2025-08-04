@@ -102,8 +102,6 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define DTLS_server(class) DTLS_server_method()
 #define DTLS_client(class) DTLS_client_method()
 
-#define SSL_Method_context SSL_CTX_new
-
 #define SSL_set_host SSL_set1_host
 #define SSL_set_rbio SSL_set0_rbio
 #define SSL_set_wbio SSL_set0_wbio
@@ -382,18 +380,6 @@ Crypt::OpenSSL3::SSL::Context T_MAGICEXT
 Crypt::OpenSSL3::SSL T_MAGICEXT
 Crypt::OpenSSL3::SSL::Session T_MAGICEXT
 END
-
-Crypt::OpenSSL3::SSL::Protocol TLS(SV* class)
-
-Crypt::OpenSSL3::SSL::Protocol TLS_server(SV* class)
-
-Crypt::OpenSSL3::SSL::Protocol TLS_client(SV* class)
-
-Crypt::OpenSSL3::SSL::Protocol DTLS(SV* class)
-
-Crypt::OpenSSL3::SSL::Protocol DTLS_server(SV* class)
-
-Crypt::OpenSSL3::SSL::Protocol DTLS_client(SV* class)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3	PREFIX = ERR_
 
@@ -739,9 +725,22 @@ bool X509_STORE_set_default_paths(Crypt::OpenSSL3::X509::Store store)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Protocol	PREFIX = SSL_Method_
 
-Crypt::OpenSSL3::SSL::Context SSL_Method_context(Crypt::OpenSSL3::SSL::Protocol method)
+Crypt::OpenSSL3::SSL::Protocol TLS(SV* class)
+
+Crypt::OpenSSL3::SSL::Protocol TLS_server(SV* class)
+
+Crypt::OpenSSL3::SSL::Protocol TLS_client(SV* class)
+
+Crypt::OpenSSL3::SSL::Protocol DTLS(SV* class)
+
+Crypt::OpenSSL3::SSL::Protocol DTLS_server(SV* class)
+
+Crypt::OpenSSL3::SSL::Protocol DTLS_client(SV* class)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Context	PREFIX = SSL_CTX_
+
+Crypt::OpenSSL3::SSL::Context SSL_CTX_new(SV* class, Crypt::OpenSSL3::SSL::Protocol method)
+C_ARGS: method
 
 long SSL_CTX_set_options(Crypt::OpenSSL3::SSL::Context ctx, long options)
 
