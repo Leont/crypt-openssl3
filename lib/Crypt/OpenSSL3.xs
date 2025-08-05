@@ -249,60 +249,71 @@ static OSSL_PARAM* S_params_dup(pTHX_ const OSSL_PARAM* input) {
 #define params_dup(params) S_params_dup(aTHX_ params)
 
 
-static HV* S_reallocate_get_params(pTHX_ OSSL_PARAM* gettable) {
+static void reallocate_get_params(OSSL_PARAM* gettable) {
+	for (; gettable->key; gettable++) {
+		gettable->data = gettable->return_size ? OPENSSL_zalloc(gettable->return_size) : NULL;
+		gettable->data_size = gettable->return_size;
+	}
+}
+
+static SV* S_make_params_hash(pTHX_ OSSL_PARAM* gettable) {
 	HV* hash = newHV();
 
-	while (gettable->key) {
+	for (OSSL_PARAM* iter = gettable; iter->key; iter++) {
 		SV* sv = NULL;
-		if (gettable->data_type == OSSL_PARAM_INTEGER) {
-			sv = newSViv(0);
-			gettable->data_size = IVSIZE;
-			gettable->data = &SvIVX(sv);
+		if (iter->data_type == OSSL_PARAM_INTEGER) {
+			if (iter->data_size == 0)
+				sv = newSViv(0);
+			else if (iter->data_size <= IVSIZE) {
+				int64_t value;
+				OSSL_PARAM_get_int64(iter, &value);
+				sv = newSViv(value);
+			} else {
+				BN* value = NULL;
+				OSSL_PARAM_get_BN(iter, &value);
+				sv = make_object(value, &Crypt__OpenSSL3__BigNum_magic, "Crypt::OpenSSL3::BigNum");
+			}
 		}
-		else if (gettable->data_type == OSSL_PARAM_UNSIGNED_INTEGER) {
-			sv = newSVuv(UV_MAX);
-			gettable->data_size = UVSIZE;
-			gettable->data = &SvIVX(sv);
+		else if (iter->data_type == OSSL_PARAM_UNSIGNED_INTEGER) {
+			if (iter->data_size == 0)
+				sv = newSVuv(0);
+			else if (iter->data_size <= UVSIZE) {
+				uint64_t value = 0;
+				OSSL_PARAM_get_uint64(iter, &value);
+				sv = newSVuv(value);
+			} else {
+				BN* value = NULL;
+				OSSL_PARAM_get_BN(iter, &value);
+				sv = make_object(value, &Crypt__OpenSSL3__BigNum_magic, "Crypt::OpenSSL3::BigNum");
+			}
 		}
-		else if (gettable->data_type == OSSL_PARAM_REAL) {
-			sv = newSVnv(0);
-			gettable->data_size = NVSIZE;
-			gettable->data = &SvNVX(sv);
+		else if (iter->data_type == OSSL_PARAM_REAL) {
+			double value;
+			OSSL_PARAM_get_double(iter, &value);
+			sv = newSVnv(value);
 		}
-		else if (gettable->data_type == OSSL_PARAM_UTF8_STRING) {
-			sv = newSV(gettable->return_size ? gettable->return_size : 1);
-			SvCUR_set(sv, gettable->return_size);
-			SvUTF8_on(sv);
-			SvPOK_only_UTF8(sv);
-			gettable->data_size = gettable->return_size + 1;
-			gettable->data = SvPVX(sv);
+		else if (iter->data_type == OSSL_PARAM_UTF8_STRING) {
+			sv = newSVpvn_utf8(iter->data, iter->data_size, 1);
 		}
-		else if (gettable->data_type == OSSL_PARAM_OCTET_STRING) {
-			sv = newSV(gettable->return_size);
-			SvCUR_set(sv, gettable->return_size);
-			SvPOK_only(sv);
-			gettable->data_size = gettable->return_size;
-			gettable->data = SvPVX(sv);
+		else if (iter->data_type == OSSL_PARAM_OCTET_STRING) {
+			sv = newSVpvn(iter->data, iter->data_size);
 		}
 
 		if (sv)
-			hv_store(hash, gettable->key, strlen(gettable->key), sv, 0);
-
-		gettable++;
+			hv_store(hash, iter->key, strlen(iter->key), sv, 0);
 	}
-	sv_2mortal((SV*)hash);
 
-	return hash;
+	return newRV_noinc((SV*)hash);
 }
-#define reallocate_get_params(params) S_reallocate_get_params(aTHX_ params)
+#define make_params_hash(params) S_make_params_hash(aTHX_ params)
 
 #define GENERATE_GET_PARAMS(prefix, arg)\
 	RETVAL = &PL_sv_undef;\
 	OSSL_PARAM* params = params_dup(prefix ## _gettable_params(arg));\
 	if (prefix ## _get_params(arg, params)) {\
-		HV* hash = reallocate_get_params(params);\
+		reallocate_get_params(params);\
 		if (prefix ## _get_params(arg, params))\
-			RETVAL = newRV_inc((SV*)hash);\
+			RETVAL = make_params_hash(params);\
 	}
 
 #ifdef MULTIPLICITY
