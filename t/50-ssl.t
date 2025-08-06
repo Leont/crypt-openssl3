@@ -14,7 +14,7 @@ my $server_context = Crypt::OpenSSL3::SSL::Context->new($server_method);
 
 $client_context->set_verify(Crypt::OpenSSL3::SSL::VERIFY_NONE);
 ok $server_context->use_certificate_chain_file('t/server.crt');
-ok $server_context->use_PrivateKey_file('t/server.key', 1);
+ok $server_context->use_PrivateKey_file('t/server.key', Crypt::OpenSSL3::SSL::FILETYPE_PEM);
 
 my $client = Crypt::OpenSSL3::SSL->new($client_context);
 ok $client->set_tlsext_host_name('server');
