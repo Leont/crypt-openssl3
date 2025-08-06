@@ -674,6 +674,20 @@ C_ARGS:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509	PREFIX = X509_
 
+Crypt::OpenSSL3::X509 read_bio(class, Crypt::OpenSSL3::BIO bio)
+CODE:
+	RETVAL = PEM_read_bio_X509(bio, NULL, NULL, NULL);
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+OUTPUT:
+	RETVAL
+
+bool write_bio(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::BIO bio)
+CODE:
+	RETVAL = PEM_write_bio_X509(bio, x);
+OUTPUT:
+	RETVAL
+
 Crypt::OpenSSL3::X509::Name X509_get_subject_name(Crypt::OpenSSL3::X509 x)
 
 bool X509_set_subject_name(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::X509::Name name)
