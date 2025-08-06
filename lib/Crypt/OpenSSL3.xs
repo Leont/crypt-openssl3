@@ -995,6 +995,20 @@ void SSL_set_wbio(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO bio);
 INIT:
 	BIO_up_ref(bio);
 
+Crypt::OpenSSL3::BIO SSL_get_rbio(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	if (RETVAL)
+		BIO_up_ref(RETVAL);
+	else
+		XSRETURN_UNDEF;
+
+Crypt::OpenSSL3::BIO SSL_get_wbio(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	if (RETVAL)
+		BIO_up_ref(RETVAL);
+	else
+		XSRETURN_UNDEF;
+
 Crypt::OpenSSL3::SSL::Session SSL_get_session(Crypt::OpenSSL3::SSL ssl)
 POSTCALL:
 	SSL_SESSION_up_ref(RETVAL);

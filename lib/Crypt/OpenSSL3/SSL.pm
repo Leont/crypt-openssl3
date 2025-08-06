@@ -33,6 +33,8 @@ use Crypt::OpenSSL3;
 
 =method get_options
 
+=method get_rbio
+
 =method get_rfd
 
 =method get_session
@@ -44,6 +46,8 @@ use Crypt::OpenSSL3;
 =method get_ssl_method
 
 =method get_verify_result
+
+=method get_wbio
 
 =method get_wfd
 
