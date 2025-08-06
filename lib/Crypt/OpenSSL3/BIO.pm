@@ -9,9 +9,15 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: An OpenSSL IO instance
 
+=method new_bio_pair
+
+=method new_dgram
+
+=method new_fd
+
 =method new_file
 
-=method new_mem
+=method new_socket
 
 =method ctrl_pending
 

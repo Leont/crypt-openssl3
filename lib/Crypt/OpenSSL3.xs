@@ -89,7 +89,6 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 }
 #define make_object(var, magic, name) S_make_object(aTHX_ var, magic, name)
 
-#define BIO_new_mem(class) BIO_new(BIO_s_mem())
 #define BN_generate_prime BN_generate_prime_ex2
 #define X509_verify_cert_error_code(value) value
 #define X509_verify_cert_ok(value) (value == X509_V_OK)
@@ -418,7 +417,20 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BIO	PREFIX = BIO_
 Crypt::OpenSSL3::BIO BIO_new_file(SV* class, const char *filename, const char *mode)
 C_ARGS: filename, mode
 
-Crypt::OpenSSL3::BIO BIO_new_mem(SV* class);
+Crypt::OpenSSL3::BIO BIO_new_fd(class, int fd, bool close_flag = FALSE)
+C_ARGS: fd, close_flag
+
+NO_OUTPUT int BIO_new_bio_pair(SV* class, OUTLIST Crypt::OpenSSL3::BIO bio1, size_t writebuf1, OUTLIST Crypt::OpenSSL3::BIO bio2, size_t writebuf2);
+C_ARGS: &bio1, writebuf1, &bio2, writebuf2
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_EMPTY;
+
+Crypt::OpenSSL3::BIO BIO_new_socket(class, int sock, bool close_flag = FALSE)
+C_ARGS: sock, close_flag
+
+Crypt::OpenSSL3::BIO BIO_new_dgram(class, int sock, bool close_flag = FALSE)
+C_ARGS: sock, close_flag
 
 bool BIO_reset(Crypt::OpenSSL3::BIO b)
 
@@ -430,9 +442,9 @@ bool BIO_flush(Crypt::OpenSSL3::BIO b)
 
 bool BIO_eof(Crypt::OpenSSL3::BIO b)
 
-bool BIO_set_close(Crypt::OpenSSL3::BIO b, long flag)
+bool BIO_set_close(Crypt::OpenSSL3::BIO b, bool flag)
 
-int BIO_get_close(Crypt::OpenSSL3::BIO b)
+bool BIO_get_close(Crypt::OpenSSL3::BIO b)
 
 int BIO_pending(Crypt::OpenSSL3::BIO b)
 
@@ -976,11 +988,11 @@ int SSL_get_rfd(Crypt::OpenSSL3::SSL ssl)
 int SSL_get_wfd(Crypt::OpenSSL3::SSL ssl)
 
 void SSL_set_rbio(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO bio)
-POSTCALL:
+INIT:
 	BIO_up_ref(bio);
 
 void SSL_set_wbio(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO bio);
-POSTCALL:
+INIT:
 	BIO_up_ref(bio);
 
 Crypt::OpenSSL3::SSL::Session SSL_get_session(Crypt::OpenSSL3::SSL ssl)
