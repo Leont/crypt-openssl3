@@ -3,6 +3,9 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#define NEED_mg_findext
+#include "ppport.h"
+
 #include <openssl/ssl.h>
 #include <openssl/param_build.h>
 #include <openssl/kdf.h>
