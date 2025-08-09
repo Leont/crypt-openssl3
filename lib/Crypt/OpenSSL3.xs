@@ -818,6 +818,12 @@ POSTCALL:
 
 bool SSL_CTX_load_verify_locations(Crypt::OpenSSL3::SSL::Context ctx, const char *CAfile, const char *CApath)
 
+bool SSL_CTX_load_verify_file(Crypt::OpenSSL3::SSL::Context ctx, const char *CAfile)
+
+bool SSL_CTX_load_verify_dir(Crypt::OpenSSL3::SSL::Context ctx, const char *CApath)
+
+bool SSL_CTX_load_verify_store(Crypt::OpenSSL3::SSL::Context ctx, const char *CAstore)
+
 bool SSL_CTX_set_default_verify_paths(Crypt::OpenSSL3::SSL::Context ctx)
 
 bool SSL_CTX_set_default_verify_dir(Crypt::OpenSSL3::SSL::Context ctx)

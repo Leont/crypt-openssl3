@@ -12,7 +12,8 @@ my $server_method = Crypt::OpenSSL3::SSL::Method->TLS_server;
 my $client_context = Crypt::OpenSSL3::SSL::Context->new($client_method);
 my $server_context = Crypt::OpenSSL3::SSL::Context->new($server_method);
 
-$client_context->set_verify(Crypt::OpenSSL3::SSL::VERIFY_NONE);
+$client_context->set_verify(Crypt::OpenSSL3::SSL::VERIFY_PEER);
+ok $client_context->load_verify_file('t/server.crt');
 ok $server_context->use_certificate_chain_file('t/server.crt');
 ok $server_context->use_PrivateKey_file('t/server.key', Crypt::OpenSSL3::SSL::FILETYPE_PEM);
 
@@ -45,6 +46,8 @@ is $right->pending, 0;
 is $server->get_error($r2), Crypt::OpenSSL3::SSL::ERROR_WANT_READ;
 
 is $client->connect, 1;
+my $verify = $client->get_verify_result;
+ok $verify->ok or diag $verify->error_string;
 
 is $server->accept, 1;
 

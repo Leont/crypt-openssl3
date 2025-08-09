@@ -29,7 +29,13 @@ use Crypt::OpenSSL3;
 
 =method get_options
 
+=method load_verify_dir
+
+=method load_verify_file
+
 =method load_verify_locations
+
+=method load_verify_store
 
 =method remove_session
 
