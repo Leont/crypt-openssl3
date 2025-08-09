@@ -83,6 +83,7 @@ SIMPLE_TYPE(SSL_METHOD, SSL__Method, const)
 COUNTING_TYPE(SSL_CTX, SSL__Context)
 COUNTING_TYPE(SSL, SSL)
 COUNTING_TYPE(SSL_SESSION, SSL__Session)
+SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, const)
 
 static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 	SV* result = newSV(0);
@@ -109,6 +110,8 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define SSL_set_wbio SSL_set0_wbio
 
 #define SSL_SESSION_get_peer SSL_SESSION_get0_peer
+
+#define SSL_CIPHER_get_handshake_digest(c) (EVP_MD*)SSL_CIPHER_get_handshake_digest(c)
 
 #define RAND_get_primary(class) RAND_get0_primary(NULL)
 #define RAND_get_public(class) RAND_get0_public(NULL)
@@ -394,6 +397,7 @@ Crypt::OpenSSL3::SSL::Method T_MAGICEXT
 Crypt::OpenSSL3::SSL::Context T_MAGICEXT
 Crypt::OpenSSL3::SSL T_MAGICEXT
 Crypt::OpenSSL3::SSL::Session T_MAGICEXT
+Crypt::OpenSSL3::SSL::Cipher T_MAGICEXT
 END
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3	PREFIX = ERR_
@@ -1038,6 +1042,59 @@ POSTCALL:
 bool SSL_set_session(Crypt::OpenSSL3::SSL ssl, Crypt::OpenSSL3::SSL::Session session)
 
 bool SSL_session_reused(Crypt::OpenSSL3::SSL ssl)
+
+Crypt::OpenSSL3::SSL::Cipher SSL_get_current_cipher(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+Crypt::OpenSSL3::SSL::Cipher SSL_get_pending_cipher(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Cipher	PREFIX = SSL_CIPHER_
+
+const char *SSL_CIPHER_get_name(Crypt::OpenSSL3::SSL::Cipher cipher)
+
+const char *SSL_CIPHER_standard_name(Crypt::OpenSSL3::SSL::Cipher cipher)
+
+NO_OUTPUT int SSL_CIPHER_get_bits(Crypt::OpenSSL3::SSL::Cipher cipher, OUTLIST int alg_bits)
+POSTCALL:
+	if (!RETVAL)
+		alg_bits = 0;
+
+const char *SSL_CIPHER_get_version(Crypt::OpenSSL3::SSL::Cipher cipher)
+
+NO_OUTPUT char *SSL_CIPHER_description(Crypt::OpenSSL3::SSL::Cipher cipher, OUTLIST SV* description, int length = 128)
+INIT:
+	char* ptr = make_buffer(&description, length);
+C_ARGS: cipher, ptr, length
+POSTCALL:
+	if (RETVAL)
+		set_buffer_length(description, strlen(ptr));
+
+int SSL_CIPHER_get_cipher_nid(Crypt::OpenSSL3::SSL::Cipher c)
+
+int SSL_CIPHER_get_digest_nid(Crypt::OpenSSL3::SSL::Cipher c)
+
+Crypt::OpenSSL3::MD SSL_CIPHER_get_handshake_digest(Crypt::OpenSSL3::SSL::Cipher c)
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+int SSL_CIPHER_get_kx_nid(Crypt::OpenSSL3::SSL::Cipher c)
+
+int SSL_CIPHER_get_auth_nid(Crypt::OpenSSL3::SSL::Cipher c)
+
+bool SSL_CIPHER_is_aead(Crypt::OpenSSL3::SSL::Cipher c)
+
+unsigned SSL_CIPHER_get_id(Crypt::OpenSSL3::SSL::Cipher c)
+
+unsigned SSL_CIPHER_get_protocol_id(Crypt::OpenSSL3::SSL::Cipher c)
+
+
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Session	PREFIX = SSL_SESSION_
 

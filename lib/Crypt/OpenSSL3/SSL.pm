@@ -25,6 +25,10 @@ use Crypt::OpenSSL3;
 
 =method do_handshake
 
+=method get_current_cipher
+
+=method get_pending_cipher
+
 =method get_error
 
 =method get_fd
