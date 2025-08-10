@@ -110,6 +110,18 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define SSL_set_wbio SSL_set0_wbio
 
 #define SSL_SESSION_get_peer SSL_SESSION_get0_peer
+#define SSL_SESSION_get_alpn_selected SSL_SESSION_get0_alpn_selected
+#define SSL_SESSION_get_cipher SSL_SESSION_get0_cipher
+#define SSL_SESSION_get_hostname SSL_SESSION_get0_hostname
+#define SSL_SESSION_get_id_context SSL_SESSION_get0_id_context
+#define SSL_SESSION_get_ticket SSL_SESSION_get0_ticket
+#define SSL_SESSION_get_time SSL_SESSION_get_time_ex
+#define SSL_SESSION_set_alpn_selected SSL_SESSION_set1_alpn_selected
+#define SSL_SESSION_set_hostname SSL_SESSION_set1_hostname
+#define SSL_SESSION_set_id SSL_SESSION_set1_id
+#define SSL_SESSION_set_id_context SSL_SESSION_set1_id_context
+#define SSL_SESSION_set_time SSL_SESSION_set_time_ex
+
 
 #define SSL_CIPHER_get_handshake_digest(c) (EVP_MD*)SSL_CIPHER_get_handshake_digest(c)
 
@@ -1104,9 +1116,80 @@ unsigned SSL_CIPHER_get_protocol_id(Crypt::OpenSSL3::SSL::Cipher c)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Session	PREFIX = SSL_SESSION_
 
+Crypt::OpenSSL3::SSL::Session SSL_SESSION_new(class)
+C_ARGS:
+
+long SSL_SESSION_get_timeout(Crypt::OpenSSL3::SSL::Session s)
+
+long SSL_SESSION_set_timeout(Crypt::OpenSSL3::SSL::Session s, long t)
+
+int SSL_SESSION_get_protocol_version(Crypt::OpenSSL3::SSL::Session s)
+
+int SSL_SESSION_set_protocol_version(Crypt::OpenSSL3::SSL::Session s, int version)
+
+time_t SSL_SESSION_get_time(Crypt::OpenSSL3::SSL::Session s)
+
+time_t SSL_SESSION_set_time(Crypt::OpenSSL3::SSL::Session s, time_t t)
+
+const char *SSL_SESSION_get_hostname(Crypt::OpenSSL3::SSL::Session s)
+
+bool SSL_SESSION_set_hostname(Crypt::OpenSSL3::SSL::Session s, const char *hostname)
+
+void SSL_SESSION_get_alpn_selected(Crypt::OpenSSL3::SSL::Session s, OUTLIST SV* result)
+	const unsigned char* ptr = NULL;
+	size_t len = 0;
+C_ARGS: s, &ptr, &len
+POSTCALL:
+	result = newSVpvn((char*)ptr, len);
+
+bool SSL_SESSION_set_alpn_selected(Crypt::OpenSSL3::SSL::Session s, const unsigned char *alpn, size_t length(alpn))
+
+Crypt::OpenSSL3::SSL::Cipher SSL_SESSION_get_cipher(Crypt::OpenSSL3::SSL::Session s)
+
+bool SSL_SESSION_set_cipher(Crypt::OpenSSL3::SSL::Session s, Crypt::OpenSSL3::SSL::Cipher cipher)
+
+bool SSL_SESSION_has_ticket(Crypt::OpenSSL3::SSL::Session s)
+
+unsigned long SSL_SESSION_get_ticket_lifetime_hint(Crypt::OpenSSL3::SSL::Session s)
+
+void SSL_SESSION_get_ticket(Crypt::OpenSSL3::SSL::Session s, OUTLIST SV* result)
+	const unsigned char* ptr = NULL;
+	size_t len = 0;
+C_ARGS: s, &ptr, &len
+POSTCALL:
+	result = newSVpvn((char*)ptr, len);
+
+unsigned SSL_SESSION_get_max_early_data(Crypt::OpenSSL3::SSL::Session s)
+
+bool SSL_SESSION_set_max_early_data(Crypt::OpenSSL3::SSL::Session s, unsigned max_early_data)
+
 Crypt::OpenSSL3::X509 SSL_SESSION_get_peer(Crypt::OpenSSL3::SSL::Session session)
 POSTCALL:
 	X509_up_ref(RETVAL);
+
+bool SSL_SESSION_set_id_context(Crypt::OpenSSL3::SSL::Session s, const unsigned char *sid_ctx, unsigned int length(sid_ctx))
+
+bool SSL_SESSION_set_id(Crypt::OpenSSL3::SSL::Session s, const unsigned char *sid, unsigned int length(sid))
+
+bool SSL_SESSION_is_resumable(Crypt::OpenSSL3::SSL::Session s)
+
+NO_OUTPUT const unsigned char *SSL_SESSION_get_id(Crypt::OpenSSL3::SSL::Session s, OUTLIST SV* result)
+	unsigned int len = 0;
+C_ARGS: s, &len
+POSTCALL:
+	result = newSVpvn(RETVAL, len);
+
+NO_OUTPUT const unsigned char *SSL_SESSION_get_id_context(Crypt::OpenSSL3::SSL::Session s, OUTLIST SV* result)
+	unsigned int len = 0;
+C_ARGS: s, &len
+POSTCALL:
+	result = newSVpvn(RETVAL, len);
+
+unsigned int SSL_SESSION_get_compress_id(Crypt::OpenSSL3::SSL::Session s)
+
+bool SSL_SESSION_print(Crypt::OpenSSL3::BIO fp, Crypt::OpenSSL3::SSL::Session ses)
+
+bool SSL_SESSION_print_keylog(Crypt::OpenSSL3::BIO bp, Crypt::OpenSSL3::SSL::Session x)
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random	PREFIX = EVP_RAND_
