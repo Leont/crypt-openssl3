@@ -275,6 +275,49 @@ static void reallocate_get_params(OSSL_PARAM* gettable) {
 	}
 }
 
+static SV* S_make_param_scalar(pTHX_ OSSL_PARAM* iter) {
+	if (iter->data_type == OSSL_PARAM_INTEGER) {
+		if (iter->data_size == 0)
+			return newSViv(0);
+		else if (iter->data_size <= IVSIZE) {
+			int64_t value;
+			OSSL_PARAM_get_int64(iter, &value);
+			return newSViv(value);
+		} else {
+			BIGNUM* value = NULL;
+			OSSL_PARAM_get_BN(iter, &value);
+			return make_object(value, &Crypt__OpenSSL3__BigNum_magic, "Crypt::OpenSSL3::BigNum");
+		}
+	}
+	else if (iter->data_type == OSSL_PARAM_UNSIGNED_INTEGER) {
+		if (iter->data_size == 0)
+			return newSVuv(0);
+		else if (iter->data_size <= UVSIZE) {
+			uint64_t value = 0;
+			OSSL_PARAM_get_uint64(iter, &value);
+			return newSVuv(value);
+		} else {
+			BIGNUM* value = NULL;
+			OSSL_PARAM_get_BN(iter, &value);
+			return make_object(value, &Crypt__OpenSSL3__BigNum_magic, "Crypt::OpenSSL3::BigNum");
+		}
+	}
+	else if (iter->data_type == OSSL_PARAM_REAL) {
+		double value;
+		OSSL_PARAM_get_double(iter, &value);
+		return newSVnv(value);
+	}
+	else if (iter->data_type == OSSL_PARAM_UTF8_STRING) {
+		return newSVpvn_utf8(iter->data, iter->data_size, 1);
+	}
+	else if (iter->data_type == OSSL_PARAM_OCTET_STRING) {
+		return newSVpvn(iter->data, iter->data_size);
+	}
+
+	return NULL;
+}
+#define make_param_scalar(params) S_make_param_scalar(aTHX_ params)
+
 static SV* S_make_params_hash(pTHX_ OSSL_PARAM* gettable) {
 	HV* hash = newHV();
 
@@ -282,46 +325,7 @@ static SV* S_make_params_hash(pTHX_ OSSL_PARAM* gettable) {
 		if (!OSSL_PARAM_modified(iter))
 			continue;
 
-		SV* sv = NULL;
-		if (iter->data_type == OSSL_PARAM_INTEGER) {
-			if (iter->data_size == 0)
-				sv = newSViv(0);
-			else if (iter->data_size <= IVSIZE) {
-				int64_t value;
-				OSSL_PARAM_get_int64(iter, &value);
-				sv = newSViv(value);
-			} else {
-				BN* value = NULL;
-				OSSL_PARAM_get_BN(iter, &value);
-				sv = make_object(value, &Crypt__OpenSSL3__BigNum_magic, "Crypt::OpenSSL3::BigNum");
-			}
-		}
-		else if (iter->data_type == OSSL_PARAM_UNSIGNED_INTEGER) {
-			if (iter->data_size == 0)
-				sv = newSVuv(0);
-			else if (iter->data_size <= UVSIZE) {
-				uint64_t value = 0;
-				OSSL_PARAM_get_uint64(iter, &value);
-				sv = newSVuv(value);
-			} else {
-				BN* value = NULL;
-				OSSL_PARAM_get_BN(iter, &value);
-				sv = make_object(value, &Crypt__OpenSSL3__BigNum_magic, "Crypt::OpenSSL3::BigNum");
-			}
-		}
-		else if (iter->data_type == OSSL_PARAM_REAL) {
-			double value;
-			OSSL_PARAM_get_double(iter, &value);
-			sv = newSVnv(value);
-		}
-		else if (iter->data_type == OSSL_PARAM_UTF8_STRING) {
-			sv = newSVpvn_utf8(iter->data, iter->data_size, 1);
-		}
-		else if (iter->data_type == OSSL_PARAM_OCTET_STRING) {
-			sv = newSVpvn(iter->data, iter->data_size);
-		}
-
-		if (sv)
+		if (SV* sv = make_param_scalar(iter))
 			hv_store(hash, iter->key, strlen(iter->key), sv, 0);
 	}
 
