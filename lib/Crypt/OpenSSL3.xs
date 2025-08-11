@@ -254,7 +254,7 @@ static OSSL_PARAM* S_params_dup(pTHX_ const OSSL_PARAM* input) {
 		result[index].data_type = input[index].data_type;
 		result[index].data = NULL;
 		result[index].data_size = SIZE_MAX;
-		result[index].return_size = 0;
+		result[index].return_size = OSSL_PARAM_UNMODIFIED;
 	}
 	result[counter].key = NULL;
 	result[counter].data_type = 0;
@@ -268,6 +268,8 @@ static OSSL_PARAM* S_params_dup(pTHX_ const OSSL_PARAM* input) {
 
 static void reallocate_get_params(OSSL_PARAM* gettable) {
 	for (; gettable->key; gettable++) {
+		if (!OSSL_PARAM_modified(gettable))
+			continue;
 		gettable->data = gettable->return_size ? OPENSSL_zalloc(gettable->return_size) : NULL;
 		gettable->data_size = gettable->return_size;
 	}
@@ -277,6 +279,9 @@ static SV* S_make_params_hash(pTHX_ OSSL_PARAM* gettable) {
 	HV* hash = newHV();
 
 	for (OSSL_PARAM* iter = gettable; iter->key; iter++) {
+		if (!OSSL_PARAM_modified(iter))
+			continue;
+
 		SV* sv = NULL;
 		if (iter->data_type == OSSL_PARAM_INTEGER) {
 			if (iter->data_size == 0)
