@@ -22,6 +22,7 @@ ok $cipher, 'Fetched AES-128-CTR';
 my $context = Crypt::OpenSSL3::Cipher::Context->new;
 $context->init($cipher, $key, $iv, 1, { padding => 0 }) or die;
 
+is $context->get_param('iv'), $iv;
 my $plain = "Hello, World!";
 
 my $enc1 = $context->update($plain) // die;

@@ -13,7 +13,7 @@ use warnings;
 
 =method get_kdf_size
 
-=method get_params
+=method get_param
 
 =method reset
 

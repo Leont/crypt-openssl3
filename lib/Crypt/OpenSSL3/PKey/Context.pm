@@ -69,7 +69,7 @@ use warnings;
 
 =method get_keygen_info
 
-=method get_params
+=method get_param
 
 =method get_rsa_mgf1_md
 

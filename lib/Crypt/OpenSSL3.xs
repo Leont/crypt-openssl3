@@ -248,39 +248,6 @@ static const OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* inpu
 }
 #define params_for(settable, sv) S_params_for(aTHX_ settable, sv)
 
-static OSSL_PARAM* S_params_dup(pTHX_ const OSSL_PARAM* input) {
-	size_t counter = 0;
-	for (const OSSL_PARAM* iter = input; iter->key; iter++)
-		counter++;
-
-	OSSL_PARAM* result = OPENSSL_zalloc((counter + 1) * sizeof(OSSL_PARAM));
-
-	for (size_t index = 0; index < counter; ++index) {
-		result[index].key = input[index].key;
-		result[index].data_type = input[index].data_type;
-		result[index].data = NULL;
-		result[index].data_size = SIZE_MAX;
-		result[index].return_size = OSSL_PARAM_UNMODIFIED;
-	}
-	result[counter].key = NULL;
-	result[counter].data_type = 0;
-
-	SAVEDESTRUCTOR(OSSL_PARAM_free, result);
-
-	return result;
-}
-#define params_dup(params) S_params_dup(aTHX_ params)
-
-
-static void reallocate_get_params(OSSL_PARAM* gettable) {
-	for (; gettable->key; gettable++) {
-		if (!OSSL_PARAM_modified(gettable))
-			continue;
-		gettable->data = gettable->return_size ? OPENSSL_zalloc(gettable->return_size) : NULL;
-		gettable->data_size = gettable->return_size;
-	}
-}
-
 static SV* S_make_param_scalar(pTHX_ OSSL_PARAM* iter) {
 	if (iter->data_type == OSSL_PARAM_INTEGER) {
 		if (iter->data_size == 0)
@@ -324,28 +291,22 @@ static SV* S_make_param_scalar(pTHX_ OSSL_PARAM* iter) {
 }
 #define make_param_scalar(params) S_make_param_scalar(aTHX_ params)
 
-static SV* S_make_params_hash(pTHX_ OSSL_PARAM* gettable) {
-	HV* hash = newHV();
-
-	for (OSSL_PARAM* iter = gettable; iter->key; iter++) {
-		if (!OSSL_PARAM_modified(iter))
-			continue;
-
-		if (SV* sv = make_param_scalar(iter))
-			hv_store(hash, iter->key, strlen(iter->key), sv, 0);
-	}
-
-	return newRV_noinc((SV*)hash);
-}
-#define make_params_hash(params) S_make_params_hash(aTHX_ params)
-
-#define GENERATE_GET_PARAMS(prefix, arg)\
+#define GENERATE_GET_PARAM(prefix, arg, name)\
 	RETVAL = &PL_sv_undef;\
-	OSSL_PARAM* params = params_dup(prefix ## _gettable_params(arg));\
-	if (prefix ## _get_params(arg, params)) {\
-		reallocate_get_params(params);\
-		if (prefix ## _get_params(arg, params))\
-			RETVAL = make_params_hash(params);\
+	const OSSL_PARAM* description = OSSL_PARAM_locate_const(prefix ## _gettable_params(arg), name);\
+	if (description) {\
+		OSSL_PARAM params[] = {\
+			OSSL_PARAM_DEFN(description->key, description->data_type, NULL, SIZE_MAX),\
+			OSSL_PARAM_END,\
+		};\
+		if (prefix ## _get_params(arg, params)) {\
+			if (OSSL_PARAM_modified(params)) {\
+				params->data = OPENSSL_zalloc(params->return_size);\
+				params->data_size = params->return_size;\
+			}\
+			if (prefix ## _get_params(arg, params))\
+				RETVAL = make_param_scalar(params);\
+		}\
 	}
 
 #ifdef MULTIPLICITY
@@ -1233,12 +1194,11 @@ PPCODE:
 	EVP_RAND_do_all_provided(NULL, EVP_RAND_provided_callback, iTHX);
 	SPAGAIN;
 
-SV* EVP_RAND_get_params(Crypt::OpenSSL3::Random rand)
+SV* EVP_RAND_get_param(Crypt::OpenSSL3::Random rand, const char* name)
 CODE:
-	GENERATE_GET_PARAMS(EVP_RAND, rand)
+	GENERATE_GET_PARAM(EVP_RAND, rand, name)
 OUTPUT:
 	RETVAL
-
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random	PREFIX = RAND_
 
@@ -1357,9 +1317,9 @@ PPCODE:
 	EVP_CIPHER_do_all_provided(NULL, EVP_CIPHER_provided_callback, iTHX);
 	SPAGAIN;
 
-SV* EVP_CIPHER_get_params(Crypt::OpenSSL3::Cipher cipher)
+SV* EVP_CIPHER_get_param(Crypt::OpenSSL3::Cipher cipher, const char* name)
 CODE:
-	GENERATE_GET_PARAMS(EVP_CIPHER, cipher)
+	GENERATE_GET_PARAM(EVP_CIPHER, cipher, name)
 OUTPUT:
 	RETVAL
 
@@ -1403,9 +1363,9 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_CIPHER_CTX_settable_params(ctx), args);
 C_ARGS: ctx, params
 
-SV* EVP_CIPHER_CTX_get_params(Crypt::OpenSSL3::Cipher::Context ctx)
+SV* EVP_CIPHER_CTX_get_param(Crypt::OpenSSL3::Cipher::Context ctx, const char* name)
 CODE:
-	GENERATE_GET_PARAMS(EVP_CIPHER_CTX, ctx)
+	GENERATE_GET_PARAM(EVP_CIPHER_CTX, ctx, name)
 OUTPUT:
 	RETVAL
 
@@ -1494,9 +1454,9 @@ unsigned long EVP_MD_get_flags(Crypt::OpenSSL3::MD md)
 
 bool EVP_MD_xof(Crypt::OpenSSL3::MD md)
 
-SV* EVP_MD_get_params(Crypt::OpenSSL3::MD md)
+SV* EVP_MD_get_param(Crypt::OpenSSL3::MD md, const char* name)
 CODE:
-	GENERATE_GET_PARAMS(EVP_MD, md)
+	GENERATE_GET_PARAM(EVP_MD, md, name)
 OUTPUT:
 	RETVAL
 
@@ -1554,9 +1514,9 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_MD_CTX_settable_params(ctx), args);
 C_ARGS: ctx, params
 
-SV* EVP_MD_CTX_get_params(Crypt::OpenSSL3::MD::Context ctx)
+SV* EVP_MD_CTX_get_param(Crypt::OpenSSL3::MD::Context ctx, const char* name)
 CODE:
-	GENERATE_GET_PARAMS(EVP_MD_CTX, ctx)
+	GENERATE_GET_PARAM(EVP_MD_CTX, ctx, name)
 OUTPUT:
 	RETVAL
 
@@ -1609,9 +1569,9 @@ PPCODE:
 	EVP_MAC_do_all_provided(NULL, EVP_MAC_provided_callback, iTHX);
 	SPAGAIN;
 
-SV* EVP_MAC_get_params(Crypt::OpenSSL3::MAC mac)
+SV* EVP_MAC_get_param(Crypt::OpenSSL3::MAC mac, const char* name)
 CODE:
-	GENERATE_GET_PARAMS(EVP_MAC, mac)
+	GENERATE_GET_PARAM(EVP_MAC, mac, name)
 OUTPUT:
 	RETVAL
 
@@ -1635,9 +1595,9 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_MAC_CTX_settable_params(ctx), args);
 C_ARGS: ctx, params
 
-SV* EVP_MAC_CTX_get_params(Crypt::OpenSSL3::MAC::Context ctx)
+SV* EVP_MAC_CTX_get_param(Crypt::OpenSSL3::MAC::Context ctx, const char* name)
 CODE:
-	GENERATE_GET_PARAMS(EVP_MAC_CTX, ctx)
+	GENERATE_GET_PARAM(EVP_MAC_CTX, ctx, name)
 OUTPUT:
 	RETVAL
 
@@ -1697,9 +1657,9 @@ PPCODE:
 	EVP_KDF_do_all_provided(NULL, EVP_KDF_provided_callback, iTHX);
 	SPAGAIN;
 
-SV* EVP_KDF_get_params(Crypt::OpenSSL3::KDF kdf)
+SV* EVP_KDF_get_param(Crypt::OpenSSL3::KDF kdf, const char* name)
 CODE:
-	GENERATE_GET_PARAMS(EVP_KDF, kdf)
+	GENERATE_GET_PARAM(EVP_KDF, kdf, name)
 OUTPUT:
 	RETVAL
 
@@ -1718,9 +1678,9 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_KDF_CTX_settable_params(ctx), args);
 C_ARGS: ctx, params
 
-SV* EVP_KDF_CTX_get_params(Crypt::OpenSSL3::KDF::Context ctx)
+SV* EVP_KDF_CTX_get_param(Crypt::OpenSSL3::KDF::Context ctx, const char* name)
 CODE:
-	GENERATE_GET_PARAMS(EVP_KDF_CTX, ctx)
+	GENERATE_GET_PARAM(EVP_KDF_CTX, ctx, name)
 OUTPUT:
 	RETVAL
 
@@ -1857,9 +1817,9 @@ size_t EVP_PKEY_get_encoded_public_key(Crypt::OpenSSL3::PKey pkey, OUT unsigned 
 CLEANUP:
 	OPENSSL_free(ppub);
 
-SV* EVP_PKEY_get_params(Crypt::OpenSSL3::PKey pkey)
+SV* EVP_PKEY_get_param(Crypt::OpenSSL3::PKey pkey, const char* name)
 CODE:
-	GENERATE_GET_PARAMS(EVP_PKEY, pkey)
+	GENERATE_GET_PARAM(EVP_PKEY, pkey, name)
 OUTPUT:
 	RETVAL
 
@@ -1916,9 +1876,9 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
 C_ARGS: ctx, params
 
-SV* EVP_PKEY_CTX_get_params(Crypt::OpenSSL3::PKey::Context ctx)
+SV* EVP_PKEY_CTX_get_param(Crypt::OpenSSL3::PKey::Context ctx, const char* name)
 CODE:
-	GENERATE_GET_PARAMS(EVP_PKEY_CTX, ctx)
+	GENERATE_GET_PARAM(EVP_PKEY_CTX, ctx, name)
 OUTPUT:
 	RETVAL
 

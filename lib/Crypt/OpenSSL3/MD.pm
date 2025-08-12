@@ -19,7 +19,7 @@ use warnings;
 
 =method get_name
 
-=method get_params
+=method get_param
 
 =method get_pkey_type
 

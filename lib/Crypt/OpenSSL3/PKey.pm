@@ -43,7 +43,7 @@ use warnings;
 
 =method get_octet_string_param
 
-=method get_params
+=method get_param
 
 =method get_raw_private_key
 

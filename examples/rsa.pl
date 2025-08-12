@@ -24,4 +24,4 @@ my $unwrapped = $ctx3->decapsulate($wrapped) or die;
 
 say unpack "H*", $unwrapped;
 
-say Dumper($pkey->get_params);
+say $pkey->get_param('max-size');

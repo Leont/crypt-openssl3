@@ -35,7 +35,7 @@ use warnings;
 
 =method get_nid
 
-=method get_params
+=method get_param
 
 =method is_encrypting
 

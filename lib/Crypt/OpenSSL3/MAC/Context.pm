@@ -17,7 +17,7 @@ use warnings;
 
 =method get_block_size
 
-=method get_params
+=method get_param
 
 =method get_mac
 
