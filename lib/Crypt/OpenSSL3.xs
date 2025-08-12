@@ -206,6 +206,14 @@ static inline void S_set_buffer_length(pTHX_ SV* buffer, ssize_t result) {
 }
 #define set_buffer_length(buffer, result) S_set_buffer_length(aTHX_ buffer, result)
 
+static const BIGNUM* S_get_BIGNUM(pTHX_ SV* value) {
+	if (!SvROK(value))
+		return NULL;
+	MAGIC* magic = mg_findext(SvRV(value), PERL_MAGIC_ext, &Crypt__OpenSSL3__BigNum_magic);
+	return magic ? (const BIGNUM*)magic->mg_ptr : NULL;
+}
+#define get_BIGNUM(value) S_get_BIGNUM(aTHX_ value)
+
 static const OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* input) {
 	static const OSSL_PARAM empty_PARAMS = OSSL_PARAM_DEFN(NULL, 0, NULL, 0);
 	if (!SvROK(input) || SvTYPE(SvRV(input)) != SVt_PVHV)
@@ -223,13 +231,19 @@ static const OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* inpu
 		const OSSL_PARAM* found = OSSL_PARAM_locate_const(settable, name);
 
 		if (found) {
-			if (found->data_type == OSSL_PARAM_INTEGER)
-				OSSL_PARAM_BLD_push_int64(builder, found->key, SvIV(sv));
-			else if (found->data_type == OSSL_PARAM_UNSIGNED_INTEGER)
-				OSSL_PARAM_BLD_push_uint64(builder, found->key, SvUV(sv));
-			else if (found->data_type == OSSL_PARAM_REAL)
+			if (found->data_type == OSSL_PARAM_INTEGER) {
+				if (const BIGNUM* big = get_BIGNUM(sv))
+					OSSL_PARAM_BLD_push_BN(builder, found->key, big);
+				else
+					OSSL_PARAM_BLD_push_int64(builder, found->key, SvIV(sv));
+			} else if (found->data_type == OSSL_PARAM_UNSIGNED_INTEGER) {
+				if (const BIGNUM* big = get_BIGNUM(sv))
+					OSSL_PARAM_BLD_push_BN(builder, found->key, big);
+				else
+					OSSL_PARAM_BLD_push_uint64(builder, found->key, SvUV(sv));
+			} else if (found->data_type == OSSL_PARAM_REAL) {
 				OSSL_PARAM_BLD_push_double(builder, found->key, SvNV(sv));
-			else if (found->data_type == OSSL_PARAM_UTF8_STRING) {
+			} else if (found->data_type == OSSL_PARAM_UTF8_STRING) {
 				STRLEN length;
 				const char* ptr = SvPVutf8(sv, length);
 				OSSL_PARAM_BLD_push_utf8_string(builder, found->key, ptr, length);
