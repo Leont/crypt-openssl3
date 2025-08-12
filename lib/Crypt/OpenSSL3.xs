@@ -206,33 +206,39 @@ static inline void S_set_buffer_length(pTHX_ SV* buffer, ssize_t result) {
 }
 #define set_buffer_length(buffer, result) S_set_buffer_length(aTHX_ buffer, result)
 
-static const OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* sv) {
+static const OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* input) {
 	static const OSSL_PARAM empty_PARAMS = OSSL_PARAM_DEFN(NULL, 0, NULL, 0);
-	if (!SvROK(sv) || SvTYPE(SvRV(sv)) != SVt_PVHV)
+	if (!SvROK(input) || SvTYPE(SvRV(input)) != SVt_PVHV)
 		return &empty_PARAMS;
 
 	OSSL_PARAM_BLD* builder = OSSL_PARAM_BLD_new();
-	HV* hash = (HV*)SvRV(sv);
-	while (settable->key) {
-		SV** sv_ptr = hv_fetch(hash, settable->key, strlen(settable->key), 0);
-		if (sv_ptr && *sv_ptr) {
-			if (settable->data_type == OSSL_PARAM_INTEGER)
-				OSSL_PARAM_BLD_push_int64(builder, settable->key, SvIV(*sv_ptr));
-			else if (settable->data_type == OSSL_PARAM_UNSIGNED_INTEGER)
-				OSSL_PARAM_BLD_push_uint64(builder, settable->key, SvUV(*sv_ptr));
-			else if (settable->data_type == OSSL_PARAM_REAL)
-				OSSL_PARAM_BLD_push_double(builder, settable->key, SvNV(*sv_ptr));
-			else if (settable->data_type == OSSL_PARAM_UTF8_STRING) {
+	HV* hash = (HV*)SvRV(input);
+
+	hv_iterinit(hash);
+	char* name;
+	I32 name_len;
+	SV* sv;
+
+	while (sv = hv_iternextsv(hash, &name, &name_len)) {
+		const OSSL_PARAM* found = OSSL_PARAM_locate_const(settable, name);
+
+		if (found) {
+			if (found->data_type == OSSL_PARAM_INTEGER)
+				OSSL_PARAM_BLD_push_int64(builder, found->key, SvIV(sv));
+			else if (found->data_type == OSSL_PARAM_UNSIGNED_INTEGER)
+				OSSL_PARAM_BLD_push_uint64(builder, found->key, SvUV(sv));
+			else if (found->data_type == OSSL_PARAM_REAL)
+				OSSL_PARAM_BLD_push_double(builder, found->key, SvNV(sv));
+			else if (found->data_type == OSSL_PARAM_UTF8_STRING) {
 				STRLEN length;
-				const char* ptr = SvPVutf8(*sv_ptr, length);
-				OSSL_PARAM_BLD_push_utf8_string(builder, settable->key, ptr, length);
-			} else if (settable->data_type == OSSL_PARAM_OCTET_STRING) {
+				const char* ptr = SvPVutf8(sv, length);
+				OSSL_PARAM_BLD_push_utf8_string(builder, found->key, ptr, length);
+			} else if (found->data_type == OSSL_PARAM_OCTET_STRING) {
 				STRLEN length;
-				const char* ptr = SvPVbyte(*sv_ptr, length);
-				OSSL_PARAM_BLD_push_octet_string(builder, settable->key, ptr, length);
+				const char* ptr = SvPVbyte(sv, length);
+				OSSL_PARAM_BLD_push_octet_string(builder, found->key, ptr, length);
 			}
 		}
-		settable++;
 	}
 
 	OSSL_PARAM* result = OSSL_PARAM_BLD_to_param(builder);
