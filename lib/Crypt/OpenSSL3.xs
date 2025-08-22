@@ -117,12 +117,14 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define SSL_SESSION_get_hostname SSL_SESSION_get0_hostname
 #define SSL_SESSION_get_id_context SSL_SESSION_get0_id_context
 #define SSL_SESSION_get_ticket SSL_SESSION_get0_ticket
-#define SSL_SESSION_get_time SSL_SESSION_get_time_ex
 #define SSL_SESSION_set_alpn_selected SSL_SESSION_set1_alpn_selected
 #define SSL_SESSION_set_hostname SSL_SESSION_set1_hostname
 #define SSL_SESSION_set_id SSL_SESSION_set1_id
 #define SSL_SESSION_set_id_context SSL_SESSION_set1_id_context
+#if OPENSSL_VERSION_PREREQ(3, 3)
+#define SSL_SESSION_get_time SSL_SESSION_get_time_ex
 #define SSL_SESSION_set_time SSL_SESSION_set_time_ex
+#endif
 
 
 #define SSL_CIPHER_get_handshake_digest(c) (EVP_MD*)SSL_CIPHER_get_handshake_digest(c)
@@ -1713,6 +1715,7 @@ POSTCALL:
 	if (RETVAL)
 		set_buffer_length(digest, outlen);
 
+#if OPENSSL_VERSION_PREREQ(3, 3)
 NO_OUTPUT bool EVP_MD_CTX_squeeze(Crypt::OpenSSL3::MD::Context ctx, OUTLIST SV* digest, size_t outlen)
 INIT:
 	char* ptr = make_buffer(&digest, outlen);
@@ -1720,6 +1723,7 @@ C_ARGS: ctx, ptr, outlen
 POSTCALL:
 	if (RETVAL)
 		set_buffer_length(digest, outlen);
+#endif
 
 bool EVP_MD_CTX_set_params(Crypt::OpenSSL3::MD::Context ctx, SV* args = undef)
 INIT:
