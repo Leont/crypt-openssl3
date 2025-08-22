@@ -108,6 +108,8 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define SSL_set_host SSL_set1_host
 #define SSL_set_rbio SSL_set0_rbio
 #define SSL_set_wbio SSL_set0_wbio
+#define SSL_get_context SSL_get_SSL_CTX
+#define SSL_get_alpn_selected SSL_get0_alpn_selected
 
 #define SSL_SESSION_get_peer SSL_SESSION_get0_peer
 #define SSL_SESSION_get_alpn_selected SSL_SESSION_get0_alpn_selected
@@ -352,6 +354,7 @@ DEFINE_PROVIDED_CALLBACK(EVP_MAC, MAC)
 DEFINE_PROVIDED_CALLBACK(EVP_KDF, KDF)
 DEFINE_PROVIDED_CALLBACK(EVP_SIGNATURE, Signature)
 
+typedef int Bool;
 #define undef &PL_sv_undef
 
 // This will force byte semantics on all strings
@@ -367,6 +370,8 @@ PROTOTYPES: DISABLE
 
 TYPEMAP: <<END
 const unsigned char*	T_PV
+Bool	T_BOOL
+struct timeval	T_TIMEVAL
 
 Crypt::OpenSSL3::Random T_MAGICEXT
 Crypt::OpenSSL3::Random::Context T_MAGICEXT
@@ -400,6 +405,10 @@ Crypt::OpenSSL3::SSL::Context T_MAGICEXT
 Crypt::OpenSSL3::SSL T_MAGICEXT
 Crypt::OpenSSL3::SSL::Session T_MAGICEXT
 Crypt::OpenSSL3::SSL::Cipher T_MAGICEXT
+
+OUTPUT
+T_TIMEVAL
+	sv_setnv($arg, $var.tv_sec + $var.tv_usec / 1000000.0);
 END
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3	PREFIX = ERR_
@@ -796,6 +805,10 @@ long SSL_CTX_clear_options(Crypt::OpenSSL3::SSL::Context ctx, long options)
 
 long SSL_CTX_get_options(Crypt::OpenSSL3::SSL::Context ctx)
 
+void SSL_CTX_set_read_ahead(Crypt::OpenSSL3::SSL::Context ctx, bool yes)
+
+bool SSL_CTX_get_read_ahead(Crypt::OpenSSL3::SSL::Context ctx)
+
 bool SSL_CTX_set_session_id_context(Crypt::OpenSSL3::SSL::Context ctx, const unsigned char *sid_ctx, unsigned int sid_ctx_len)
 
 long SSL_CTX_set_mode(Crypt::OpenSSL3::SSL::Context ctx, long mode)
@@ -808,7 +821,11 @@ bool SSL_CTX_set_min_proto_version(Crypt::OpenSSL3::SSL::Context ctx, int versio
 
 bool SSL_CTX_set_max_proto_version(Crypt::OpenSSL3::SSL::Context ctx, int version)
 
-bool SSL_CTX_set_alpn_protos(Crypt::OpenSSL3::SSL::Context ctx, const unsigned char *protos, unsigned int protos_len)
+int SSL_CTX_get_min_proto_version(Crypt::OpenSSL3::SSL::Context ctx)
+
+int SSL_CTX_get_max_proto_version(Crypt::OpenSSL3::SSL::Context ctx)
+
+bool SSL_CTX_set_alpn_protos(Crypt::OpenSSL3::SSL::Context ctx, const unsigned char *protos, unsigned int length(protos))
 
 Crypt::OpenSSL3::X509::Store SSL_CTX_get_cert_store(Crypt::OpenSSL3::SSL::Context ctx)
 POSTCALL:
@@ -850,6 +867,8 @@ bool SSL_CTX_use_PrivateKey_ASN1(int pk, Crypt::OpenSSL3::SSL::Context ctx, unsi
 
 bool SSL_CTX_use_PrivateKey_file(Crypt::OpenSSL3::SSL::Context ctx, const char *file, int type)
 
+bool SSL_CTX_check_private_key(Crypt::OpenSSL3::SSL::Context ctx)
+
 void SSL_CTX_set_verify(Crypt::OpenSSL3::SSL::Context ctx, int mode)
 C_ARGS: ctx, mode, NULL
 
@@ -869,6 +888,37 @@ bool SSL_CTX_add_session(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::SSL
 
 bool SSL_CTX_remove_session(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::SSL::Session c);
 
+long SSL_CTX_sess_number(Crypt::OpenSSL3::SSL::Context ctx)
+
+long SSL_CTX_sess_connect(Crypt::OpenSSL3::SSL::Context ctx)
+
+long SSL_CTX_sess_connect_good(Crypt::OpenSSL3::SSL::Context ctx)
+
+long SSL_CTX_sess_connect_renegotiate(Crypt::OpenSSL3::SSL::Context ctx)
+
+long SSL_CTX_sess_accept(Crypt::OpenSSL3::SSL::Context ctx)
+
+long SSL_CTX_sess_accept_good(Crypt::OpenSSL3::SSL::Context ctx)
+
+long SSL_CTX_sess_accept_renegotiate(Crypt::OpenSSL3::SSL::Context ctx)
+
+long SSL_CTX_sess_hits(Crypt::OpenSSL3::SSL::Context ctx)
+
+long SSL_CTX_sess_cb_hits(Crypt::OpenSSL3::SSL::Context ctx)
+
+long SSL_CTX_sess_misses(Crypt::OpenSSL3::SSL::Context ctx)
+
+long SSL_CTX_sess_timeouts(Crypt::OpenSSL3::SSL::Context ctx)
+
+long SSL_CTX_sess_cache_full(Crypt::OpenSSL3::SSL::Context ctx)
+
+long SSL_CTX_sess_set_cache_size(Crypt::OpenSSL3::SSL::Context ctx, long t)
+
+long SSL_CTX_sess_get_cache_size(Crypt::OpenSSL3::SSL::Context ctx)
+
+int SSL_CTX_set_num_tickets(Crypt::OpenSSL3::SSL::Context ctx, size_t num_tickets)
+
+size_t SSL_CTX_get_num_tickets(Crypt::OpenSSL3::SSL::Context ctx)
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL	PREFIX = SSL_
@@ -904,15 +954,29 @@ BOOT:
 	CONSTANT2(SSL_, FILETYPE_PEM);
 	CONSTANT2(SSL_, FILETYPE_ASN1);
 
+	CONSTANT2(, TLS1_VERSION);
 	CONSTANT2(, TLS1_1_VERSION);
 	CONSTANT2(, TLS1_2_VERSION);
 	CONSTANT2(, TLS1_3_VERSION);
+	CONSTANT2(, DTLS1_VERSION);
+	CONSTANT2(, DTLS1_2_VERSION);
 }
 
 Crypt::OpenSSL3::SSL SSL_new(SV* class, Crypt::OpenSSL3::SSL::Context context)
 C_ARGS: context
 
 Crypt::OpenSSL3::SSL::Method SSL_get_ssl_method(Crypt::OpenSSL3::SSL ssl)
+
+Crypt::OpenSSL3::SSL::Context SSL_get_context(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	SSL_CTX_up_ref(RETVAL);
+
+NO_OUTPUT int SSL_get_event_timeout(Crypt::OpenSSL3::SSL s, OUTLIST struct timeval tv, OUTLIST Bool is_infinite)
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_EMPTY;
+
+bool SSL_handle_events(Crypt::OpenSSL3::SSL ssl)
 
 long SSL_set_options(Crypt::OpenSSL3::SSL ssl, long options)
 
@@ -932,7 +996,11 @@ bool SSL_set_min_proto_version(Crypt::OpenSSL3::SSL ssl, int version)
 
 bool SSL_set_max_proto_version(Crypt::OpenSSL3::SSL ssl, int version)
 
-bool SSL_set_alpn_protos(Crypt::OpenSSL3::SSL ssl, const unsigned char *protos, unsigned int protos_len)
+void SSL_set_security_level(Crypt::OpenSSL3::SSL s, int level)
+
+int SSL_get_security_level(Crypt::OpenSSL3::SSL s)
+
+bool SSL_set_alpn_protos(Crypt::OpenSSL3::SSL ssl, const unsigned char *protos, unsigned int length(protos))
 
 bool SSL_use_certificate(Crypt::OpenSSL3::SSL ssl, Crypt::OpenSSL3::X509 x)
 
@@ -948,6 +1016,8 @@ bool SSL_use_PrivateKey_ASN1(int pk, Crypt::OpenSSL3::SSL ssl, const char *d, lo
 
 bool SSL_use_PrivateKey_file(Crypt::OpenSSL3::SSL ssl, const char *file, int type)
 
+bool SSL_check_private_key(Crypt::OpenSSL3::SSL ssl)
+
 void SSL_set_verify(Crypt::OpenSSL3::SSL ssl, int mode)
 C_ARGS: ssl, mode, NULL
 
@@ -960,6 +1030,11 @@ void SSL_set_post_handshake_auth(Crypt::OpenSSL3::SSL ssl, int val)
 bool SSL_set_cipher_list(Crypt::OpenSSL3::SSL ssl, const char *str)
 
 bool SSL_set_ciphersuites(Crypt::OpenSSL3::SSL ssl, const char *str)
+
+const char *SSL_get_cipher_list(Crypt::OpenSSL3::SSL ssl, int priority)
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
 
 int SSL_add_client_CA(Crypt::OpenSSL3::SSL ssl, Crypt::OpenSSL3::X509 cacert)
 POSTCALL:
@@ -996,14 +1071,16 @@ INIT:
 	char* ptr = grow_buffer(buffer, size);
 C_ARGS: ssl, ptr, size
 POSTCALL:
-	set_buffer_length(buffer, RETVAL);
+	if (RETVAL > 0)
+		set_buffer_length(buffer, RETVAL);
 
 int SSL_peek(Crypt::OpenSSL3::SSL ssl, SV* buffer, size_t size)
 INIT:
 	char* ptr = grow_buffer(buffer, size);
 C_ARGS: ssl, ptr, size
 POSTCALL:
-	set_buffer_length(buffer, RETVAL);
+	if (RETVAL > 0)
+		set_buffer_length(buffer, RETVAL);
 
 int SSL_write(Crypt::OpenSSL3::SSL ssl, const char* buf, int length(buf))
 
@@ -1043,6 +1120,10 @@ POSTCALL:
 	else
 		XSRETURN_UNDEF;
 
+void SSL_set_read_ahead(Crypt::OpenSSL3::SSL s, bool yes)
+
+bool SSL_get_read_ahead(Crypt::OpenSSL3::SSL s)
+
 Crypt::OpenSSL3::SSL::Session SSL_get_session(Crypt::OpenSSL3::SSL ssl)
 POSTCALL:
 	SSL_SESSION_up_ref(RETVAL);
@@ -1050,6 +1131,29 @@ POSTCALL:
 bool SSL_set_session(Crypt::OpenSSL3::SSL ssl, Crypt::OpenSSL3::SSL::Session session)
 
 bool SSL_session_reused(Crypt::OpenSSL3::SSL ssl)
+
+void SSL_copy_session_id(Crypt::OpenSSL3::SSL to, Crypt::OpenSSL3::SSL from)
+
+Crypt::OpenSSL3::X509 SSL_get_certificate(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	if (RETVAL)
+		X509_up_ref(RETVAL);
+	else
+		XSRETURN_UNDEF;
+
+Crypt::OpenSSL3::X509 SSL_get_peer_certificate(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	if (RETVAL)
+		X509_up_ref(RETVAL);
+	else
+		XSRETURN_UNDEF;
+
+Crypt::OpenSSL3::PKey SSL_get_privatekey(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	if (RETVAL)
+		EVP_PKEY_up_ref(RETVAL);
+	else
+		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::SSL::Cipher SSL_get_current_cipher(Crypt::OpenSSL3::SSL ssl)
 POSTCALL:
@@ -1060,6 +1164,67 @@ Crypt::OpenSSL3::SSL::Cipher SSL_get_pending_cipher(Crypt::OpenSSL3::SSL ssl)
 POSTCALL:
 	if (!RETVAL)
 		XSRETURN_UNDEF;
+
+int SSL_client_version(Crypt::OpenSSL3::SSL s)
+
+const char *SSL_get_version(Crypt::OpenSSL3::SSL ssl)
+
+bool SSL_is_dtls(Crypt::OpenSSL3::SSL ssl)
+
+bool SSL_is_tls(Crypt::OpenSSL3::SSL ssl)
+
+bool SSL_in_init(Crypt::OpenSSL3::SSL s)
+
+bool SSL_in_before(Crypt::OpenSSL3::SSL s)
+
+bool SSL_is_init_finished(Crypt::OpenSSL3::SSL s)
+
+bool SSL_in_connect_init(Crypt::OpenSSL3::SSL s)
+
+bool SSL_in_accept_init(Crypt::OpenSSL3::SSL s)
+
+int SSL_pending(Crypt::OpenSSL3::SSL ssl)
+
+bool SSL_has_pending(Crypt::OpenSSL3::SSL s)
+
+int SSL_version(Crypt::OpenSSL3::SSL s)
+
+const char *SSL_state_string(Crypt::OpenSSL3::SSL ssl)
+
+const char *SSL_state_string_long(Crypt::OpenSSL3::SSL ssl)
+
+const char *SSL_rstate_string(Crypt::OpenSSL3::SSL ssl)
+
+const char *SSL_rstate_string_long(Crypt::OpenSSL3::SSL ssl)
+
+int SSL_set_num_tickets(Crypt::OpenSSL3::SSL s, size_t num_tickets)
+
+size_t SSL_get_num_tickets(Crypt::OpenSSL3::SSL s)
+
+bool SSL_new_session_ticket(Crypt::OpenSSL3::SSL s)
+
+size_t SSL_get_finished(Crypt::OpenSSL3::SSL ssl, SV* result)
+INIT:
+	char* ptr = make_buffer(&result, EVP_MAX_MD_SIZE);
+C_ARGS: ssl, ptr, EVP_MAX_MD_SIZE
+POSTCALL:
+	if (RETVAL)
+		set_buffer_length(result, RETVAL);
+
+size_t SSL_get_peer_finished(Crypt::OpenSSL3::SSL ssl, SV* result);
+INIT:
+	char* ptr = make_buffer(&result, EVP_MAX_MD_SIZE);
+C_ARGS: ssl, ptr, EVP_MAX_MD_SIZE
+POSTCALL:
+	if (RETVAL)
+		set_buffer_length(result, RETVAL);
+
+void SSL_get_alpn_selected(Crypt::OpenSSL3::SSL s, OUTLIST SV* result)
+	const unsigned char* ptr = NULL;
+	unsigned int len = 0;
+C_ARGS: s, &ptr, &len
+POSTCALL:
+	result = newSVpvn((char*)ptr, len);
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Cipher	PREFIX = SSL_CIPHER_

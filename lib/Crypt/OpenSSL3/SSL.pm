@@ -15,31 +15,61 @@ use Crypt::OpenSSL3;
 
 =method add_client_CA
 
+=method check_private_key
+
 =method clear
 
 =method clear_mode
 
 =method clear_options
 
+=method client_version
+
 =method connect
+
+=method copy_session_id
 
 =method do_handshake
 
+=method get_alpn_selected
+
+=method get_certificate
+
+=method get_cipher_list
+
+=method get_context
+
 =method get_current_cipher
+
+=method get_finished
+
+=method get_peer_certificate
 
 =method get_pending_cipher
 
 =method get_error
 
+=method get_event_timeout
+
 =method get_fd
 
 =method get_mode
 
+=method get_num_tickets
+
 =method get_options
+
+=method get_peer_finished
+
+=method get_privatekey
+
+=method get_read_ahead
 
 =method get_rbio
 
 =method get_rfd
+
+=method get_security_level
 
 =method get_session
 
@@ -51,15 +81,43 @@ use Crypt::OpenSSL3;
 
 =method get_verify_result
 
+=method get_version
+
 =method get_wbio
 
 =method get_wfd
 
+=method handle_events
+
+=method has_pending
+
+=method in_accept_init
+
+=method in_before
+
+=method in_connect_init
+
+=method in_init
+
+=method is_dtls
+
+=method is_init_finished
+
 =method is_server
+
+=method is_tls
+
+=method new_session_ticket
 
 =method peek
 
+=method pending
+
 =method read
+
+=method rstate_string
+
+=method rstate_string_long
 
 =method session_reused
 
@@ -83,13 +141,19 @@ use Crypt::OpenSSL3;
 
 =method set_mode
 
+=method set_num_tickets
+
 =method set_options
 
 =method set_post_handshake_auth
 
+=method set_read_ahead
+
 =method set_rbio
 
 =method set_rfd
+
+=method set_security_level
 
 =method set_session
 
@@ -107,6 +171,10 @@ use Crypt::OpenSSL3;
 
 =method shutdown
 
+=method state_string
+
+=method state_string_long
+
 =method use_PrivateKey
 
 =method use_PrivateKey_ASN1
@@ -122,6 +190,8 @@ use Crypt::OpenSSL3;
 =method use_certificate_file
 
 =method verify_client_post_handshake
+
+=method version
 
 =method write
 

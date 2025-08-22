@@ -17,6 +17,8 @@ use Crypt::OpenSSL3;
 
 =method add_session
 
+=method check_private_key
+
 =method clear_extra_chain_certs
 
 =method clear_mode
@@ -25,9 +27,17 @@ use Crypt::OpenSSL3;
 
 =method get_cert_store
 
+=method get_max_proto_version
+
+=method get_min_proto_version
+
 =method get_mode
 
+=method get_num_tickets
+
 =method get_options
+
+=method get_read_ahead
 
 =method load_verify_dir
 
@@ -38,6 +48,34 @@ use Crypt::OpenSSL3;
 =method load_verify_store
 
 =method remove_session
+
+=method sess_accept
+
+=method sess_accept_good
+
+=method sess_accept_renegotiate
+
+=method sess_cache_full
+
+=method sess_cb_hits
+
+=method sess_connect
+
+=method sess_connect_good
+
+=method sess_connect_renegotiate
+
+=method sess_get_cache_size
+
+=method sess_hits
+
+=method sess_misses
+
+=method sess_number
+
+=method sess_set_cache_size
+
+=method sess_timeouts
 
 =method set_alpn_protos
 
@@ -59,9 +97,13 @@ use Crypt::OpenSSL3;
 
 =method set_mode
 
+=method set_num_tickets
+
 =method set_options
 
 =method set_post_handshake_auth
+
+=method set_read_ahead
 
 =method set_session_id_context
 
