@@ -128,11 +128,23 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define DTLS_server(class) DTLS_server_method()
 #define DTLS_client(class) DTLS_client_method()
 
+#define QUIC_client(class) OSSL_QUIC_client_method()
+#define QUIC_client_thread(class) OSSL_QUIC_client_thread_method()
+#define QUIC_server(class) OSSL_QUIC_server_method()
+
 #define SSL_set_host SSL_set1_host
 #define SSL_set_rbio SSL_set0_rbio
 #define SSL_set_wbio SSL_set0_wbio
 #define SSL_get_context SSL_get_SSL_CTX
 #define SSL_get_alpn_selected SSL_get0_alpn_selected
+#define SSL_get_connection SSL_get0_connection
+#define SSL_get_listener SSL_get0_listener
+#define SSL_get_domain SSL_get0_domain
+#define SSL_set_initial_peer_addr SSL_set1_initial_peer_addr
+#if !OPENSSL_VERSION_PREREQ(3, 2)
+#define SSL_is_tls(s) (!SSL_is_dtls(s))
+#define SSL_is_quic(s) FALSE
+#endif
 
 #define SSL_SESSION_get_peer SSL_SESSION_get0_peer
 #define SSL_SESSION_get_alpn_selected SSL_SESSION_get0_alpn_selected
@@ -416,6 +428,7 @@ TYPEMAP: <<END
 const unsigned char*	T_PV
 Bool	T_BOOL
 struct timeval	T_TIMEVAL
+uint64_t	T_UV
 
 Crypt::OpenSSL3::Random T_MAGICEXT
 Crypt::OpenSSL3::Random::Context T_MAGICEXT
@@ -915,6 +928,16 @@ Crypt::OpenSSL3::SSL::Method DTLS_server(SV* class)
 
 Crypt::OpenSSL3::SSL::Method DTLS_client(SV* class)
 
+#if OPENSSL_VERSION_PREREQ(3, 2)
+Crypt::OpenSSL3::SSL::Method QUIC_client(SV* class)
+
+Crypt::OpenSSL3::SSL::Method QUIC_client_thread(SV* class)
+#endif
+
+#if OPENSSL_VERSION_PREREQ(3, 5)
+Crypt::OpenSSL3::SSL::Method QUIC_server(SV* class)
+#endif
+
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Context	PREFIX = SSL_CTX_
 
 Crypt::OpenSSL3::SSL::Context SSL_CTX_new(SV* class, Crypt::OpenSSL3::SSL::Method method)
@@ -1041,6 +1064,15 @@ int SSL_CTX_set_num_tickets(Crypt::OpenSSL3::SSL::Context ctx, size_t num_ticket
 
 size_t SSL_CTX_get_num_tickets(Crypt::OpenSSL3::SSL::Context ctx)
 
+#if OPENSSL_VERSION_PREREQ(3, 5)
+
+bool SSL_CTX_set_domain_flags(Crypt::OpenSSL3::SSL::Context ctx, uint64_t flags)
+
+NO_OUTPUT bool SSL_CTX_get_domain_flags(Crypt::OpenSSL3::SSL::Context ctx, OUTLIST uint64_t flags)
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+#endif
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL	PREFIX = SSL_
 
@@ -1081,6 +1113,28 @@ BOOT:
 	CONSTANT2(, TLS1_3_VERSION);
 	CONSTANT2(, DTLS1_VERSION);
 	CONSTANT2(, DTLS1_2_VERSION);
+#if OPENSSL_VERSION_PREREQ(3, 2)
+	CONSTANT2(OSSL_, QUIC1_VERSION);
+	CONSTANT2(SSL_, ACCEPT_STREAM_NO_BLOCK);
+	CONSTANT2(SSL_, INCOMING_STREAM_POLICY_AUTO);
+	CONSTANT2(SSL_, INCOMING_STREAM_POLICY_ACCEPT);
+	CONSTANT2(SSL_, INCOMING_STREAM_POLICY_REJECT);
+	CONSTANT2(SSL_, STREAM_FLAG_UNI);
+	CONSTANT2(SSL_, STREAM_FLAG_NO_BLOCK);
+	CONSTANT2(SSL_, STREAM_FLAG_ADVANCE);
+	CONSTANT2(SSL_, STREAM_TYPE_NONE);
+	CONSTANT2(SSL_, STREAM_TYPE_BIDI);
+	CONSTANT2(SSL_, STREAM_TYPE_READ);
+	CONSTANT2(SSL_, STREAM_TYPE_WRITE);
+#endif
+#if OPENSSL_VERSION_PREREQ(3, 5)
+	CONSTANT2(SSL_, ACCEPT_CONNECTION_NO_BLOCK);
+	CONSTANT2(SSL_, DOMAIN_FLAG_SINGLE_THREAD);
+	CONSTANT2(SSL_, DOMAIN_FLAG_MULTI_THREAD);
+	CONSTANT2(SSL_, DOMAIN_FLAG_THREAD_ASSISTED);
+	CONSTANT2(SSL_, DOMAIN_FLAG_BLOCKING);
+	CONSTANT2(SSL_, DOMAIN_FLAG_LEGACY_BLOCKING);
+#endif
 }
 
 Crypt::OpenSSL3::SSL SSL_new(SV* class, Crypt::OpenSSL3::SSL::Context context)
@@ -1297,9 +1351,9 @@ const char *SSL_get_version(Crypt::OpenSSL3::SSL ssl)
 
 bool SSL_is_dtls(Crypt::OpenSSL3::SSL ssl)
 
-#if OPENSSL_VERSION_PREREQ(3, 2)
 bool SSL_is_tls(Crypt::OpenSSL3::SSL ssl)
-#endif
+
+bool SSL_is_quic(Crypt::OpenSSL3::SSL ssl)
 
 bool SSL_in_init(Crypt::OpenSSL3::SSL s)
 
@@ -1353,6 +1407,103 @@ void SSL_get_alpn_selected(Crypt::OpenSSL3::SSL s, OUTLIST SV* result)
 C_ARGS: s, &ptr, &len
 POSTCALL:
 	result = newSVpvn((char*)ptr, len);
+
+#if OPENSSL_VERSION_PREREQ(3, 2)
+
+bool SSL_set_blocking_mode(Crypt::OpenSSL3::SSL s, int blocking)
+
+int SSL_get_blocking_mode(Crypt::OpenSSL3::SSL s)
+POSTCALL:
+	if (RETVAL < 0)
+		XSRETURN_UNDEF;
+
+Crypt::OpenSSL3::SSL SSL_new_stream(Crypt::OpenSSL3::SSL ssl, uint64_t flags)
+
+bool SSL_set_incoming_stream_policy(Crypt::OpenSSL3::SSL conn, int policy, uint64_t app_error_code = 0)
+
+Crypt::OpenSSL3::SSL SSL_accept_stream(Crypt::OpenSSL3::SSL ssl, uint64_t flags)
+
+size_t SSL_get_accept_stream_queue_len(Crypt::OpenSSL3::SSL ssl)
+
+bool SSL_set_default_stream_mode(Crypt::OpenSSL3::SSL conn, unsigned mode)
+
+bool SSL_stream_conclude(Crypt::OpenSSL3::SSL s, uint64_t flags)
+
+bool SSL_stream_reset(Crypt::OpenSSL3::SSL ssl)
+C_ARGS: ssl, NULL, 0
+
+int SSL_get_rpoll_descriptor(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO::PollDescriptor desc)
+
+int SSL_get_wpoll_descriptor(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO::PollDescriptor desc)
+
+int SSL_net_read_desired(Crypt::OpenSSL3::SSL s)
+
+int SSL_net_write_desired(Crypt::OpenSSL3::SSL s)
+
+Crypt::OpenSSL3::SSL SSL_get_connection(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	SSL_up_ref(RETVAL);
+
+bool SSL_is_connection(Crypt::OpenSSL3::SSL ssl)
+
+uint64_t SSL_get_stream_id(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	if (RETVAL == UINT64_MAX)
+		XSRETURN_UNDEF;
+
+int SSL_get_stream_type(Crypt::OpenSSL3::SSL ssl)
+
+Bool SSL_is_stream_local(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	if (RETVAL < 0)
+		XSRETURN_UNDEF;
+
+bool SSL_set_initial_peer_addr(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO::Address addr)
+
+#endif
+
+
+#if OPENSSL_VERSION_PREREQ(3, 5)
+
+Crypt::OpenSSL3::SSL SSL_new_listener(SV* class, Crypt::OpenSSL3::SSL::Context ctx, uint64_t flags)
+C_ARGS: ctx, flags
+
+Crypt::OpenSSL3::SSL SSL_new_listener_from(Crypt::OpenSSL3::SSL ssl, uint64_t flags)
+
+bool SSL_is_listener(Crypt::OpenSSL3::SSL ssl)
+
+Crypt::OpenSSL3::SSL SSL_get_listener(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	if (RETVAL)
+		SSL_up_ref(RETVAL);
+	else
+		XSRETURN_UNDEF;
+
+bool SSL_listen(Crypt::OpenSSL3::SSL ssl)
+
+Crypt::OpenSSL3::SSL SSL_accept_connection(Crypt::OpenSSL3::SSL ssl, uint64_t flags)
+
+size_t SSL_get_accept_connection_queue_len(Crypt::OpenSSL3::SSL ssl)
+
+Crypt::OpenSSL3::SSL SSL_new_from_listener(Crypt::OpenSSL3::SSL ssl, uint64_t flags)
+
+Crypt::OpenSSL3::SSL SSL_new_domain(Crypt::OpenSSL3::SSL::Context ctx, uint64_t flags)
+
+bool SSL_is_domain(Crypt::OpenSSL3::SSL ssl)
+
+Crypt::OpenSSL3::SSL SSL_get_domain(Crypt::OpenSSL3::SSL ssl)
+POSTCALL:
+	if (RETVAL)
+		SSL_up_ref(RETVAL);
+	else
+		XSRETURN_UNDEF;
+
+NO_OUTPUT int SSL_get_domain_flags(Crypt::OpenSSL3::SSL ssl, OUTLIST uint64_t flags)
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+#endif
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Cipher	PREFIX = SSL_CIPHER_

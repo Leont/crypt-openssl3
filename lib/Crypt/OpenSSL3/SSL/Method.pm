@@ -20,3 +20,9 @@ use Crypt::OpenSSL3;
 =method DTLS_client
 
 =method DTLS_server
+
+=method QUIC_client
+
+=method QUIC_client_thread
+
+=method QUIC_server

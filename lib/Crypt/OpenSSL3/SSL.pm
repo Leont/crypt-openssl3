@@ -13,6 +13,10 @@ use Crypt::OpenSSL3;
 
 =method accept
 
+=method accept_connection
+
+=method accept_stream
+
 =method add_client_CA
 
 =method check_private_key
@@ -31,15 +35,27 @@ use Crypt::OpenSSL3;
 
 =method do_handshake
 
+=method get_accept_connection_queue_len
+
+=method get_accept_stream_queue_len
+
 =method get_alpn_selected
+
+=method get_blocking_mode
 
 =method get_certificate
 
 =method get_cipher_list
 
+=method get_connection
+
 =method get_context
 
 =method get_current_cipher
+
+=method get_domain
+
+=method get_domain_flags
 
 =method get_finished
 
@@ -52,6 +68,8 @@ use Crypt::OpenSSL3;
 =method get_event_timeout
 
 =method get_fd
+
+=method get_listener
 
 =method get_mode
 
@@ -69,6 +87,8 @@ use Crypt::OpenSSL3;
 
 =method get_rfd
 
+=method get_rpoll_descriptor
+
 =method get_security_level
 
 =method get_session
@@ -79,6 +99,10 @@ use Crypt::OpenSSL3;
 
 =method get_ssl_method
 
+=method get_stream_id
+
+=method get_stream_type
+
 =method get_verify_result
 
 =method get_version
@@ -86,6 +110,8 @@ use Crypt::OpenSSL3;
 =method get_wbio
 
 =method get_wfd
+
+=method get_wpoll_descriptor
 
 =method handle_events
 
@@ -99,15 +125,39 @@ use Crypt::OpenSSL3;
 
 =method in_init
 
+=method is_connection
+
+=method is_domain
+
 =method is_dtls
 
 =method is_init_finished
 
+=method is_listener
+
 =method is_server
+
+=method is_stream_local
 
 =method is_tls
 
+=method listen
+
+=method net_read_desired
+
+=method net_write_desired
+
+=method new_domain
+
+=method new_from_listener
+
+=method new_listener
+
+=method new_listener_from
+
 =method new_session_ticket
+
+=method new_stream
 
 =method peek
 
@@ -125,15 +175,23 @@ use Crypt::OpenSSL3;
 
 =method set_alpn_protos
 
+=method set_blocking_mode
+
 =method set_cipher_list
 
 =method set_ciphersuites
 
 =method set_connect_state
 
+=method set_default_stream_mode
+
 =method set_fd
 
 =method set_host
+
+=method set_incoming_stream_policy
+
+=method set_initial_peer_addr
 
 =method set_max_proto_version
 
@@ -174,6 +232,10 @@ use Crypt::OpenSSL3;
 =method state_string
 
 =method state_string_long
+
+=method stream_conclude
+
+=method stream_reset
 
 =method use_PrivateKey
 

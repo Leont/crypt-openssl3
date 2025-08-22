@@ -27,6 +27,8 @@ use Crypt::OpenSSL3;
 
 =method get_cert_store
 
+=method get_domain_flags
+
 =method get_max_proto_version
 
 =method get_min_proto_version
@@ -90,6 +92,8 @@ use Crypt::OpenSSL3;
 =method set_default_verify_file
 
 =method set_default_verify_paths
+
+=method set_domain_flags
 
 =method set_max_proto_version
 
