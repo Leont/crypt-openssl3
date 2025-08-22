@@ -15,6 +15,8 @@ use warnings;
 
 =method get_param
 
+=method kdf
+
 =method reset
 
 =method set_params

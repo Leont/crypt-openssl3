@@ -163,6 +163,7 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define EVP_KDF_get_name EVP_KDF_get0_name
 #define EVP_KDF_get_description EVP_KDF_get0_description
 #define EVP_KDF_CTX_get_name EVP_KDF_CTX_get0_name
+#define EVP_KDF_CTX_kdf(ctx) (EVP_KDF*)EVP_KDF_CTX_kdf(ctx)
 
 #define EVP_SIGNATURE_get_name EVP_SIGNATURE_get0_name
 #define EVP_SIGNATURE_get_description EVP_SIGNATURE_get0_description
@@ -1878,6 +1879,10 @@ CODE:
 	GENERATE_GET_PARAM(EVP_KDF_CTX, ctx, name)
 OUTPUT:
 	RETVAL
+
+Crypt::OpenSSL3::KDF EVP_KDF_CTX_kdf(Crypt::OpenSSL3::KDF::Context ctx)
+POSTCALL:
+	EVP_KDF_up_ref(RETVAL);
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF::Context	PREFIX = EVP_KDF_
