@@ -93,6 +93,9 @@ DUPLICATING_TYPE(X509_NAME_ENTRY, X509__Name__Entry)
 typedef long Crypt__OpenSSL3__X509__VerifyResult;
 
 COUNTING_TYPE(BIO, BIO)
+#if OPENSSL_VERSION_PREREQ(3, 2)
+typedef BIO_POLL_DESCRIPTOR* Crypt__OpenSSL3__BIO__PollDescriptor;
+#endif
 
 SIMPLE_TYPE(SSL_METHOD, SSL__Method, const)
 COUNTING_TYPE(SSL_CTX, SSL__Context)
@@ -107,6 +110,10 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 	return result;
 }
 #define make_object(var, magic, name) S_make_object(aTHX_ var, magic, name)
+
+#define BIO_POLL_DESCRIPTOR_new(class) safecalloc(1, sizeof(BIO_POLL_DESCRIPTOR))
+#define BIO_POLL_DESCRIPTOR_type(desc) ((desc)->type)
+#define BIO_POLL_DESCRIPTOR_fd(desc) ((desc)->value.fd)
 
 #define BN_generate_prime BN_generate_prime_ex2
 #define X509_verify_cert_error_code(value) value
@@ -424,6 +431,7 @@ Crypt::OpenSSL3::PKey T_MAGICEXT
 Crypt::OpenSSL3::PKey::Context T_MAGICEXT
 
 Crypt::OpenSSL3::BIO T_MAGICEXT
+Crypt::OpenSSL3::BIO::PollDescriptor T_MAGICBUF
 Crypt::OpenSSL3::Error T_INTOBJ
 
 Crypt::OpenSSL3::BigNum T_MAGICEXT
@@ -536,7 +544,30 @@ POSTCALL:
 
 int BIO_write(Crypt::OpenSSL3::BIO b, const char *data, int length(data))
 
+#if OPENSSL_VERSION_PREREQ(3, 2)
+bool BIO_get_rpoll_descriptor(Crypt::OpenSSL3::BIO b, Crypt::OpenSSL3::BIO::PollDescriptor desc)
 
+bool BIO_get_wpoll_descriptor(Crypt::OpenSSL3::BIO b, Crypt::OpenSSL3::BIO::PollDescriptor desc)
+#endif
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BIO::PollDescriptor	PREFIX = BIO_POLL_DESCRIPTOR_
+BOOT:
+{
+#if OPENSSL_VERSION_PREREQ(3, 2)
+	HV* stash = get_hv("Crypt::OpenSSL3::BIO::PollDescriptor", TRUE);
+	CONSTANT2(BIO_POLL_DESCRIPTOR_, TYPE_NONE);
+	CONSTANT2(BIO_POLL_DESCRIPTOR_, TYPE_SOCK_FD);
+	CONSTANT2(BIO_POLL_DESCRIPTOR_, CUSTOM_START);
+#endif
+}
+
+#if OPENSSL_VERSION_PREREQ(3, 2)
+Crypt::OpenSSL3::BIO::PollDescriptor BIO_POLL_DESCRIPTOR_new(class)
+
+int BIO_POLL_DESCRIPTOR_type(Crypt::OpenSSL3::BIO::PollDescriptor desc)
+
+int BIO_POLL_DESCRIPTOR_fd(Crypt::OpenSSL3::BIO::PollDescriptor desc)
+#endif
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BigNum	PREFIX = BN_
 

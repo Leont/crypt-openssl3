@@ -31,6 +31,10 @@ use Crypt::OpenSSL3;
 
 =method get_line
 
+=method get_rpoll_descriptor
+
+=method get_wpoll_descriptor
+
 =method gets
 
 =method pending
