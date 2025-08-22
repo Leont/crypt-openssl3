@@ -94,6 +94,7 @@ typedef long Crypt__OpenSSL3__X509__VerifyResult;
 
 COUNTING_TYPE(BIO, BIO)
 #if OPENSSL_VERSION_PREREQ(3, 2)
+DUPLICATING_TYPE(BIO_ADDR, BIO__Address)
 typedef BIO_POLL_DESCRIPTOR* Crypt__OpenSSL3__BIO__PollDescriptor;
 #endif
 
@@ -431,6 +432,7 @@ Crypt::OpenSSL3::PKey T_MAGICEXT
 Crypt::OpenSSL3::PKey::Context T_MAGICEXT
 
 Crypt::OpenSSL3::BIO T_MAGICEXT
+Crypt::OpenSSL3::BIO::Address T_MAGICEXT
 Crypt::OpenSSL3::BIO::PollDescriptor T_MAGICBUF
 Crypt::OpenSSL3::Error T_INTOBJ
 
@@ -548,6 +550,51 @@ int BIO_write(Crypt::OpenSSL3::BIO b, const char *data, int length(data))
 bool BIO_get_rpoll_descriptor(Crypt::OpenSSL3::BIO b, Crypt::OpenSSL3::BIO::PollDescriptor desc)
 
 bool BIO_get_wpoll_descriptor(Crypt::OpenSSL3::BIO b, Crypt::OpenSSL3::BIO::PollDescriptor desc)
+#endif
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BIO::Address	PREFIX = BIO_ADDR_
+
+#if OPENSSL_VERSION_PREREQ(3, 2)
+
+Crypt::OpenSSL3::BIO::Address BIO_ADDR_new()
+
+bool BIO_ADDR_copy(Crypt::OpenSSL3::BIO::Address dst, Crypt::OpenSSL3::BIO::Address src)
+
+Crypt::OpenSSL3::BIO::Address BIO_ADDR_dup(Crypt::OpenSSL3::BIO::Address ap)
+
+void BIO_ADDR_clear(Crypt::OpenSSL3::BIO::Address ap)
+
+bool BIO_ADDR_rawmake(Crypt::OpenSSL3::BIO::Address ap, int family, const char *where, size_t length(where), unsigned short port)
+
+int BIO_ADDR_family(Crypt::OpenSSL3::BIO::Address ap)
+
+SV* BIO_ADDR_rawaddress(Crypt::OpenSSL3::BIO::Address ap)
+CODE:
+	size_t length = 0;
+	if (BIO_ADDR_rawaddress(ap, NULL, &length)) {
+		char* ptr = make_buffer(&RETVAL, length);
+		if (BIO_ADDR_rawaddress(ap, ptr, &length))
+			set_buffer_length(RETVAL, length);
+	} else
+		RETVAL = &PL_sv_undef;
+OUTPUT:
+	RETVAL
+
+unsigned short BIO_ADDR_rawport(Crypt::OpenSSL3::BIO::Address ap)
+
+char *BIO_ADDR_hostname_string(Crypt::OpenSSL3::BIO::Address ap, int numeric)
+CLEANUP:
+	OPENSSL_free(RETVAL);
+
+char *BIO_ADDR_service_string(Crypt::OpenSSL3::BIO::Address ap, int numeric)
+CLEANUP:
+	OPENSSL_free(RETVAL);
+
+char *BIO_ADDR_path_string(Crypt::OpenSSL3::BIO::Address ap)
+CLEANUP:
+	OPENSSL_free(RETVAL);
+
 #endif
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BIO::PollDescriptor	PREFIX = BIO_POLL_DESCRIPTOR_
