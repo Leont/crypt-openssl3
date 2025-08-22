@@ -29,8 +29,6 @@ use warnings;
 
 =method get_size
 
-=method get_size_ex
-
 =method get_type
 
 =method reset

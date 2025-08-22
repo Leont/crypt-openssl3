@@ -176,8 +176,6 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define EVP_PKEY_decrypt_init EVP_PKEY_decrypt_init_ex
 #define EVP_PKEY_derive_init EVP_PKEY_derive_init_ex
 #define EVP_PKEY_derive_set_peer EVP_PKEY_derive_set_peer_ex
-#define EVP_PKEY_sign_init EVP_PKEY_sign_init_ex2
-#define EVP_PKEY_verify_init EVP_PKEY_verify_init_ex2
 #define EVP_PKEY_CTX_add_hkdf_info EVP_PKEY_CTX_add1_hkdf_info
 #define EVP_PKEY_CTX_set_hkdf_salt EVP_PKEY_CTX_set1_hkdf_salt
 #define EVP_PKEY_CTX_set_hkdf_key EVP_PKEY_CTX_set1_hkdf_key
@@ -186,6 +184,22 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define EVP_PKEY_CTX_get_rsa_oaep_label EVP_PKEY_CTX_get0_rsa_oaep_label
 #define EVP_PKEY_CTX_set_rsa_oaep_label EVP_PKEY_CTX_set0_rsa_oaep_label
 #define EVP_PKEY_CTX_set_id EVP_PKEY_CTX_set1_id
+
+#if !OPENSSL_VERSION_PREREQ(3, 4)
+static int EVP_PKEY_sign_init_ex2(EVP_PKEY_CTX *ctx, EVP_SIGNATURE *algo, const OSSL_PARAM params[]) {
+	if (algo)
+		return FALSE;
+	return EVP_PKEY_sign_init_ex(ctx, params);
+}
+
+static int EVP_PKEY_verify_init_ex2(EVP_PKEY_CTX *ctx, EVP_SIGNATURE *algo, const OSSL_PARAM params[]) {
+	if (algo)
+		return FALSE;
+	return EVP_PKEY_verify_init_ex(ctx, params);
+}
+#endif
+#define EVP_PKEY_sign_init EVP_PKEY_sign_init_ex2
+#define EVP_PKEY_verify_init EVP_PKEY_verify_init_ex2
 
 #define CONSTANT2(PREFIX, VALUE) newCONSTSUB(stash, #VALUE, newSVuv(PREFIX##VALUE))
 
@@ -1648,7 +1662,9 @@ int EVP_MD_get_block_size(Crypt::OpenSSL3::MD md)
 
 unsigned long EVP_MD_get_flags(Crypt::OpenSSL3::MD md)
 
+#if OPENSSL_VERSION_PREREQ(3, 4)
 bool EVP_MD_xof(Crypt::OpenSSL3::MD md)
+#endif
 
 SV* EVP_MD_get_param(Crypt::OpenSSL3::MD md, const char* name)
 CODE:
@@ -1730,8 +1746,6 @@ Crypt::OpenSSL3::MD EVP_MD_CTX_get_md(Crypt::OpenSSL3::MD::Context ctx)
 const char *EVP_MD_CTX_get_name(Crypt::OpenSSL3::MD::Context ctx)
 
 int EVP_MD_CTX_get_size(Crypt::OpenSSL3::MD::Context ctx)
-
-int EVP_MD_CTX_get_size_ex(Crypt::OpenSSL3::MD::Context ctx)
 
 int EVP_MD_CTX_get_block_size(Crypt::OpenSSL3::MD::Context ctx)
 
@@ -2237,7 +2251,9 @@ bool EVP_PKEY_CTX_set_hkdf_key(Crypt::OpenSSL3::PKey::Context pctx, unsigned cha
 
 bool EVP_PKEY_CTX_add_hkdf_info(Crypt::OpenSSL3::PKey::Context pctx, unsigned char *info, int infolen)
 
+#if OPENSSL_VERSION_PREREQ(3, 4)
 bool EVP_PKEY_CTX_set_signature(Crypt::OpenSSL3::PKey::Context pctx, const unsigned char *sig, size_t siglen)
+#endif
 
 int EVP_PKEY_CTX_get_keygen_info(Crypt::OpenSSL3::PKey::Context ctx, int idx)
 
@@ -2375,6 +2391,8 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
 C_ARGS: ctx, algo, params
 
+#if OPENSSL_VERSION_PREREQ(3, 4)
+
 bool EVP_PKEY_sign_message_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef, Crypt::OpenSSL3::Signature algo = NULL)
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
@@ -2396,6 +2414,17 @@ CODE:
 OUTPUT:
 	RETVAL
 
+bool EVP_PKEY_verify_message_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef, Crypt::OpenSSL3::Signature algo = NULL)
+INIT:
+	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
+C_ARGS: ctx, algo, params
+
+bool EVP_PKEY_verify_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
+
+bool EVP_PKEY_verify_message_final(Crypt::OpenSSL3::PKey::Context ctx)
+
+#endif
+
 SV* EVP_PKEY_sign(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *tbs, size_t length(tbs))
 CODE:
 	size_t sig_length;
@@ -2415,14 +2444,5 @@ bool EVP_PKEY_verify_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef, 
 INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
 C_ARGS: ctx, algo, params
-
-bool EVP_PKEY_verify_message_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef, Crypt::OpenSSL3::Signature algo = NULL)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, algo, params
-
-bool EVP_PKEY_verify_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
-
-bool EVP_PKEY_verify_message_final(Crypt::OpenSSL3::PKey::Context ctx)
 
 bool EVP_PKEY_verify(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *sig, size_t length(sig), const unsigned char *tbs, size_t length(tbs))
