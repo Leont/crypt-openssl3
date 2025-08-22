@@ -20,6 +20,7 @@ my $ctx2 = Crypt::OpenSSL3::PKey::Context->new_from_pkey($pkey);
 ok $ctx2;
 
 ok $ctx2->encapsulate_init;
+ok $ctx2->set_params({ operation => "RSASVE" });
 my ($wrapped, $gen) = $ctx2->encapsulate;
 ok $wrapped;
 ok $gen;
@@ -27,6 +28,7 @@ ok $gen;
 my $ctx3 = Crypt::OpenSSL3::PKey::Context->new_from_pkey($pkey);
 ok $ctx3;
 ok $ctx3->decapsulate_init;
+ok $ctx3->set_params({ operation => "RSASVE" });
 my $unwrapped = $ctx3->decapsulate($wrapped);
 ok $unwrapped;
 
