@@ -546,7 +546,7 @@ bool BN_mod_mul(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::Ope
 
 bool BN_mod_sqr(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum m, Crypt::OpenSSL3::BigNum::Context ctx)
 
-Crypt::OpenSSL3::BigNum BN_mod_sqrt(Crypt::OpenSSL3::BigNum in, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum p, Crypt::OpenSSL3::BigNum::Context ctx)
+bool BN_mod_sqrt(Crypt::OpenSSL3::BigNum in, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum p, Crypt::OpenSSL3::BigNum::Context ctx)
 
 bool BN_exp(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum p, Crypt::OpenSSL3::BigNum::Context ctx)
 
@@ -709,10 +709,14 @@ OUTPUT:
 	RETVAL
 
 Crypt::OpenSSL3::X509::Name X509_get_subject_name(Crypt::OpenSSL3::X509 x)
+POSTCALL:
+	RETVAL = X509_NAME_dup(RETVAL);
 
 bool X509_set_subject_name(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::X509::Name name)
 
 Crypt::OpenSSL3::X509::Name X509_get_issuer_name(Crypt::OpenSSL3::X509 x)
+POSTCALL:
+	RETVAL = X509_NAME_dup(RETVAL);
 
 bool X509_set_issuer_name(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::X509::Name name)
 
@@ -752,6 +756,8 @@ int X509_NAME_get_index_by_NID(Crypt::OpenSSL3::X509::Name name, int nid, int la
 int X509_NAME_entry_count(Crypt::OpenSSL3::X509::Name name)
 
 Crypt::OpenSSL3::X509::Name::Entry X509_NAME_get_entry(Crypt::OpenSSL3::X509::Name name, int loc)
+POSTCALL:
+	RETVAL = X509_NAME_ENTRY_dup(RETVAL);
 
 char* X509_NAME_oneline(Crypt::OpenSSL3::X509::Name a)
 	C_ARGS: a, NULL, 0
@@ -1126,7 +1132,10 @@ bool SSL_get_read_ahead(Crypt::OpenSSL3::SSL s)
 
 Crypt::OpenSSL3::SSL::Session SSL_get_session(Crypt::OpenSSL3::SSL ssl)
 POSTCALL:
-	SSL_SESSION_up_ref(RETVAL);
+	if (RETVAL)
+		SSL_SESSION_up_ref(RETVAL);
+	else
+		XSRETURN_UNDEF;
 
 bool SSL_set_session(Crypt::OpenSSL3::SSL ssl, Crypt::OpenSSL3::SSL::Session session)
 
@@ -1254,7 +1263,9 @@ int SSL_CIPHER_get_digest_nid(Crypt::OpenSSL3::SSL::Cipher c)
 
 Crypt::OpenSSL3::MD SSL_CIPHER_get_handshake_digest(Crypt::OpenSSL3::SSL::Cipher c)
 POSTCALL:
-	if (!RETVAL)
+	if (RETVAL)
+		EVP_MD_up_ref(RETVAL);
+	else
 		XSRETURN_UNDEF;
 
 int SSL_CIPHER_get_kx_nid(Crypt::OpenSSL3::SSL::Cipher c)
@@ -1320,7 +1331,10 @@ bool SSL_SESSION_set_max_early_data(Crypt::OpenSSL3::SSL::Session s, unsigned ma
 
 Crypt::OpenSSL3::X509 SSL_SESSION_get_peer(Crypt::OpenSSL3::SSL::Session session)
 POSTCALL:
-	X509_up_ref(RETVAL);
+	if (RETVAL)
+		X509_up_ref(RETVAL);
+	else
+		XSRETURN_UNDEF;
 
 bool SSL_SESSION_set_id_context(Crypt::OpenSSL3::SSL::Session s, const unsigned char *sid_ctx, unsigned int length(sid_ctx))
 
@@ -1422,6 +1436,8 @@ Crypt::OpenSSL3::Random::Context EVP_RAND_CTX_new(SV* class, Crypt::OpenSSL3::Ra
 C_ARGS: type, parent
 
 Crypt::OpenSSL3::Random EVP_RAND_CTX_get_rand(Crypt::OpenSSL3::Random::Context ctx)
+POSTCALL:
+	EVP_RAND_up_ref(RETVAL);
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random::Context	PREFIX = EVP_RAND_
 
