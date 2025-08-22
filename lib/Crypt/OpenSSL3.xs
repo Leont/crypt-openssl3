@@ -2292,7 +2292,7 @@ C_ARGS: ctx, authpriv, params
 void EVP_PKEY_encapsulate(Crypt::OpenSSL3::PKey::Context ctx, OUTLIST SV* wrapped_key, OUTLIST SV* gen_key)
 CODE:
 	size_t wrapped_length, gen_length;
-	if (!EVP_PKEY_encapsulate(ctx, NULL, &wrapped_length, NULL, &gen_length))
+	if (EVP_PKEY_encapsulate(ctx, NULL, &wrapped_length, NULL, &gen_length) != 1)
 		XSRETURN_EMPTY;
 
 	char* wrapped_ptr = make_buffer(&wrapped_key, wrapped_length);
@@ -2318,13 +2318,13 @@ SV* EVP_PKEY_decapsulate(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char
 CODE:
 	size_t unwrapped_length;
 	int result = EVP_PKEY_decapsulate(ctx, NULL, &unwrapped_length, wrapped, STRLEN_length_of_wrapped);
-	RETVAL = &PL_sv_undef;
-	if (result) {
+	if (result == 1) {
 		char* unwrapped_ptr = make_buffer(&RETVAL, unwrapped_length);
 
-		if (EVP_PKEY_decapsulate(ctx, unwrapped_ptr, &unwrapped_length, wrapped, STRLEN_length_of_wrapped))
+		if (EVP_PKEY_decapsulate(ctx, unwrapped_ptr, &unwrapped_length, wrapped, STRLEN_length_of_wrapped) == 1)
 			set_buffer_length(RETVAL, unwrapped_length);
-	}
+	} else
+		RETVAL = &PL_sv_undef;
 OUTPUT:
 	RETVAL
 
@@ -2337,14 +2337,14 @@ SV* EVP_PKEY_encrypt(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *in
 CODE:
 	size_t out_length;
 	bool result = EVP_PKEY_encrypt(ctx, NULL, &out_length, in, STRLEN_length_of_in);
-	RETVAL = &PL_sv_undef;
-	if (result) {
+	if (result == 1) {
 		char* out_ptr = make_buffer(&RETVAL, out_length);
 
 		result = EVP_PKEY_encrypt(ctx, out_ptr, &out_length, in, STRLEN_length_of_in);
-		if (result)
+		if (result == 1)
 			set_buffer_length(RETVAL, out_length);
-	}
+	} else
+		RETVAL = &PL_sv_undef;
 OUTPUT:
 	RETVAL
 
@@ -2356,15 +2356,13 @@ C_ARGS: ctx, params
 SV* EVP_PKEY_decrypt(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *in, size_t length(in))
 CODE:
 	size_t out_length;
-	bool result = EVP_PKEY_decrypt(ctx, NULL, &out_length, in, STRLEN_length_of_in);
-	RETVAL = &PL_sv_undef;
-	if (result) {
+	if (EVP_PKEY_decrypt(ctx, NULL, &out_length, in, STRLEN_length_of_in) == 1) {
 		char* out_ptr = make_buffer(&RETVAL, out_length);
 
-		result = EVP_PKEY_decrypt(ctx, out_ptr, &out_length, in, STRLEN_length_of_in);
-		if (result)
+		if (EVP_PKEY_decrypt(ctx, out_ptr, &out_length, in, STRLEN_length_of_in) == 1)
 			set_buffer_length(RETVAL, out_length);
-	}
+	} else
+		RETVAL = &PL_sv_undef;
 OUTPUT:
 	RETVAL
 
@@ -2378,15 +2376,13 @@ bool EVP_PKEY_derive_set_peer(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL
 SV* EVP_PKEY_derive(Crypt::OpenSSL3::PKey::Context ctx)
 CODE:
 	size_t key_length;
-	bool result = EVP_PKEY_derive(ctx, NULL, &key_length);
-	RETVAL = &PL_sv_undef;
-	if (result) {
+	if (EVP_PKEY_derive(ctx, NULL, &key_length) == 1) {
 		char* key_ptr = make_buffer(&RETVAL, key_length);
 
-		result = EVP_PKEY_derive(ctx, key_ptr, &key_length);
-		if (result)
+		if (EVP_PKEY_derive(ctx, key_ptr, &key_length) == 1)
 			set_buffer_length(RETVAL, key_length);
-	}
+	} else
+		RETVAL = &PL_sv_undef;
 OUTPUT:
 	RETVAL
 
@@ -2407,14 +2403,12 @@ bool EVP_PKEY_sign_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned c
 SV* EVP_PKEY_sign_message_final(Crypt::OpenSSL3::PKey::Context ctx)
 CODE:
 	size_t sigsize;
-	bool result = EVP_PKEY_sign_message_final(ctx, NULL, &sigsize);
-	RETVAL = &PL_sv_undef;
-	if (result) {
+	if (EVP_PKEY_sign_message_final(ctx, NULL, &sigsize) == 1) {
 		char* ptr = make_buffer(&RETVAL, sigsize);
-		result = EVP_PKEY_sign_message_final(ctx, ptr, &sigsize);
-		if (result)
+		if (EVP_PKEY_sign_message_final(ctx, ptr, &sigsize) == 1)
 			set_buffer_length(RETVAL, sigsize);
-	}
+	} else
+		RETVAL = &PL_sv_undef;
 OUTPUT:
 	RETVAL
 
@@ -2425,22 +2419,23 @@ C_ARGS: ctx, algo, params
 
 bool EVP_PKEY_verify_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
 
-bool EVP_PKEY_verify_message_final(Crypt::OpenSSL3::PKey::Context ctx)
+Bool EVP_PKEY_verify_message_final(Crypt::OpenSSL3::PKey::Context ctx)
+POSTCALL:
+	if (RETVAL < 0)
+		XSRETURN_UNDEF;
 
 #endif
 
 SV* EVP_PKEY_sign(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *tbs, size_t length(tbs))
 CODE:
 	size_t sig_length;
-	bool result = EVP_PKEY_sign(ctx, NULL, &sig_length, tbs, STRLEN_length_of_tbs);
-	RETVAL = &PL_sv_undef;
-	if (result) {
+	if (EVP_PKEY_sign(ctx, NULL, &sig_length, tbs, STRLEN_length_of_tbs) == 1) {
 		char* sig_ptr = make_buffer(&RETVAL, sig_length);
 
-		result = EVP_PKEY_sign(ctx, sig_ptr, &sig_length, tbs, STRLEN_length_of_tbs);
-		if (result)
+		if (EVP_PKEY_sign(ctx, sig_ptr, &sig_length, tbs, STRLEN_length_of_tbs) == 1)
 			set_buffer_length(RETVAL, sig_length);
-	}
+	} else
+		RETVAL = &PL_sv_undef;
 OUTPUT:
 	RETVAL
 
@@ -2449,4 +2444,7 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
 C_ARGS: ctx, algo, params
 
-bool EVP_PKEY_verify(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *sig, size_t length(sig), const unsigned char *tbs, size_t length(tbs))
+Bool EVP_PKEY_verify(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *sig, size_t length(sig), const unsigned char *tbs, size_t length(tbs))
+POSTCALL:
+	if (RETVAL < 0)
+		XSRETURN_UNDEF;
