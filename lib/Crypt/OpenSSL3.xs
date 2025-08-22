@@ -51,6 +51,21 @@ static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = {\
 typedef modifier c_prefix * Crypt__OpenSSL3__ ## xs_type;\
 static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = { NULL };
 
+#if !OPENSSL_VERSION_PREREQ(3, 2)
+static EVP_MD_CTX *EVP_MD_CTX_dup(const EVP_MD_CTX *in) {
+	EVP_MD_CTX* result = EVP_MD_CTX_new();
+	EVP_MD_CTX_copy(result, in);
+	return result;
+}
+
+static EVP_CIPHER_CTX *EVP_CIPHER_CTX_dup(const EVP_CIPHER_CTX *in) {
+	EVP_CIPHER_CTX* result = EVP_CIPHER_CTX_new();
+	EVP_CIPHER_CTX_copy(result, in);
+	return result;
+}
+#define EVP_RAND_CTX_up_ref(ctx) NULL
+#endif
+
 typedef unsigned long Crypt__OpenSSL3__Error;
 COUNTING_TYPE(EVP_RAND, Random)
 COUNTING_TYPE(EVP_RAND_CTX, Random__Context)
@@ -121,6 +136,10 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define SSL_SESSION_set_hostname SSL_SESSION_set1_hostname
 #define SSL_SESSION_set_id SSL_SESSION_set1_id
 #define SSL_SESSION_set_id_context SSL_SESSION_set1_id_context
+#if !OPENSSL_VERSION_PREREQ(3,2)
+#define SSL_get_event_timeout(s, tv, inf) DTLSv1_get_timeout(s, tv)
+#define SSL_handle_events DTLSv1_handle_timeout
+#endif
 #if OPENSSL_VERSION_PREREQ(3, 3)
 #define SSL_SESSION_get_time SSL_SESSION_get_time_ex
 #define SSL_SESSION_set_time SSL_SESSION_set_time_ex
@@ -679,8 +698,9 @@ bool BN_abs_is_word(Crypt::OpenSSL3::BigNum a, UV w)
 
 bool BN_is_odd(Crypt::OpenSSL3::BigNum a)
 
+#if OPENSSL_VERSION_PREREQ(3, 2)
 bool BN_are_coprime(Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum b, Crypt::OpenSSL3::BigNum::Context ctx);
-
+#endif
 
 bool BN_clear_bit(Crypt::OpenSSL3::BigNum a, int n)
 
@@ -995,6 +1015,8 @@ POSTCALL:
 	SSL_CTX_up_ref(RETVAL);
 
 NO_OUTPUT int SSL_get_event_timeout(Crypt::OpenSSL3::SSL s, OUTLIST struct timeval tv, OUTLIST Bool is_infinite)
+INIT:
+	is_infinite = 0;
 POSTCALL:
 	if (!RETVAL)
 		XSRETURN_EMPTY;
@@ -1197,7 +1219,9 @@ const char *SSL_get_version(Crypt::OpenSSL3::SSL ssl)
 
 bool SSL_is_dtls(Crypt::OpenSSL3::SSL ssl)
 
+#if OPENSSL_VERSION_PREREQ(3, 2)
 bool SSL_is_tls(Crypt::OpenSSL3::SSL ssl)
+#endif
 
 bool SSL_in_init(Crypt::OpenSSL3::SSL s)
 
@@ -1436,6 +1460,7 @@ Crypt::OpenSSL3::Random::Context RAND_get_private(SV* class)
 POSTCALL:
 	EVP_RAND_CTX_up_ref(RETVAL);
 
+#if OPENSSL_VERSION_PREREQ(3, 2)
 bool RAND_set_public(SV* class, Crypt::OpenSSL3::Random::Context rand)
 POSTCALL:
 	if (RETVAL)
@@ -1445,7 +1470,7 @@ bool RAND_set_private(SV* class, Crypt::OpenSSL3::Random::Context rand)
 POSTCALL:
 	if (RETVAL)
 		EVP_RAND_CTX_up_ref(rand);
-
+#endif
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random::Context	PREFIX = EVP_RAND_CTX_
 
@@ -2284,11 +2309,6 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
 C_ARGS: ctx, params
 
-bool EVP_PKEY_auth_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpriv, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, authpriv, params
-
 void EVP_PKEY_encapsulate(Crypt::OpenSSL3::PKey::Context ctx, OUTLIST SV* wrapped_key, OUTLIST SV* gen_key)
 CODE:
 	size_t wrapped_length, gen_length;
@@ -2309,11 +2329,6 @@ INIT:
 	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
 C_ARGS: ctx, params
 
-bool EVP_PKEY_auth_decapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpub, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, authpub, params
-
 SV* EVP_PKEY_decapsulate(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *wrapped, size_t length(wrapped))
 CODE:
 	size_t unwrapped_length;
@@ -2327,6 +2342,18 @@ CODE:
 		RETVAL = &PL_sv_undef;
 OUTPUT:
 	RETVAL
+
+#if OPENSSL_VERSION_PREREQ(3, 2)
+bool EVP_PKEY_auth_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpriv, SV* args = undef)
+INIT:
+	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
+C_ARGS: ctx, authpriv, params
+
+bool EVP_PKEY_auth_decapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpub, SV* args = undef)
+INIT:
+	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
+C_ARGS: ctx, authpub, params
+#endif
 
 bool EVP_PKEY_encrypt_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
 INIT:
