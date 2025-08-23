@@ -37,8 +37,24 @@ use warnings;
 
 =method set_params
 
+=method sign
+
+=method sign_init
+
+=method sign_final
+
+=method sign_update
+
 =method squeeze
 
 =method test_flags
 
 =method update
+
+=method verify
+
+=method verify_init
+
+=method verify_final
+
+=method verify_update

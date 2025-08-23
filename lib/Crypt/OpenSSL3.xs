@@ -195,6 +195,14 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define EVP_MD_CTX_final EVP_DigestFinal_ex
 #define EVP_MD_CTX_final_xof EVP_DigestFinalXOF
 #define EVP_MD_CTX_squeeze EVP_DigestSqueeze
+#define EVP_MD_CTX_sign_init EVP_DigestSignInit
+#define EVP_MD_CTX_sign_update EVP_DigestSignUpdate
+#define EVP_MD_CTX_sign_final EVP_DigestSignFinal
+#define EVP_MD_CTX_sign EVP_DigestSign
+#define EVP_MD_CTX_verify_init EVP_DigestVerifyInit
+#define EVP_MD_CTX_verify_update EVP_DigestVerifyUpdate
+#define EVP_MD_CTX_verify_final EVP_DigestVerifyFinal
+#define EVP_MD_CTX_verify EVP_DigestVerify
 
 #define EVP_MAC_get_name EVP_MAC_get0_name
 #define EVP_MAC_get_description EVP_MAC_get0_description
@@ -1975,6 +1983,50 @@ POSTCALL:
 	if (RETVAL)
 		set_buffer_length(digest, outlen);
 #endif
+
+bool EVP_MD_CTX_sign_init(Crypt::OpenSSL3::MD::Context ctx, Crypt::OpenSSL3::MD type, Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::PKey::Context pctx = NULL)
+C_ARGS: ctx, pctx ? &pctx : NULL, type, NULL, pkey
+	
+bool EVP_MD_CTX_sign_update(Crypt::OpenSSL3::MD::Context ctx, const char *d, size_t length(d))
+
+SV* EVP_MD_CTX_sign_final(Crypt::OpenSSL3::MD::Context ctx)
+CODE:
+	size_t size = 0;
+	if (EVP_DigestSignFinal(ctx, NULL, &size) == 1) {
+		char* ptr = make_buffer(&RETVAL, size);
+		if (EVP_DigestSignFinal(ctx, ptr, &size) == 1)
+			set_buffer_length(RETVAL, size);
+	} else
+		RETVAL = &PL_sv_undef;
+OUTPUT:
+	RETVAL
+
+SV* EVP_MD_CTX_sign(Crypt::OpenSSL3::MD::Context ctx, const unsigned char *tbs, size_t length(tbs))
+CODE:
+	size_t size = 0;
+	if (EVP_DigestSign(ctx, NULL, &size, tbs, STRLEN_length_of_tbs) == 1) {
+		char* ptr = make_buffer(&RETVAL, size);
+		if (EVP_DigestSign(ctx, ptr, &size, tbs, STRLEN_length_of_tbs) == 1)
+			set_buffer_length(RETVAL, size);
+	} else
+		RETVAL = &PL_sv_undef;
+OUTPUT:
+	RETVAL
+
+bool EVP_MD_CTX_verify_init(Crypt::OpenSSL3::MD::Context ctx, Crypt::OpenSSL3::MD type, Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::PKey::Context pctx = NULL)
+C_ARGS: ctx, pctx ? &pctx : NULL, type, NULL, pkey
+	
+bool EVP_MD_CTX_verify_update(Crypt::OpenSSL3::MD::Context ctx, const char *d, size_t length(d))
+
+Bool EVP_MD_CTX_verify_final(Crypt::OpenSSL3::MD::Context ctx, const unsigned char *sig, size_t length(sig))
+POSTCALL:
+	if (RETVAL < 0)
+		XSRETURN_UNDEF;
+
+Bool EVP_MD_CTX_verify(Crypt::OpenSSL3::MD::Context ctx, const unsigned char *sig, size_t length(sig), const unsigned char *tbs, size_t length(tbs))
+POSTCALL:
+	if (RETVAL < 0)
+		XSRETURN_UNDEF;
 
 bool EVP_MD_CTX_set_params(Crypt::OpenSSL3::MD::Context ctx, SV* args = undef)
 INIT:
