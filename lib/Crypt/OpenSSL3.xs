@@ -611,7 +611,7 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BIO::PollDescriptor	PREFIX =
 BOOT:
 {
 #if OPENSSL_VERSION_PREREQ(3, 2)
-	HV* stash = get_hv("Crypt::OpenSSL3::BIO::PollDescriptor", TRUE);
+	HV* stash = gv_stashpvs("Crypt::OpenSSL3::BIO::PollDescriptor", GV_ADD | GV_ADDMULTI);
 	CONSTANT2(BIO_POLL_DESCRIPTOR_, TYPE_NONE);
 	CONSTANT2(BIO_POLL_DESCRIPTOR_, TYPE_SOCK_FD);
 	CONSTANT2(BIO_POLL_DESCRIPTOR_, CUSTOM_START);
@@ -630,7 +630,7 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BigNum	PREFIX = BN_
 
 BOOT:
 {
-	HV* stash = get_hv("Crypt::OpenSSL3::BigNum", TRUE);
+	HV* stash = gv_stashpvs("Crypt::OpenSSL3::BigNum", GV_ADD | GV_ADDMULTI);
 	CONSTANT2(BN_, RAND_TOP_ANY);
 	CONSTANT2(BN_, RAND_TOP_ONE);
 	CONSTANT2(BN_, RAND_TOP_TWO);
@@ -1075,7 +1075,7 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL	PREFIX = SSL_
 
 BOOT:
 {
-	HV* stash = get_hv("Crypt::OpenSSL3::SSL", FALSE);
+	HV* stash = gv_stashpvs("Crypt::OpenSSL3::SSL", GV_ADD | GV_ADDMULTI);
 	CONSTANT2(SSL_, ERROR_NONE);
 	CONSTANT2(SSL_, ERROR_ZERO_RETURN);
 	CONSTANT2(SSL_, ERROR_WANT_READ);

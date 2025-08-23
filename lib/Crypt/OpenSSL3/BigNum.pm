@@ -126,3 +126,19 @@ use warnings;
 =method sub_word
 
 =method ucmp
+
+=head1 CONSTANTS
+
+=over 4
+
+=item RAND_BOTTOM_ANY
+
+=item RAND_BOTTOM_ODD
+
+=item RAND_TOP_ANY
+
+=item RAND_TOP_ONE
+
+=item RAND_TOP_TWO
+
+=back

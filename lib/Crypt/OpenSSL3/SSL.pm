@@ -141,6 +141,8 @@ use Crypt::OpenSSL3;
 
 =method is_tls
 
+=method is_quic
+
 =method listen
 
 =method net_read_desired
@@ -257,3 +259,124 @@ use Crypt::OpenSSL3;
 
 =method write
 
+=head1 CONSTANTS
+
+=over 4
+
+=item ERROR_NONE
+
+=item ERROR_SSL
+
+=item ERROR_SYSCALL
+
+=item ERROR_WANT_ACCEPT
+
+=item ERROR_WANT_ASYNC
+
+=item ERROR_WANT_ASYNC_JOB
+
+=item ERROR_WANT_CONNECT
+
+=item ERROR_WANT_READ
+
+=item ERROR_WANT_WRITE
+
+=item ERROR_WANT_X509_LOOKUP
+
+=item ERROR_ZERO_RETURN
+
+=back
+
+=over 4
+
+=item VERIFY_NONE
+
+=item VERIFY_PEER
+
+=item VERIFY_CLIENT_ONCE
+
+=item VERIFY_FAIL_IF_NO_PEER_CERT
+
+=item VERIFY_POST_HANDSHAKE
+
+=back
+
+=over 4
+
+=item TLS1_VERSION
+
+=item TLS1_1_VERSION
+
+=item TLS1_2_VERSION
+
+=item TLS1_3_VERSION
+
+=item DTLS1_VERSION
+
+=item DTLS1_2_VERSION
+
+=item QUIC1_VERSION
+
+=back
+
+=over 4
+
+=item FILETYPE_ASN1
+
+=item FILETYPE_PEM
+
+=back
+
+=over 4
+
+=item MODE_ACCEPT_MOVING_WRITE_BUFFER
+
+=item MODE_ASYNC
+
+=item MODE_AUTO_RETRY
+
+=item MODE_ENABLE_PARTIAL_WRITE
+
+=item MODE_RELEASE_BUFFERS
+
+=item MODE_SEND_FALLBACK_SCSV
+
+=back
+
+=over 4
+
+=item ACCEPT_CONNECTION_NO_BLOCK
+
+=item ACCEPT_STREAM_NO_BLOCK
+
+=item DOMAIN_FLAG_BLOCKING
+
+=item DOMAIN_FLAG_LEGACY_BLOCKING
+
+=item DOMAIN_FLAG_MULTI_THREAD
+
+=item DOMAIN_FLAG_SINGLE_THREAD
+
+=item DOMAIN_FLAG_THREAD_ASSISTED
+
+=item INCOMING_STREAM_POLICY_ACCEPT
+
+=item INCOMING_STREAM_POLICY_AUTO
+
+=item INCOMING_STREAM_POLICY_REJECT
+
+=item STREAM_FLAG_ADVANCE
+
+=item STREAM_FLAG_NO_BLOCK
+
+=item STREAM_FLAG_UNI
+
+=item STREAM_TYPE_BIDI
+
+=item STREAM_TYPE_NONE
+
+=item STREAM_TYPE_READ
+
+=item STREAM_TYPE_WRITE
+
+=back

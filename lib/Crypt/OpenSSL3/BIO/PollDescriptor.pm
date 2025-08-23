@@ -14,3 +14,15 @@ use Crypt::OpenSSL3;
 =method type
 
 =method fd
+
+=head1 CONSTANTS
+
+=over 4
+
+=item CUSTOM_START
+
+=item TYPE_NONE
+
+=item TYPE_SOCK_FD
+
+=back
