@@ -11,6 +11,7 @@
 #include <openssl/kdf.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
+#include <openssl/opensslv.h>
 
 #include <openssl/rsa.h>
 #include <openssl/dsa.h>
@@ -111,6 +112,9 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 	return result;
 }
 #define make_object(var, magic, name) S_make_object(aTHX_ var, magic, name)
+
+#undef OPENSSL_VERSION_TEXT
+#define OPENSSL_VERSION_TEXT OPENSSL_VERSION
 
 #define BIO_POLL_DESCRIPTOR_new(class) safecalloc(1, sizeof(BIO_POLL_DESCRIPTOR))
 #define BIO_POLL_DESCRIPTOR_type(desc) ((desc)->type)
@@ -428,7 +432,7 @@ typedef int Bool;
 #undef SvPV_nolen
 #define SvPV_nolen(sv) SvPVbyte_nolen(sv)
 
-MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3	PREFIX = OpenSSL_
 
 PROTOTYPES: DISABLE
 
@@ -477,6 +481,50 @@ OUTPUT
 T_TIMEVAL
 	sv_setnv($arg, $var.tv_sec + $var.tv_usec / 1000000.0);
 END
+
+BOOT:
+{
+	HV* stash = gv_stashpvs("Crypt::OpenSSL3::", GV_ADD | GV_ADDMULTI);
+	CONSTANT2(OPENSSL_, VERSION_STRING);
+	CONSTANT2(OPENSSL_, VERSION_TEXT);
+	CONSTANT2(OPENSSL_, FULL_VERSION_STRING);
+	CONSTANT2(OPENSSL_, CFLAGS);
+	CONSTANT2(OPENSSL_, BUILT_ON);
+	CONSTANT2(OPENSSL_, PLATFORM);
+	CONSTANT2(OPENSSL_, DIR);
+	CONSTANT2(OPENSSL_, ENGINES_DIR);
+	CONSTANT2(OPENSSL_, MODULES_DIR);
+	CONSTANT2(OPENSSL_, CPU_INFO);
+	CONSTANT2(OPENSSL_, INFO_CONFIG_DIR);
+	CONSTANT2(OPENSSL_, INFO_ENGINES_DIR);
+	CONSTANT2(OPENSSL_, INFO_MODULES_DIR);
+	CONSTANT2(OPENSSL_, INFO_DSO_EXTENSION);
+	CONSTANT2(OPENSSL_, INFO_DIR_FILENAME_SEPARATOR);
+	CONSTANT2(OPENSSL_, INFO_LIST_SEPARATOR);
+	CONSTANT2(OPENSSL_, INFO_CPU_SETTINGS);
+#if OPENSSL_VERSION_PREREQ(3, 4)
+	CONSTANT2(OPENSSL_, WINCTX);
+	CONSTANT2(OPENSSL_, INFO_WINDOWS_CONTEXT);
+#endif
+}
+
+const char *OpenSSL_version(int t = OPENSSL_VERSION_STRING)
+
+unsigned long OpenSSL_version_num()
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3	PREFIX = OPENSSL_
+
+unsigned int OPENSSL_version_major()
+
+unsigned int OPENSSL_version_minor()
+
+unsigned int OPENSSL_version_patch()
+
+const char *OPENSSL_version_pre_release()
+
+const char *OPENSSL_version_build_metadata()
+
+const char *OPENSSL_info(int t)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3	PREFIX = ERR_
 
