@@ -472,14 +472,11 @@ END
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3	PREFIX = ERR_
 
-Crypt::OpenSSL3::Error ERR_get_error(SV* class)
-C_ARGS:
+Crypt::OpenSSL3::Error ERR_get_error()
 
-Crypt::OpenSSL3::Error ERR_peek_error(SV* class)
-C_ARGS:
+Crypt::OpenSSL3::Error ERR_peek_error()
 
-void ERR_clear_error(SV* class)
-C_ARGS:
+void ERR_clear_error()
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Error	PREFIX = ERR_
 

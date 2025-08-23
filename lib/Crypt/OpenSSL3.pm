@@ -11,10 +11,9 @@ XSLoader::load(__PACKAGE__, __PACKAGE__->VERSION);
 
 # ABSTRACT: A modern OpenSSL wrapper
 
-=method clear_error
 
-=method get_error
+=func clear_error
 
-=method peek_error
+=func get_error
 
-=method error_string
+=func peek_error
