@@ -105,6 +105,9 @@ COUNTING_TYPE(SSL, SSL)
 DUPLICATING_TYPE(SSL_SESSION, SSL__Session)
 SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, const)
 
+#define PARAMS(a) OSSL_PARAM*
+#define CTX_PARAMS(a) OSSL_PARAM*
+
 static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
 	SV* result = newSV(0);
 	MAGIC* magic = sv_magicext(newSVrv(result, ntype), NULL, PERL_MAGIC_ext, mgvtbl, (const char*)var, 0);
@@ -284,10 +287,9 @@ static const BIGNUM* S_get_BIGNUM(pTHX_ SV* value) {
 }
 #define get_BIGNUM(value) S_get_BIGNUM(aTHX_ value)
 
-static const OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* input) {
-	static const OSSL_PARAM empty_PARAMS = OSSL_PARAM_DEFN(NULL, 0, NULL, 0);
+static OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* input) {
 	if (!SvROK(input) || SvTYPE(SvRV(input)) != SVt_PVHV)
-		return &empty_PARAMS;
+		return NULL;
 
 	OSSL_PARAM_BLD* builder = OSSL_PARAM_BLD_new();
 	HV* hash = (HV*)SvRV(input);
@@ -476,6 +478,25 @@ Crypt::OpenSSL3::SSL::Context T_MAGICEXT
 Crypt::OpenSSL3::SSL T_MAGICEXT
 Crypt::OpenSSL3::SSL::Session T_MAGICEXT
 Crypt::OpenSSL3::SSL::Cipher T_MAGICEXT
+
+PARAMS(EVP_RAND_CTX) T_PARAMS
+PARAMS(EVP_CIPHER_CTX) T_PARAMS
+CTX_PARAMS(EVP_CIPHER) T_CTX_PARAMS
+PARAMS(EVP_MD_CTX) T_PARAMS
+CTX_PARAMS(EVP_MD) T_CTX_PARAMS
+PARAMS(EVP_MAC_CTX) T_PARAMS
+PARAMS(EVP_KDF_CTX) T_PARAMS
+PARAMS(EVP_PKEY) T_PARAMS
+PARAMS(EVP_PKEY_CTX) T_PARAMS
+
+INPUT
+T_PARAMS
+	const OSSL_PARAM* settable = ${ (my $settable = $type) =~ s/ PARAMS \( (\w+) \) /$1_settable_params(ctx)/x; \$settable };
+	$var = params_for(settable, $arg);
+
+T_CTX_PARAMS
+	const OSSL_PARAM* settable = ${ (my $settable = $type) =~ s/ CTX_PARAMS \( (\w+) \) /$1_settable_ctx_params(type)/x; \$settable };
+	$var = params_for(settable, $arg);
 
 OUTPUT
 T_TIMEVAL
@@ -1765,10 +1786,7 @@ POSTCALL:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random::Context	PREFIX = EVP_RAND_
 
-bool EVP_RAND_instantiate(Crypt::OpenSSL3::Random::Context ctx, unsigned int strength, int prediction_resistance, const unsigned char *pstr, size_t length(pstr), SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_RAND_CTX_settable_params(ctx), args);
-C_ARGS: ctx, strength, prediction_resistance, pstr, STRLEN_length_of_pstr, params
+bool EVP_RAND_instantiate(Crypt::OpenSSL3::Random::Context ctx, unsigned int strength, int prediction_resistance, const unsigned char *pstr, size_t length(pstr), PARAMS(EVP_RAND_CTX) params = NULL)
 
 bool EVP_RAND_uninstantiate(Crypt::OpenSSL3::Random::Context ctx)
 
@@ -1850,10 +1868,9 @@ C_ARGS:
 
 bool EVP_CIPHER_CTX_reset(Crypt::OpenSSL3::Cipher::Context ctx)
 
-bool init(Crypt::OpenSSL3::Cipher::Context ctx, Crypt::OpenSSL3::Cipher cipher, const unsigned char* key, const unsigned char* iv, int enc, SV* args = undef)
+bool init(Crypt::OpenSSL3::Cipher::Context ctx, Crypt::OpenSSL3::Cipher type, const unsigned char* key, const unsigned char* iv, int enc, CTX_PARAMS(EVP_CIPHER) params = NULL)
 CODE:
-	const OSSL_PARAM* params = params_for(EVP_CIPHER_settable_ctx_params(cipher), args);
-	RETVAL = EVP_CipherInit_ex2(ctx, cipher, key, iv, enc, params);
+	RETVAL = EVP_CipherInit_ex2(ctx, type, key, iv, enc, params);
 OUTPUT:
 	RETVAL
 
@@ -1877,10 +1894,7 @@ CODE:
 OUTPUT:
 	RETVAL
 
-bool EVP_CIPHER_CTX_set_params(Crypt::OpenSSL3::Cipher::Context ctx, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_CIPHER_CTX_settable_params(ctx), args);
-C_ARGS: ctx, params
+bool EVP_CIPHER_CTX_set_params(Crypt::OpenSSL3::Cipher::Context ctx, PARAMS(EVP_CIPHER_CTX) params = NULL)
 
 SV* EVP_CIPHER_CTX_get_param(Crypt::OpenSSL3::Cipher::Context ctx, const char* name)
 CODE:
@@ -1998,10 +2012,7 @@ C_ARGS:
 
 bool EVP_MD_CTX_reset(Crypt::OpenSSL3::MD::Context ctx)
 
-bool EVP_MD_CTX_init(Crypt::OpenSSL3::MD::Context ctx, Crypt::OpenSSL3::MD type, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_MD_CTX_settable_params(ctx), args);
-C_ARGS: ctx, type, params
+bool EVP_MD_CTX_init(Crypt::OpenSSL3::MD::Context ctx, Crypt::OpenSSL3::MD type, CTX_PARAMS(EVP_MD) params = NULL)
 
 bool EVP_MD_CTX_update(Crypt::OpenSSL3::MD::Context ctx, const char *d, size_t length(d))
 
@@ -2076,10 +2087,7 @@ POSTCALL:
 	if (RETVAL < 0)
 		XSRETURN_UNDEF;
 
-bool EVP_MD_CTX_set_params(Crypt::OpenSSL3::MD::Context ctx, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_MD_CTX_settable_params(ctx), args);
-C_ARGS: ctx, params
+bool EVP_MD_CTX_set_params(Crypt::OpenSSL3::MD::Context ctx, PARAMS(EVP_MD_CTX) params = NULL)
 
 SV* EVP_MD_CTX_get_param(Crypt::OpenSSL3::MD::Context ctx, const char* name)
 CODE:
@@ -2155,10 +2163,7 @@ size_t EVP_MAC_CTX_get_mac_size(Crypt::OpenSSL3::MAC::Context ctx)
 
 size_t EVP_MAC_CTX_get_block_size(Crypt::OpenSSL3::MAC::Context ctx)
 
-bool EVP_MAC_CTX_set_params(Crypt::OpenSSL3::MAC::Context ctx, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_MAC_CTX_settable_params(ctx), args);
-C_ARGS: ctx, params
+bool EVP_MAC_CTX_set_params(Crypt::OpenSSL3::MAC::Context ctx, PARAMS(EVP_MAC_CTX) params = NULL)
 
 SV* EVP_MAC_CTX_get_param(Crypt::OpenSSL3::MAC::Context ctx, const char* name)
 CODE:
@@ -2170,10 +2175,7 @@ OUTPUT:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC::Context	PREFIX = EVP_MAC_
 
-bool EVP_MAC_init(Crypt::OpenSSL3::MAC::Context ctx, const unsigned char *key, size_t length(key), SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_MAC_CTX_settable_params(ctx), args);
-C_ARGS: ctx, key, STRLEN_length_of_key, params
+bool EVP_MAC_init(Crypt::OpenSSL3::MAC::Context ctx, const unsigned char *key, size_t length(key), PARAMS(EVP_MAC_CTX) params = NULL)
 
 bool EVP_MAC_update(Crypt::OpenSSL3::MAC::Context ctx, const unsigned char *data, size_t length(data))
 
@@ -2238,10 +2240,7 @@ void EVP_KDF_CTX_reset(Crypt::OpenSSL3::KDF::Context ctx)
 
 size_t EVP_KDF_CTX_get_kdf_size(Crypt::OpenSSL3::KDF::Context ctx)
 
-bool EVP_KDF_CTX_set_params(Crypt::OpenSSL3::KDF::Context ctx, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_KDF_CTX_settable_params(ctx), args);
-C_ARGS: ctx, params
+bool EVP_KDF_CTX_set_params(Crypt::OpenSSL3::KDF::Context ctx, PARAMS(EVP_KDF_CTX) params = NULL)
 
 SV* EVP_KDF_CTX_get_param(Crypt::OpenSSL3::KDF::Context ctx, const char* name)
 CODE:
@@ -2256,9 +2255,8 @@ POSTCALL:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF::Context	PREFIX = EVP_KDF_
 
-NO_OUTPUT bool EVP_KDF_derive(Crypt::OpenSSL3::KDF::Context ctx, OUTLIST SV* derived, size_t keylen, SV* args = undef)
+NO_OUTPUT bool EVP_KDF_derive(Crypt::OpenSSL3::KDF::Context ctx, OUTLIST SV* derived, size_t keylen, PARAMS(EVP_KDF_CTX) params)
 INIT:
-	const OSSL_PARAM* params = params_for(EVP_KDF_CTX_settable_params(ctx), args);
 	char* ptr = make_buffer(&derived, keylen);
 C_ARGS: ctx, ptr, keylen, params
 POSTCALL:
@@ -2402,10 +2400,7 @@ bool EVP_PKEY_get_utf8_string_param(Crypt::OpenSSL3::PKey pkey, const char *key_
 
 bool EVP_PKEY_get_octet_string_param(Crypt::OpenSSL3::PKey pkey, const char *key_name, unsigned char *buf, size_t length(buf), OUT size_t out_len)
 
-bool EVP_PKEY_set_params(Crypt::OpenSSL3::PKey pkey, SV* args = undef)
-INIT:
-	OSSL_PARAM* params = (OSSL_PARAM*)params_for(EVP_PKEY_settable_params(pkey), args);
-C_ARGS: pkey, params
+bool EVP_PKEY_set_params(Crypt::OpenSSL3::PKey ctx, PARAMS(EVP_PKEY) params = NULL)
 
 bool EVP_PKEY_set_int_param(Crypt::OpenSSL3::PKey pkey, const char *key_name, int in)
 
@@ -2440,10 +2435,7 @@ C_ARGS: NULL, name, propquery
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_from_pkey(SV* class, Crypt::OpenSSL3::PKey pkey, const char *propquery = "")
 C_ARGS: NULL, pkey, propquery
 
-bool EVP_PKEY_CTX_set_params(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, params
+bool EVP_PKEY_CTX_set_params(Crypt::OpenSSL3::PKey::Context ctx, PARAMS(EVP_PKEY_CTX) params = NULL)
 
 SV* EVP_PKEY_CTX_get_param(Crypt::OpenSSL3::PKey::Context ctx, const char* name)
 CODE:
