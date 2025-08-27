@@ -185,6 +185,10 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define EVP_RAND_CTX_get_rand EVP_RAND_CTX_get0_rand
 #define EVP_CIPHER_get_name EVP_CIPHER_get0_name
 #define EVP_CIPHER_get_description EVP_CIPHER_get0_description
+#undef EVP_CIPHER_CTX_init
+#define EVP_CIPHER_CTX_init EVP_CipherInit_ex2
+#define EVP_CIPHER_CTX_update EVP_CipherUpdate
+#define EVP_CIPHER_CTX_final EVP_CipherFinal_ex
 #define EVP_CIPHER_CTX_set_aead_ivlen(ctx, length) EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, length, NULL)
 #define EVP_CIPHER_CTX_get_aead_tag(ctx, ptr, length) EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, length, ptr)
 #define EVP_CIPHER_CTX_set_aead_tag(ctx, ptr, length) EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, length, ptr)
@@ -1868,31 +1872,29 @@ C_ARGS:
 
 bool EVP_CIPHER_CTX_reset(Crypt::OpenSSL3::Cipher::Context ctx)
 
-bool init(Crypt::OpenSSL3::Cipher::Context ctx, Crypt::OpenSSL3::Cipher type, const unsigned char* key, const unsigned char* iv, int enc, CTX_PARAMS(EVP_CIPHER) params = NULL)
-CODE:
-	RETVAL = EVP_CipherInit_ex2(ctx, type, key, iv, enc, params);
-OUTPUT:
-	RETVAL
+bool EVP_CIPHER_CTX_init(Crypt::OpenSSL3::Cipher::Context ctx, Crypt::OpenSSL3::Cipher type, const unsigned char* key, size_t length(key), const unsigned char* iv, size_t length(iv), bool enc, CTX_PARAMS(EVP_CIPHER) params = NULL)
+INIT:
+	if (XSauto_length_of_key != EVP_CIPHER_get_key_length(type) || XSauto_length_of_iv != EVP_CIPHER_get_iv_length(type))
+		XSRETURN_NO;
+C_ARGS: ctx, type, key, iv, enc, params
 
-SV* update(Crypt::OpenSSL3::Cipher::Context ctx, const char* input, size_t length(input))
-CODE:
-	int outl = STRLEN_length_of_input;
-	char* ptr = make_buffer(&RETVAL, outl);
-	bool result = EVP_CipherUpdate(ctx, ptr, &outl, input, STRLEN_length_of_input);
-	if (result)
-		set_buffer_length(RETVAL, outl);
-OUTPUT:
-	RETVAL
+NO_OUTPUT int EVP_CIPHER_CTX_update(Crypt::OpenSSL3::Cipher::Context ctx, const char* input, size_t length(input), OUTLIST SV* output)
+INIT:
+	int outl = STRLEN_length_of_input + EVP_CIPHER_CTX_get_block_size(ctx);
+	char* ptr = make_buffer(&output, outl);
+C_ARGS: ctx, ptr, &outl, input, STRLEN_length_of_input
+POSTCALL:
+	if (RETVAL)
+		set_buffer_length(output, outl);
 
-SV* final(Crypt::OpenSSL3::Cipher::Context ctx)
-CODE:
+NO_OUTPUT int EVP_CIPHER_CTX_final(Crypt::OpenSSL3::Cipher::Context ctx, OUTLIST SV* output)
+INIT:
 	int size = EVP_CIPHER_CTX_get_block_size(ctx);
-	char* ptr = make_buffer(&RETVAL, size);
-	int result = EVP_CipherFinal_ex(ctx, ptr, &size);
-	if (result)
-		set_buffer_length(RETVAL, size);
-OUTPUT:
-	RETVAL
+	char* ptr = make_buffer(&output, size);
+C_ARGS: ctx, ptr, &size
+POSTCALL:
+	if (RETVAL)
+		set_buffer_length(output, size);
 
 bool EVP_CIPHER_CTX_set_params(Crypt::OpenSSL3::Cipher::Context ctx, PARAMS(EVP_CIPHER_CTX) params = NULL)
 
