@@ -2630,10 +2630,8 @@ bool EVP_PKEY_parameters_eq(Crypt::OpenSSL3::PKey a, Crypt::OpenSSL3::PKey b)
 
 bool EVP_PKEY_eq(Crypt::OpenSSL3::PKey a, Crypt::OpenSSL3::PKey b)
 
-bool EVP_PKEY_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, params
+bool EVP_PKEY_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx)
+C_ARGS: ctx, NULL
 
 void EVP_PKEY_encapsulate(Crypt::OpenSSL3::PKey::Context ctx, OUTLIST SV* wrapped_key, OUTLIST SV* gen_key)
 CODE:
@@ -2650,10 +2648,8 @@ CODE:
 	} else
 		XSRETURN_EMPTY;
 
-bool EVP_PKEY_decapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, params
+bool EVP_PKEY_decapsulate_init(Crypt::OpenSSL3::PKey::Context ctx)
+C_ARGS: ctx, NULL
 
 SV* EVP_PKEY_decapsulate(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *wrapped, size_t length(wrapped))
 CODE:
@@ -2670,21 +2666,15 @@ OUTPUT:
 	RETVAL
 
 #if OPENSSL_VERSION_PREREQ(3, 2)
-bool EVP_PKEY_auth_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpriv, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, authpriv, params
+bool EVP_PKEY_auth_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpriv)
+C_ARGS: ctx, authpriv, NULL
 
-bool EVP_PKEY_auth_decapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpub, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, authpub, params
+bool EVP_PKEY_auth_decapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpub)
+C_ARGS: ctx, authpub, NULL
 #endif
 
-bool EVP_PKEY_encrypt_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, params
+bool EVP_PKEY_encrypt_init(Crypt::OpenSSL3::PKey::Context ctx)
+C_ARGS: ctx, NULL
 
 SV* EVP_PKEY_encrypt(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *in, size_t length(in))
 CODE:
@@ -2701,10 +2691,8 @@ CODE:
 OUTPUT:
 	RETVAL
 
-bool EVP_PKEY_decrypt_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, params
+bool EVP_PKEY_decrypt_init(Crypt::OpenSSL3::PKey::Context ctx)
+C_ARGS: ctx, NULL
 
 SV* EVP_PKEY_decrypt(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *in, size_t length(in))
 CODE:
@@ -2719,10 +2707,8 @@ CODE:
 OUTPUT:
 	RETVAL
 
-bool EVP_PKEY_derive_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, params
+bool EVP_PKEY_derive_init(Crypt::OpenSSL3::PKey::Context ctx)
+C_ARGS: ctx, NULL
 
 bool EVP_PKEY_derive_set_peer(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey peer, bool validate_peer = false)
 
@@ -2739,17 +2725,13 @@ CODE:
 OUTPUT:
 	RETVAL
 
-bool EVP_PKEY_sign_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef, Crypt::OpenSSL3::Signature algo = NULL)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, algo, params
+bool EVP_PKEY_sign_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
+C_ARGS: ctx, algo, NULL
 
 #if OPENSSL_VERSION_PREREQ(3, 4)
 
-bool EVP_PKEY_sign_message_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef, Crypt::OpenSSL3::Signature algo = NULL)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, algo, params
+bool EVP_PKEY_sign_message_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
+C_ARGS: ctx, algo, NULL
 
 bool EVP_PKEY_sign_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
 
@@ -2765,10 +2747,8 @@ CODE:
 OUTPUT:
 	RETVAL
 
-bool EVP_PKEY_verify_message_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef, Crypt::OpenSSL3::Signature algo = NULL)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, algo, params
+bool EVP_PKEY_verify_message_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
+C_ARGS: ctx, algo, NULL
 
 bool EVP_PKEY_verify_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
 
@@ -2792,10 +2772,8 @@ CODE:
 OUTPUT:
 	RETVAL
 
-bool EVP_PKEY_verify_init(Crypt::OpenSSL3::PKey::Context ctx, SV* args = undef, Crypt::OpenSSL3::Signature algo = NULL)
-INIT:
-	const OSSL_PARAM* params = params_for(EVP_PKEY_CTX_settable_params(ctx), args);
-C_ARGS: ctx, algo, params
+bool EVP_PKEY_verify_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
+C_ARGS: ctx, algo, NULL
 
 Bool EVP_PKEY_verify(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *sig, size_t length(sig), const unsigned char *tbs, size_t length(tbs))
 POSTCALL:
