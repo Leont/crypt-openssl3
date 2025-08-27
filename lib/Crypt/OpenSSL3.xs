@@ -429,6 +429,7 @@ DEFINE_PROVIDED_CALLBACK(EVP_KDF, KDF)
 DEFINE_PROVIDED_CALLBACK(EVP_SIGNATURE, Signature)
 
 typedef int Bool;
+typedef int Success;
 #define undef &PL_sv_undef
 
 // This will force byte semantics on all strings
@@ -447,6 +448,7 @@ const unsigned char*	T_PV
 Bool	T_BOOL
 struct timeval	T_TIMEVAL
 uint64_t	T_UV
+Success T_SUCCESS
 
 Crypt::OpenSSL3::Random T_MAGICEXT
 Crypt::OpenSSL3::Random::Context T_MAGICEXT
@@ -505,6 +507,8 @@ T_CTX_PARAMS
 OUTPUT
 T_TIMEVAL
 	sv_setnv($arg, $var.tv_sec + $var.tv_usec / 1000000.0);
+T_SUCCESS
+	${"$var" eq "RETVAL" ? \"$arg = $var < 0 ? &PL_sv_undef : boolSV($var);" : \"sv_setsv($arg, $var < 0 ? &PL_sv_undef : boolSV($var));"}
 END
 
 BOOT:
@@ -1490,10 +1494,7 @@ POSTCALL:
 
 bool SSL_set_blocking_mode(Crypt::OpenSSL3::SSL s, int blocking)
 
-int SSL_get_blocking_mode(Crypt::OpenSSL3::SSL s)
-POSTCALL:
-	if (RETVAL < 0)
-		XSRETURN_UNDEF;
+Success SSL_get_blocking_mode(Crypt::OpenSSL3::SSL s)
 
 Crypt::OpenSSL3::SSL SSL_new_stream(Crypt::OpenSSL3::SSL ssl, uint64_t flags)
 
@@ -1531,10 +1532,7 @@ POSTCALL:
 
 int SSL_get_stream_type(Crypt::OpenSSL3::SSL ssl)
 
-Bool SSL_is_stream_local(Crypt::OpenSSL3::SSL ssl)
-POSTCALL:
-	if (RETVAL < 0)
-		XSRETURN_UNDEF;
+Success SSL_is_stream_local(Crypt::OpenSSL3::SSL ssl)
 
 bool SSL_set_initial_peer_addr(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO::Address addr)
 
@@ -2079,15 +2077,9 @@ C_ARGS: ctx, pctx ? &pctx : NULL, type, NULL, pkey
 	
 bool EVP_MD_CTX_verify_update(Crypt::OpenSSL3::MD::Context ctx, const char *d, size_t length(d))
 
-Bool EVP_MD_CTX_verify_final(Crypt::OpenSSL3::MD::Context ctx, const unsigned char *sig, size_t length(sig))
-POSTCALL:
-	if (RETVAL < 0)
-		XSRETURN_UNDEF;
+Success EVP_MD_CTX_verify_final(Crypt::OpenSSL3::MD::Context ctx, const unsigned char *sig, size_t length(sig))
 
-Bool EVP_MD_CTX_verify(Crypt::OpenSSL3::MD::Context ctx, const unsigned char *sig, size_t length(sig), const unsigned char *tbs, size_t length(tbs))
-POSTCALL:
-	if (RETVAL < 0)
-		XSRETURN_UNDEF;
+Success EVP_MD_CTX_verify(Crypt::OpenSSL3::MD::Context ctx, const unsigned char *sig, size_t length(sig), const unsigned char *tbs, size_t length(tbs))
 
 bool EVP_MD_CTX_set_params(Crypt::OpenSSL3::MD::Context ctx, PARAMS(EVP_MD_CTX) params = NULL)
 
@@ -2358,7 +2350,7 @@ const char *EVP_PKEY_get_type_name(Crypt::OpenSSL3::PKey key)
 
 const char *EVP_PKEY_get_description(Crypt::OpenSSL3::PKey key)
 
-bool EVP_PKEY_digestsign_supports_digest(Crypt::OpenSSL3::PKey pkey, const char *name, const char *propq)
+Success EVP_PKEY_digestsign_supports_digest(Crypt::OpenSSL3::PKey pkey, const char *name, const char *propq)
 C_ARGS: pkey, NULL, name, propq
 
 NO_OUTPUT int EVP_PKEY_get_default_digest_name(Crypt::OpenSSL3::PKey pkey, OUTLIST SV* mdname)
@@ -2414,13 +2406,13 @@ bool EVP_PKEY_set_utf8_string_param(Crypt::OpenSSL3::PKey pkey, const char *key_
 
 bool EVP_PKEY_set_octet_string_param(Crypt::OpenSSL3::PKey pkey, const char *key_name, const unsigned char *buf, size_t bsize)
 
-bool EVP_PKEY_print_public(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::PKey pkey, int indent)
+Success EVP_PKEY_print_public(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::PKey pkey, int indent)
 C_ARGS: out, pkey, indent, NULL
 
-bool EVP_PKEY_print_private(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::PKey pkey, int indent)
+Success EVP_PKEY_print_private(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::PKey pkey, int indent)
 C_ARGS: out, pkey, indent, NULL
 
-bool EVP_PKEY_print_params(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::PKey pkey, int indent)
+Success EVP_PKEY_print_params(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::PKey pkey, int indent)
 C_ARGS: out, pkey, indent, NULL
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKey::Context	PREFIX = EVP_PKEY_CTX_
@@ -2609,11 +2601,11 @@ int EVP_PKEY_CTX_get_keygen_info(Crypt::OpenSSL3::PKey::Context ctx, int idx)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKey::Context	PREFIX = EVP_PKEY_
 
-bool EVP_PKEY_keygen_init(Crypt::OpenSSL3::PKey::Context ctx)
+Success EVP_PKEY_keygen_init(Crypt::OpenSSL3::PKey::Context ctx)
 
-bool EVP_PKEY_paramgen_init(Crypt::OpenSSL3::PKey::Context ctx)
+Success EVP_PKEY_paramgen_init(Crypt::OpenSSL3::PKey::Context ctx)
 
-NO_OUTPUT bool EVP_PKEY_generate(Crypt::OpenSSL3::PKey::Context ctx, OUTLIST Crypt::OpenSSL3::PKey ppkey)
+NO_OUTPUT int EVP_PKEY_generate(Crypt::OpenSSL3::PKey::Context ctx, OUTLIST Crypt::OpenSSL3::PKey ppkey)
 INIT:
 	ppkey = NULL;
 POSTCALL:
@@ -2624,7 +2616,7 @@ bool EVP_PKEY_parameters_eq(Crypt::OpenSSL3::PKey a, Crypt::OpenSSL3::PKey b)
 
 bool EVP_PKEY_eq(Crypt::OpenSSL3::PKey a, Crypt::OpenSSL3::PKey b)
 
-bool EVP_PKEY_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx)
+Success EVP_PKEY_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx)
 C_ARGS: ctx, NULL
 
 void EVP_PKEY_encapsulate(Crypt::OpenSSL3::PKey::Context ctx, OUTLIST SV* wrapped_key, OUTLIST SV* gen_key)
@@ -2642,7 +2634,7 @@ CODE:
 	} else
 		XSRETURN_EMPTY;
 
-bool EVP_PKEY_decapsulate_init(Crypt::OpenSSL3::PKey::Context ctx)
+Success EVP_PKEY_decapsulate_init(Crypt::OpenSSL3::PKey::Context ctx)
 C_ARGS: ctx, NULL
 
 SV* EVP_PKEY_decapsulate(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *wrapped, size_t length(wrapped))
@@ -2660,14 +2652,14 @@ OUTPUT:
 	RETVAL
 
 #if OPENSSL_VERSION_PREREQ(3, 2)
-bool EVP_PKEY_auth_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpriv)
+Success EVP_PKEY_auth_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpriv)
 C_ARGS: ctx, authpriv, NULL
 
-bool EVP_PKEY_auth_decapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpub)
+Success EVP_PKEY_auth_decapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpub)
 C_ARGS: ctx, authpub, NULL
 #endif
 
-bool EVP_PKEY_encrypt_init(Crypt::OpenSSL3::PKey::Context ctx)
+Success EVP_PKEY_encrypt_init(Crypt::OpenSSL3::PKey::Context ctx)
 C_ARGS: ctx, NULL
 
 SV* EVP_PKEY_encrypt(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *in, size_t length(in))
@@ -2719,15 +2711,15 @@ CODE:
 OUTPUT:
 	RETVAL
 
-bool EVP_PKEY_sign_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
+Success EVP_PKEY_sign_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
 C_ARGS: ctx, algo, NULL
 
 #if OPENSSL_VERSION_PREREQ(3, 4)
 
-bool EVP_PKEY_sign_message_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
+Success EVP_PKEY_sign_message_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
 C_ARGS: ctx, algo, NULL
 
-bool EVP_PKEY_sign_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
+Success EVP_PKEY_sign_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
 
 SV* EVP_PKEY_sign_message_final(Crypt::OpenSSL3::PKey::Context ctx)
 CODE:
@@ -2741,15 +2733,12 @@ CODE:
 OUTPUT:
 	RETVAL
 
-bool EVP_PKEY_verify_message_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
+Success EVP_PKEY_verify_message_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
 C_ARGS: ctx, algo, NULL
 
-bool EVP_PKEY_verify_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
+Success EVP_PKEY_verify_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
 
-Bool EVP_PKEY_verify_message_final(Crypt::OpenSSL3::PKey::Context ctx)
-POSTCALL:
-	if (RETVAL < 0)
-		XSRETURN_UNDEF;
+Success EVP_PKEY_verify_message_final(Crypt::OpenSSL3::PKey::Context ctx)
 
 #endif
 
@@ -2766,10 +2755,7 @@ CODE:
 OUTPUT:
 	RETVAL
 
-bool EVP_PKEY_verify_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
+Success EVP_PKEY_verify_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
 C_ARGS: ctx, algo, NULL
 
-Bool EVP_PKEY_verify(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *sig, size_t length(sig), const unsigned char *tbs, size_t length(tbs))
-POSTCALL:
-	if (RETVAL < 0)
-		XSRETURN_UNDEF;
+Success EVP_PKEY_verify(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *sig, size_t length(sig), const unsigned char *tbs, size_t length(tbs))
