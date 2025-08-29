@@ -196,11 +196,11 @@ SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, SSL::Context, const)
 
 #define SSL_CIPHER_get_handshake_digest(c) (EVP_MD*)SSL_CIPHER_get_handshake_digest(c)
 
-#define RAND_get_primary(class) RAND_get0_primary(NULL)
-#define RAND_get_public(class) RAND_get0_public(NULL)
-#define RAND_get_private(class) RAND_get0_private(NULL)
-#define RAND_set_public(class, rand) RAND_set0_public(NULL, rand)
-#define RAND_set_private(class, rand) RAND_set0_private(NULL, rand)
+#define RAND_get_primary RAND_get0_primary
+#define RAND_get_public RAND_get0_public
+#define RAND_get_private RAND_get0_private
+#define RAND_set_public RAND_set0_public
+#define RAND_set_private RAND_set0_private
 #define EVP_RAND_get_name EVP_RAND_get0_name
 #define EVP_RAND_get_description EVP_RAND_get0_description
 #define EVP_RAND_CTX_get_rand EVP_RAND_CTX_get0_rand
@@ -460,6 +460,8 @@ typedef int Success;
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3	PREFIX = OpenSSL_
 
+REQUIRE: 3.60
+
 PROTOTYPES: DISABLE
 
 TYPEMAP: <<END
@@ -598,6 +600,7 @@ Crypt::OpenSSL3::BIO BIO_new_file(SV* class, const char *filename, const char *m
 C_ARGS: filename, mode
 
 Crypt::OpenSSL3::BIO BIO_new_fd(class, int fd, bool close_flag = FALSE)
+INTERFACE: BIO_new_fd  BIO_new_socket  BIO_new_dgram
 C_ARGS: fd, close_flag
 
 NO_OUTPUT int BIO_new_bio_pair(SV* class, OUTLIST Crypt::OpenSSL3::BIO bio1, size_t writebuf1, OUTLIST Crypt::OpenSSL3::BIO bio2, size_t writebuf2);
@@ -605,12 +608,6 @@ C_ARGS: &bio1, writebuf1, &bio2, writebuf2
 POSTCALL:
 	if (!RETVAL)
 		XSRETURN_EMPTY;
-
-Crypt::OpenSSL3::BIO BIO_new_socket(class, int sock, bool close_flag = FALSE)
-C_ARGS: sock, close_flag
-
-Crypt::OpenSSL3::BIO BIO_new_dgram(class, int sock, bool close_flag = FALSE)
-C_ARGS: sock, close_flag
 
 Crypt::OpenSSL3::BIO BIO_new_mem(class)
 C_ARGS:
@@ -638,22 +635,7 @@ size_t BIO_ctrl_pending(Crypt::OpenSSL3::BIO b)
 size_t BIO_ctrl_wpending(Crypt::OpenSSL3::BIO b)
 
 NO_OUTPUT int BIO_read(Crypt::OpenSSL3::BIO b, OUTLIST SV* out, int size)
-INIT:
-	char* ptr = make_buffer(&out, size);
-C_ARGS: b, ptr, size
-POSTCALL:
-	if (RETVAL >= 0)
-		set_buffer_length(out, RETVAL);
-
-NO_OUTPUT int BIO_gets(Crypt::OpenSSL3::BIO b, OUTLIST SV* out, int size)
-INIT:
-	char* ptr = make_buffer(&out, size);
-C_ARGS: b, ptr, size
-POSTCALL:
-	if (RETVAL >= 0)
-		set_buffer_length(out, RETVAL);
-
-NO_OUTPUT int BIO_get_line(Crypt::OpenSSL3::BIO b, OUTLIST SV* out, int size)
+INTERFACE: BIO_read  BIO_gets  BIO_get_line
 INIT:
 	char* ptr = make_buffer(&out, size);
 C_ARGS: b, ptr, size
@@ -701,14 +683,8 @@ OUTPUT:
 unsigned short BIO_ADDR_rawport(Crypt::OpenSSL3::BIO::Address ap)
 
 char *BIO_ADDR_hostname_string(Crypt::OpenSSL3::BIO::Address ap, int numeric)
-CLEANUP:
-	OPENSSL_free(RETVAL);
-
-char *BIO_ADDR_service_string(Crypt::OpenSSL3::BIO::Address ap, int numeric)
-CLEANUP:
-	OPENSSL_free(RETVAL);
-
-char *BIO_ADDR_path_string(Crypt::OpenSSL3::BIO::Address ap)
+INTERFACE:
+	BIO_ADDR_hostname_string  BIO_ADDR_service_string  BIO_ADDR_path_string
 CLEANUP:
 	OPENSSL_free(RETVAL);
 
@@ -748,9 +724,7 @@ BOOT:
 
 
 Crypt::OpenSSL3::BigNum BN_new(SV* class)
-C_ARGS:
-
-Crypt::OpenSSL3::BigNum BN_secure_new(SV* class)
+INTERFACE: BN_new  BN_secure_new
 C_ARGS:
 
 Crypt::OpenSSL3::BigNum BN_dup(Crypt::OpenSSL3::BigNum self)
@@ -800,7 +774,8 @@ C_ARGS: a, ptr
 POSTCALL:
 	set_buffer_length(out, RETVAL);
 
-NO_OUTPUT int BN_bn2binpad(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out, int tolen)
+NO_OUTPUT int BN_bn2binpad(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out, int tolen = BN_num_bytes(a))
+INTERFACE: BN_bn2binpad  BN_bn2lebinpad  BN_bn2nativepad
 INIT:
 	char* ptr = make_buffer(&out, tolen);
 C_ARGS: a, ptr, tolen
@@ -836,24 +811,17 @@ Crypt::OpenSSL3::BigNum BN_native2bn(const unsigned char *s, int length(s))
 C_ARGS: s, XSauto_length_of_s, NULL
 
 #if OPENSSL_VERSION_PREREQ(3, 2)
-NO_OUTPUT int BN_signed_bn2bin(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out)
-INIT:
-	char* ptr = make_buffer(&out, BN_num_bytes(a));
-C_ARGS: a, ptr, BN_num_bytes(a)
-POSTCALL:
-	set_buffer_length(out, RETVAL);
-
-Crypt::OpenSSL3::BigNum BN_signed_bin2bn(const unsigned char *s, int length(s))
-C_ARGS: s, XSauto_length_of_s, NULL
-
-
-NO_OUTPUT int BN_signed_bn2lebin(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out, int tolen)
+NO_OUTPUT int BN_signed_bn2lebin(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out, int tolen = BN_num_bytes(a))
+INTERFACE: BN_signed_bn2bin  BN_signed_bn2lebin  BN_signed_bn2native
 INIT:
 	char* ptr = make_buffer(&out, tolen);
 C_ARGS: a, ptr, tolen
 POSTCALL:
 	if (RETVAL >= 0)
 		set_buffer_length(out, RETVAL);
+
+Crypt::OpenSSL3::BigNum BN_signed_bin2bn(const unsigned char *s, int length(s))
+C_ARGS: s, XSauto_length_of_s, NULL
 
 Crypt::OpenSSL3::BigNum BN_signed_lebin2bn(const unsigned char *s, int length(s))
 C_ARGS: s, XSauto_length_of_s, NULL
@@ -872,17 +840,12 @@ C_ARGS: s, XSauto_length_of_s, NULL
 #endif
 
 char *BN_bn2hex(Crypt::OpenSSL3::BigNum a)
-CLEANUP:
-	OPENSSL_free(RETVAL);
-
-char *BN_bn2dec(Crypt::OpenSSL3::BigNum a)
+INTERFACE: BN_bn2hex  BN_bn2dec
 CLEANUP:
 	OPENSSL_free(RETVAL);
 
 int BN_hex2bn(Crypt::OpenSSL3::BigNum a, const char *str)
-C_ARGS: &a, str
-
-int BN_dec2bn(Crypt::OpenSSL3::BigNum a, const char *str)
+INTERFACE: BN_hex2bn  BN_dec2bn
 C_ARGS: &a, str
 
 bool BN_print(Crypt::OpenSSL3::BIO fp, Crypt::OpenSSL3::BigNum a)
@@ -958,9 +921,7 @@ bool BN_rand(Crypt::OpenSSL3::BigNum rnd, int bits, int top, int bottom)
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BigNum::Context	PREFIX = BN_CTX_
 
 Crypt::OpenSSL3::BigNum::Context BN_CTX_new(SV* class)
-C_ARGS:
-
-Crypt::OpenSSL3::BigNum::Context BN_CTX_secure_new()
+INTERFACE: BN_CTX_new  BN_CTX_secure_new
 C_ARGS:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509	PREFIX = X509_
@@ -977,27 +938,17 @@ bool X509_write_pem(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::BIO bio)
 C_ARGS: bio, x
 
 Crypt::OpenSSL3::X509::Name X509_get_subject_name(Crypt::OpenSSL3::X509 x)
+INTERFACE:
+	X509_get_subject_name  X509_get_issuer_name
 POSTCALL:
 	RETVAL = X509_NAME_dup(RETVAL);
 
 bool X509_set_subject_name(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::X509::Name name)
 
-Crypt::OpenSSL3::X509::Name X509_get_issuer_name(Crypt::OpenSSL3::X509 x)
-POSTCALL:
-	RETVAL = X509_NAME_dup(RETVAL);
-
 bool X509_set_issuer_name(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::X509::Name name)
 
-NO_OUTPUT bool X509_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::MD type, OUTLIST SV* digest)
-INIT:
-	unsigned int output_length = EVP_MD_size(type);
-	char* ptr = make_buffer(&digest, output_length);
-C_ARGS: data, type, ptr, &output_length
-POSTCALL:
-	if (RETVAL)
-		set_buffer_length(digest, output_length);
-
-NO_OUTPUT bool X509_pubkey_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::MD type, OUTLIST SV* digest)
+NO_OUTPUT Bool X509_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::MD type, OUTLIST SV* digest)
+INTERFACE: X509_digest  X509_pubkey_digest
 INIT:
 	unsigned int output_length = EVP_MD_size(type);
 	char* ptr = make_buffer(&digest, output_length);
@@ -1386,14 +1337,7 @@ void SSL_set_accept_state(Crypt::OpenSSL3::SSL ssl)
 bool SSL_is_server(Crypt::OpenSSL3::SSL ssl)
 
 int SSL_read(Crypt::OpenSSL3::SSL ssl, SV* buffer, size_t size)
-INIT:
-	char* ptr = grow_buffer(buffer, size);
-C_ARGS: ssl, ptr, size
-POSTCALL:
-	if (RETVAL > 0)
-		set_buffer_length(buffer, RETVAL);
-
-int SSL_peek(Crypt::OpenSSL3::SSL ssl, SV* buffer, size_t size)
+INTERFACE: SSL_read SSL_peek
 INIT:
 	char* ptr = grow_buffer(buffer, size);
 C_ARGS: ssl, ptr, size
@@ -1418,21 +1362,12 @@ int SSL_get_rfd(Crypt::OpenSSL3::SSL ssl)
 int SSL_get_wfd(Crypt::OpenSSL3::SSL ssl)
 
 void SSL_set_rbio(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO bio)
-INIT:
-	BIO_up_ref(bio);
-
-void SSL_set_wbio(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO bio);
+INTERFACE: SSL_set_rbio  SSL_set_wbio
 INIT:
 	BIO_up_ref(bio);
 
 Crypt::OpenSSL3::BIO SSL_get_rbio(Crypt::OpenSSL3::SSL ssl)
-POSTCALL:
-	if (RETVAL)
-		BIO_up_ref(RETVAL);
-	else
-		XSRETURN_UNDEF;
-
-Crypt::OpenSSL3::BIO SSL_get_wbio(Crypt::OpenSSL3::SSL ssl)
+INTERFACE: SSL_get_rbio  SSL_get_wbio
 POSTCALL:
 	if (RETVAL)
 		BIO_up_ref(RETVAL);
@@ -1457,13 +1392,7 @@ bool SSL_session_reused(Crypt::OpenSSL3::SSL ssl)
 void SSL_copy_session_id(Crypt::OpenSSL3::SSL to, Crypt::OpenSSL3::SSL from)
 
 Crypt::OpenSSL3::X509 SSL_get_certificate(Crypt::OpenSSL3::SSL ssl)
-POSTCALL:
-	if (RETVAL)
-		X509_up_ref(RETVAL);
-	else
-		XSRETURN_UNDEF;
-
-Crypt::OpenSSL3::X509 SSL_get_peer_certificate(Crypt::OpenSSL3::SSL ssl)
+INTERFACE: SSL_get_certificate  SSL_get_peer_certificate
 POSTCALL:
 	if (RETVAL)
 		X509_up_ref(RETVAL);
@@ -1478,11 +1407,7 @@ POSTCALL:
 		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::SSL::Cipher SSL_get_current_cipher(Crypt::OpenSSL3::SSL ssl)
-POSTCALL:
-	if (!RETVAL)
-		XSRETURN_UNDEF;
-
-Crypt::OpenSSL3::SSL::Cipher SSL_get_pending_cipher(Crypt::OpenSSL3::SSL ssl)
+INTERFACE: SSL_get_current_cipher  SSL_get_pending_cipher
 POSTCALL:
 	if (!RETVAL)
 		XSRETURN_UNDEF;
@@ -1527,7 +1452,7 @@ size_t SSL_get_num_tickets(Crypt::OpenSSL3::SSL s)
 
 bool SSL_new_session_ticket(Crypt::OpenSSL3::SSL s)
 
-size_t SSL_get_finished(Crypt::OpenSSL3::SSL ssl, SV* result)
+NO_OUTPUT size_t SSL_get_finished(Crypt::OpenSSL3::SSL ssl, OUTLIST SV* result)
 INIT:
 	char* ptr = make_buffer(&result, EVP_MAX_MD_SIZE);
 C_ARGS: ssl, ptr, EVP_MAX_MD_SIZE
@@ -1535,7 +1460,7 @@ POSTCALL:
 	if (RETVAL)
 		set_buffer_length(result, RETVAL);
 
-size_t SSL_get_peer_finished(Crypt::OpenSSL3::SSL ssl, SV* result);
+NO_OUTPUT size_t SSL_get_peer_finished(Crypt::OpenSSL3::SSL ssl, OUTLIST SV* result)
 INIT:
 	char* ptr = make_buffer(&result, EVP_MAX_MD_SIZE);
 C_ARGS: ssl, ptr, EVP_MAX_MD_SIZE
@@ -1575,9 +1500,9 @@ int SSL_get_rpoll_descriptor(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO::PollD
 
 int SSL_get_wpoll_descriptor(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO::PollDescriptor desc)
 
-int SSL_net_read_desired(Crypt::OpenSSL3::SSL s)
+bool SSL_net_read_desired(Crypt::OpenSSL3::SSL s)
 
-int SSL_net_write_desired(Crypt::OpenSSL3::SSL s)
+bool SSL_net_write_desired(Crypt::OpenSSL3::SSL s)
 
 Crypt::OpenSSL3::SSL SSL_get_connection(Crypt::OpenSSL3::SSL ssl)
 POSTCALL:
@@ -1609,6 +1534,7 @@ Crypt::OpenSSL3::SSL SSL_new_listener_from(Crypt::OpenSSL3::SSL ssl, uint64_t fl
 bool SSL_is_listener(Crypt::OpenSSL3::SSL ssl)
 
 Crypt::OpenSSL3::SSL SSL_get_listener(Crypt::OpenSSL3::SSL ssl)
+INTERFACE: SSL_get_listener SSL_get_domain
 POSTCALL:
 	if (RETVAL)
 		SSL_up_ref(RETVAL);
@@ -1626,13 +1552,6 @@ Crypt::OpenSSL3::SSL SSL_new_from_listener(Crypt::OpenSSL3::SSL ssl, uint64_t fl
 Crypt::OpenSSL3::SSL SSL_new_domain(Crypt::OpenSSL3::SSL::Context ctx, uint64_t flags)
 
 bool SSL_is_domain(Crypt::OpenSSL3::SSL ssl)
-
-Crypt::OpenSSL3::SSL SSL_get_domain(Crypt::OpenSSL3::SSL ssl)
-POSTCALL:
-	if (RETVAL)
-		SSL_up_ref(RETVAL);
-	else
-		XSRETURN_UNDEF;
 
 NO_OUTPUT int SSL_get_domain_flags(Crypt::OpenSSL3::SSL ssl, OUTLIST uint64_t flags)
 POSTCALL:
@@ -1751,12 +1670,8 @@ bool SSL_SESSION_set_id(Crypt::OpenSSL3::SSL::Session s, const unsigned char *si
 bool SSL_SESSION_is_resumable(Crypt::OpenSSL3::SSL::Session s)
 
 NO_OUTPUT const unsigned char *SSL_SESSION_get_id(Crypt::OpenSSL3::SSL::Session s, OUTLIST SV* result)
-	unsigned int len = 0;
-C_ARGS: s, &len
-POSTCALL:
-	result = newSVpvn(RETVAL, len);
-
-NO_OUTPUT const unsigned char *SSL_SESSION_get_id_context(Crypt::OpenSSL3::SSL::Session s, OUTLIST SV* result)
+INTERFACE: SSL_SESSION_get_id  SSL_SESSION_get_id_context
+INIT:
 	unsigned int len = 0;
 C_ARGS: s, &len
 POSTCALL:
@@ -1804,36 +1719,22 @@ OUTPUT:
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random	PREFIX = RAND_
 
 NO_OUTPUT int RAND_bytes(SV* class, OUTLIST SV* buffer, int num)
-INIT:
-	char* ptr = make_buffer(&buffer, num);
-	set_buffer_length(buffer, num);
-C_ARGS: ptr, num
-
-NO_OUTPUT int RAND_priv_bytes(SV* class, OUTLIST SV* buffer, int num);
+INTERFACE: RAND_bytes  RAND_priv_bytes
 INIT:
 	char* ptr = make_buffer(&buffer, num);
 	set_buffer_length(buffer, num);
 C_ARGS: ptr, num
 
 Crypt::OpenSSL3::Random::Context RAND_get_primary(SV* class)
-POSTCALL:
-	EVP_RAND_CTX_up_ref(RETVAL);
-
-Crypt::OpenSSL3::Random::Context RAND_get_public(SV* class)
-POSTCALL:
-	EVP_RAND_CTX_up_ref(RETVAL);
-
-Crypt::OpenSSL3::Random::Context RAND_get_private(SV* class)
+INTERFACE: RAND_get_primary  RAND_get_public  RAND_get_private
+C_ARGS: NULL
 POSTCALL:
 	EVP_RAND_CTX_up_ref(RETVAL);
 
 #if OPENSSL_VERSION_PREREQ(3, 2)
-bool RAND_set_public(SV* class, Crypt::OpenSSL3::Random::Context rand)
-POSTCALL:
-	if (RETVAL)
-		EVP_RAND_CTX_up_ref(rand);
-
-bool RAND_set_private(SV* class, Crypt::OpenSSL3::Random::Context rand)
+Bool RAND_set_public(SV* class, Crypt::OpenSSL3::Random::Context rand)
+INTERFACE: RAND_set_public  RAND_set_private
+C_ARGS: NULL, rand
 POSTCALL:
 	if (RETVAL)
 		EVP_RAND_CTX_up_ref(rand);
