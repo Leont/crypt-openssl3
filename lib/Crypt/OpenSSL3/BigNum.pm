@@ -119,6 +119,18 @@ use warnings;
 
 =method set_word
 
+=method signed_bin2bn
+
+=method signed_bn2bin
+
+=method signed_bn2lebin
+
+=method signed_bn2native
+
+=method signed_lebin2bn
+
+=method signed_native2bn
+
 =method sqr
 
 =method sub

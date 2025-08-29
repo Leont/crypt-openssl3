@@ -794,7 +794,7 @@ POSTCALL:
 	if (RETVAL >= 0)
 		set_buffer_length(out, RETVAL);
 
-Crypt::OpenSSL3::BigNum BN_lebin2bn(const unsigned char *s, int len, Crypt::OpenSSL3::BigNum ret)
+Crypt::OpenSSL3::BigNum BN_lebin2bn(const unsigned char *s, int len)
 C_ARGS: s, len, NULL
 
 
@@ -806,9 +806,44 @@ POSTCALL:
 	if (RETVAL >= 0)
 		set_buffer_length(out, RETVAL);
 
-Crypt::OpenSSL3::BigNum BN_native2bn(const unsigned char *s, int len, Crypt::OpenSSL3::BigNum ret)
+Crypt::OpenSSL3::BigNum BN_native2bn(const unsigned char *s, int len)
 C_ARGS: s, len, NULL
 
+#if OPENSSL_VERSION_PREREQ(3, 2)
+NO_OUTPUT int BN_signed_bn2bin(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out)
+INIT:
+	char* ptr = make_buffer(&out, BN_num_bytes(a));
+C_ARGS: a, ptr, BN_num_bytes(a)
+POSTCALL:
+	set_buffer_length(out, RETVAL);
+
+Crypt::OpenSSL3::BigNum BN_signed_bin2bn(const unsigned char *s, int len)
+C_ARGS: s, len, NULL
+
+
+NO_OUTPUT int BN_signed_bn2lebin(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out, int tolen)
+INIT:
+	char* ptr = make_buffer(&out, tolen);
+C_ARGS: a, ptr, tolen
+POSTCALL:
+	if (RETVAL >= 0)
+		set_buffer_length(out, RETVAL);
+
+Crypt::OpenSSL3::BigNum BN_signed_lebin2bn(const unsigned char *s, int len)
+C_ARGS: s, len, NULL
+
+
+NO_OUTPUT int BN_signed_bn2native(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out, int tolen)
+INIT:
+	char* ptr = make_buffer(&out, tolen);
+C_ARGS: a, ptr, tolen
+POSTCALL:
+	if (RETVAL >= 0)
+		set_buffer_length(out, RETVAL);
+
+Crypt::OpenSSL3::BigNum BN_signed_native2bn(const unsigned char *s, int len)
+C_ARGS: s, len, NULL
+#endif
 
 char *BN_bn2hex(Crypt::OpenSSL3::BigNum a)
 CLEANUP:
