@@ -2392,8 +2392,14 @@ NO_OUTPUT int EVP_PKEY_get_default_digest_name(Crypt::OpenSSL3::PKey pkey, OUTLI
 INIT:
 	char* ptr = make_buffer(&mdname, 32);
 C_ARGS: pkey, ptr, 32
+POSTCALL:
+	if (RETVAL > 0)
+		set_buffer_length(mdname, strlen(SvPV_nolen(mdname)));
 
-int EVP_PKEY_get_default_digest_nid(Crypt::OpenSSL3::PKey pkey, OUT int pnid)
+NO_OUTPUT int EVP_PKEY_get_default_digest_nid(Crypt::OpenSSL3::PKey pkey, OUTLIST int pnid)
+POSTCALL:
+	if (RETVAL <= 0)
+		XSRETURN_UNDEF;
 
 int EVP_PKEY_get_field_type(Crypt::OpenSSL3::PKey pkey)
 
