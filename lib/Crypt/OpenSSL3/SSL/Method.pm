@@ -7,22 +7,22 @@ use Crypt::OpenSSL3;
 
 1;
 
-#ABSTRACT: Connection methods for SSL connections
+#ABSTRACT: Connection funcs for SSL connections
 
-=method TLS
+=func TLS
 
-=method TLS_client
+=func TLS_client
 
-=method TLS_server
+=func TLS_server
 
-=method DTLS
+=func DTLS
 
-=method DTLS_client
+=func DTLS_client
 
-=method DTLS_server
+=func DTLS_server
 
-=method QUIC_client
+=func QUIC_client
 
-=method QUIC_client_thread
+=func QUIC_client_thread
 
-=method QUIC_server
+=func QUIC_server

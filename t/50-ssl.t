@@ -7,8 +7,8 @@ use Test::More;
 
 use Crypt::OpenSSL3::SSL;
 
-my $client_method = Crypt::OpenSSL3::SSL::Method->TLS_client;
-my $server_method = Crypt::OpenSSL3::SSL::Method->TLS_server;
+my $client_method = Crypt::OpenSSL3::SSL::Method::TLS_client;
+my $server_method = Crypt::OpenSSL3::SSL::Method::TLS_server;
 my $client_context = Crypt::OpenSSL3::SSL::Context->new($client_method);
 my $server_context = Crypt::OpenSSL3::SSL::Context->new($server_method);
 

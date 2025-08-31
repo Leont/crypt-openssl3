@@ -11,7 +11,7 @@ my $socket = IO::Socket::IP->new(
 	Type     => SOCK_STREAM,
 );
 
-my $method = Crypt::OpenSSL3::SSL::Protocol->TLS_client;
+my $method = Crypt::OpenSSL3::SSL::Protocol::TLS_client;
 my $ctx = Crypt::OpenSSL3::SSL::Context->new($method);
 $ctx->set_verify(Crypt::OpenSSL3::SSL::VERIFY_PEER);
 $ctx->set_default_verify_paths() or die;
