@@ -1956,13 +1956,13 @@ bool EVP_CIPHER_CTX_set_key_length(Crypt::OpenSSL3::Cipher::Context ctx, int key
 
 int EVP_CIPHER_CTX_ctrl(Crypt::OpenSSL3::Cipher::Context ctx, int cmd, int p1, char *p2)
 
-NO_OUTPUT bool EVP_CIPHER_CTX_rand_key(Crypt::OpenSSL3::Cipher::Context ctx, OUTLIST SV* key)
+NO_OUTPUT int EVP_CIPHER_CTX_rand_key(Crypt::OpenSSL3::Cipher::Context ctx, OUTLIST SV* key)
 INIT:
 	size_t size = EVP_CIPHER_CTX_key_length(ctx);
 	char* ptr = make_buffer(&key, size);
 C_ARGS: ctx, ptr
 POSTCALL:
-	if (RETVAL)
+	if (RETVAL > 0)
 		set_buffer_length(key, size);
 
 Crypt::OpenSSL3::Cipher EVP_CIPHER_CTX_get_cipher(Crypt::OpenSSL3::Cipher::Context ctx)
