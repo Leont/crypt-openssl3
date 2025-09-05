@@ -731,6 +731,10 @@ C_ARGS:
 Crypt::OpenSSL3::BigNum BN_secure_new(SV* class)
 C_ARGS:
 
+Crypt::OpenSSL3::BigNum BN_dup(Crypt::OpenSSL3::BigNum self)
+
+bool BN_copy(Crypt::OpenSSL3::BigNum self, Crypt::OpenSSL3::BigNum other)
+
 void BN_clear(Crypt::OpenSSL3::BigNum a)
 
 bool BN_add(Crypt::OpenSSL3::BigNum r, Crypt::OpenSSL3::BigNum a, Crypt::OpenSSL3::BigNum b)
@@ -939,6 +943,8 @@ C_ARGS:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509	PREFIX = X509_
 
+Crypt::OpenSSL3::X509 X509_dup(Crypt::OpenSSL3::X509 self)
+
 Crypt::OpenSSL3::X509 read_bio(class, Crypt::OpenSSL3::BIO bio)
 CODE:
 	RETVAL = PEM_read_bio_X509(bio, NULL, NULL, NULL);
@@ -993,6 +999,8 @@ bool X509_verify_cert_ok(Crypt::OpenSSL3::X509::VerifyResult result)
 const char* X509_verify_cert_error_string(Crypt::OpenSSL3::X509::VerifyResult result)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Name	PREFIX = X509_NAME_
+
+Crypt::OpenSSL3::X509::Name X509_NAME_dup(Crypt::OpenSSL3::X509::Name self)
 
 int X509_NAME_cmp(Crypt::OpenSSL3::X509::Name a, Crypt::OpenSSL3::X509::Name b)
 
@@ -1666,6 +1674,8 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Session	PREFIX = SSL_SE
 Crypt::OpenSSL3::SSL::Session SSL_SESSION_new(class)
 C_ARGS:
 
+Crypt::OpenSSL3::SSL::Session SSL_SESSION_dup(Crypt::OpenSSL3::SSL::Session s)
+
 long SSL_SESSION_get_timeout(Crypt::OpenSSL3::SSL::Session s)
 
 long SSL_SESSION_set_timeout(Crypt::OpenSSL3::SSL::Session s, long t)
@@ -1903,6 +1913,10 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Cipher::Context	PREFIX = EVP
 Crypt::OpenSSL3::Cipher::Context EVP_CIPHER_CTX_new(SV* class)
 C_ARGS:
 
+Crypt::OpenSSL3::Cipher::Context EVP_CIPHER_CTX_dup(Crypt::OpenSSL3::Cipher::Context ctx)
+
+bool EVP_CIPHER_CTX_copy(Crypt::OpenSSL3::Cipher::Context self, Crypt::OpenSSL3::Cipher::Context other)
+
 bool EVP_CIPHER_CTX_reset(Crypt::OpenSSL3::Cipher::Context ctx)
 
 bool EVP_CIPHER_CTX_init(Crypt::OpenSSL3::Cipher::Context ctx, Crypt::OpenSSL3::Cipher type, const unsigned char* key, size_t length(key), const unsigned char* iv, size_t length(iv), bool enc, CTX_PARAMS(EVP_CIPHER) params = NULL)
@@ -2045,6 +2059,10 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MD::Context	PREFIX = EVP_MD_
 Crypt::OpenSSL3::MD::Context EVP_MD_CTX_new(SV* class)
 C_ARGS:
 
+Crypt::OpenSSL3::MD::Context EVP_MD_CTX_dup(Crypt::OpenSSL3::MD::Context ctx)
+
+bool EVP_MD_CTX_copy(Crypt::OpenSSL3::MD::Context self, Crypt::OpenSSL3::MD::Context other)
+
 bool EVP_MD_CTX_reset(Crypt::OpenSSL3::MD::Context ctx)
 
 bool EVP_MD_CTX_init(Crypt::OpenSSL3::MD::Context ctx, Crypt::OpenSSL3::MD type, CTX_PARAMS(EVP_MD) params = NULL)
@@ -2184,6 +2202,8 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC::Context	PREFIX = EVP_MA
 Crypt::OpenSSL3::MAC::Context EVP_MAC_CTX_new(SV* class, Crypt::OpenSSL3::MAC ctx)
 C_ARGS: ctx
 
+Crypt::OpenSSL3::MAC::Context EVP_MAC_CTX_dup(Crypt::OpenSSL3::MAC::Context ctx)
+
 Crypt::OpenSSL3::MAC EVP_MAC_CTX_get_mac(Crypt::OpenSSL3::MAC::Context ctx);
 POSTCALL:
 	EVP_MAC_up_ref(RETVAL);
@@ -2265,6 +2285,8 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF::Context	PREFIX = EVP_KD
 Crypt::OpenSSL3::KDF::Context EVP_KDF_CTX_new(SV* class, Crypt::OpenSSL3::KDF ctx)
 C_ARGS: ctx
 
+Crypt::OpenSSL3::KDF::Context EVP_KDF_CTX_dup(Crypt::OpenSSL3::KDF::Context ctx)
+
 void EVP_KDF_CTX_reset(Crypt::OpenSSL3::KDF::Context ctx)
 
 size_t EVP_KDF_CTX_get_kdf_size(Crypt::OpenSSL3::KDF::Context ctx)
@@ -2331,6 +2353,8 @@ C_ARGS: NULL, keytype, propq, key, STRLEN_length_of_key
 
 Crypt::OpenSSL3::PKey EVP_PKEY_new_raw_public_key_ex(SV* class, const char *keytype, const char *propq, const unsigned char *key, size_t length(key))
 C_ARGS: NULL, keytype, propq, key, STRLEN_length_of_key
+
+Crypt::OpenSSL3::PKey EVP_PKEY_dup(Crypt::OpenSSL3::PKey ctx)
 
 NO_OUTPUT void EVP_PKEY_get_raw_private_key(Crypt::OpenSSL3::PKey pkey, OUTLIST SV* key)
 CODE:
@@ -2458,6 +2482,7 @@ C_ARGS: out, pkey, indent, NULL
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKey::Context	PREFIX = EVP_PKEY_CTX_
 
+
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new(SV* class, Crypt::OpenSSL3::PKey pkey)
 C_ARGS: pkey, NULL
 
@@ -2469,6 +2494,8 @@ C_ARGS: NULL, name, propquery
 
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_from_pkey(SV* class, Crypt::OpenSSL3::PKey pkey, const char *propquery = "")
 C_ARGS: NULL, pkey, propquery
+
+Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_dup(Crypt::OpenSSL3::PKey::Context ctx)
 
 bool EVP_PKEY_CTX_set_params(Crypt::OpenSSL3::PKey::Context ctx, PARAMS(EVP_PKEY_CTX) params = NULL)
 

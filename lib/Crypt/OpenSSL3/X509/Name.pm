@@ -11,6 +11,8 @@ use Crypt::OpenSSL3;
 
 =method cmp
 
+=method dup
+
 =method entry_count
 
 =method get_entry

@@ -35,6 +35,8 @@ use warnings;
 
 =method derive_set_peer
 
+=method dup
+
 =method encapsulate
 
 =method encapsulate_init

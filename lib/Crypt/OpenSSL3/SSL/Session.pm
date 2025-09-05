@@ -9,6 +9,8 @@ use warnings;
 
 =method new
 
+=method dup
+
 =method get_alpn_selected
 
 =method get_cipher

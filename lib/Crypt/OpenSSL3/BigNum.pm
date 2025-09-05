@@ -41,11 +41,15 @@ use warnings;
 
 =method cmp
 
+=method copy
+
 =method dec2bn
 
 =method div
 
 =method div_word
+
+=method dup
 
 =method exp
 

@@ -9,6 +9,8 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: An X509 certificate
 
+=method dup
+
 =method digest
 
 =method get_issuer_name

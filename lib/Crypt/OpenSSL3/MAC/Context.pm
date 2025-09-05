@@ -11,6 +11,8 @@ use warnings;
 
 =method init
 
+=method dup
+
 =method final
 
 =method finalXOF

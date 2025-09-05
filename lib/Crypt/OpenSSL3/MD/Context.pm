@@ -13,7 +13,11 @@ use warnings;
 
 =method clear_flags
 
+=method copy
+
 =method ctrl
+
+=method dup
 
 =method final
 

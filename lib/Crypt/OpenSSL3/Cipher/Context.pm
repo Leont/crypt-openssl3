@@ -11,15 +11,15 @@ use warnings;
 
 =method init
 
-=method set_aead_ivlen
-
-=method get_aead_tag
-
-=method set_aead_tag
+=method copy
 
 =method ctrl
 
+=method dup
+
 =method final
+
+=method get_aead_tag
 
 =method get_block_size
 
@@ -42,6 +42,10 @@ use warnings;
 =method rand_key
 
 =method reset
+
+=method set_aead_ivlen
+
+=method set_aead_tag
 
 =method set_key_length
 

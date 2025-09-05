@@ -11,6 +11,8 @@ use warnings;
 
 =method derive
 
+=method dup
+
 =method get_kdf_size
 
 =method get_param

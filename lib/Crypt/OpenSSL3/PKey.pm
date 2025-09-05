@@ -17,6 +17,8 @@ use warnings;
 
 =method digestsign_supports_digest
 
+=method dup
+
 =method get_base_id
 
 =method get_bits
