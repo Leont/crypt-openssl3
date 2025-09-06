@@ -111,7 +111,16 @@ typedef BIGNUM BN;
 DUPLICATING_TYPE(BN, BigNum, BigNum);
 #define BN_CTX_dup(old) BN_CTX_new()
 DUPLICATING_TYPE(BN_CTX, BigNum__Context, BigNum::Context)
+
 SIMPLE_TYPE(ASN1_OBJECT, ASN1__Object, ASN1::Object, )
+DUPLICATING_TYPE(ASN1_INTEGER, ASN1__Integer, ASN1::Integer)
+#define ASN1_ENUMERATED_dup ASN1_INTEGER_dup
+DUPLICATING_TYPE(ASN1_ENUMERATED, ASN1__Enumerated, ASN1::Enumerated)
+DUPLICATING_TYPE(ASN1_STRING, ASN1__String, ASN1::String)
+DUPLICATING_TYPE(ASN1_OCTET_STRING, ASN1__String__Octet, ASN1::String::Octet)
+DUPLICATING_TYPE(ASN1_TIME, ASN1__Time, ASN1::Time)
+DUPLICATING_TYPE(ASN1_GENERALIZEDTIME, ASN1__Time__Generalized, ASN1::Time::Generalized)
+DUPLICATING_TYPE(ASN1_UTCTIME, ASN1__Time__UTC, ASN1::Time::UTC)
 DUPLICATING_TYPE(X509, X509, X509)
 COUNTING_TYPE(X509_STORE, X509__Store, X509::Store)
 DUPLICATING_TYPE(X509_NAME, X509__Name, X509::Name)
@@ -142,6 +151,12 @@ SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, SSL::Context, const)
 #define BIO_POLL_DESCRIPTOR_fd(desc) ((desc)->value.fd)
 
 #define BN_generate_prime BN_generate_prime_ex2
+
+#define OBJ_get_data OBJ_get0_data
+#define ASN1_INTEGER_get_BN(ai) ASN1_INTEGER_to_BN(ai, NULL)
+#define ASN1_INTEGER_set_BN(ai, bn) BN_to_ASN1_INTEGER(bn, ai)
+#define ASN1_ENUMERATED_set_BN(ai, bn) BN_to_ASN1_ENUMERATED(bn, ai)
+#define ASN1_ENUMERATED_get_BN(ai) ASN1_ENUMERATED_to_BN(ai, NULL)
 
 #define X509_read_pem PEM_read_bio_X509
 #define X509_write_pem PEM_write_bio_X509
@@ -450,6 +465,7 @@ DEFINE_PROVIDED_CALLBACK(EVP_SIGNATURE)
 
 typedef int Bool;
 typedef int Success;
+typedef int PrintRet;
 #define undef &PL_sv_undef
 
 // This will force byte semantics on all strings
@@ -469,8 +485,10 @@ TYPEMAP: <<END
 const unsigned char*	T_PV
 Bool	T_BOOL
 struct timeval	T_TIMEVAL
+int64_t T_IV
 uint64_t	T_UV
 Success T_SUCCESS
+PrintRet T_PRINT
 
 Crypt::OpenSSL3::Random T_MAGICEXT
 Crypt::OpenSSL3::Random::Context T_MAGICEXT
@@ -495,6 +513,15 @@ Crypt::OpenSSL3::BigNum T_MAGICEXT
 Crypt::OpenSSL3::BigNum::Context T_MAGICEXT
 
 Crypt::OpenSSL3::ASN1::Object	T_MAGICEXT
+Crypt::OpenSSL3::ASN1::Integer	T_MAGICEXT
+Crypt::OpenSSL3::ASN1::Enumerated	T_MAGICEXT
+Crypt::OpenSSL3::ASN1::String	T_MAGICEXT
+Crypt::OpenSSL3::ASN1::String::Octet	T_MAGICEXT
+Crypt::OpenSSL3::ASN1::String::UTF8	T_MAGICEXT
+Crypt::OpenSSL3::ASN1::Time	T_MAGICEXT
+Crypt::OpenSSL3::ASN1::Time::Generalized	T_MAGICEXT
+Crypt::OpenSSL3::ASN1::Time::UTC	T_MAGICEXT
+
 Crypt::OpenSSL3::X509	T_MAGICEXT
 Crypt::OpenSSL3::X509::Store	T_MAGICEXT
 Crypt::OpenSSL3::X509::Name	T_MAGICEXT
@@ -532,6 +559,8 @@ T_TIMEVAL
 	sv_setnv($arg, $var.tv_sec + $var.tv_usec / 1000000.0);
 T_SUCCESS
 	${"$var" eq "RETVAL" ? \"$arg = $var < 0 ? &PL_sv_undef : boolSV($var);" : \"sv_setsv($arg, $var < 0 ? &PL_sv_undef : boolSV($var));"}
+T_PRINT
+	${"$var" eq "RETVAL" ? \"$arg = $var < 0 ? &PL_sv_undef : newSViv($var);" : \"if ($var < 0) sv_setsv($arg, &PL_sv_undef); else sv_setiv($arg, $var);"}
 T_PV
 	sv_setpv((SV*)$arg, (const char*)$var);
 END
@@ -931,6 +960,230 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BigNum::Context	PREFIX = BN_
 Crypt::OpenSSL3::BigNum::Context BN_CTX_new(SV* classname)
 INTERFACE: BN_CTX_new  BN_CTX_secure_new
 C_ARGS:
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::Object	PREFIX = OBJ_
+
+int OBJ_create(class, const char *oid, const char *sn, const char *ln)
+C_ARGS: oid, sn, ln
+POSTCALL:
+	if (RETVAL == NID_undef)
+		XSRETURN_UNDEF;
+
+Crypt::OpenSSL3::ASN1::Object OBJ_txt2obj(const char *s, bool no_name = FALSE)
+
+Crypt::OpenSSL3::ASN1::Object OBJ_nid2obj(int n)
+
+int OBJ_cmp(Crypt::OpenSSL3::ASN1::Object a, Crypt::OpenSSL3::ASN1::Object b)
+
+int OBJ_obj2nid(Crypt::OpenSSL3::ASN1::Object o)
+
+size_t OBJ_length(Crypt::OpenSSL3::ASN1::Object obj)
+
+const unsigned char *OBJ_get_data(Crypt::OpenSSL3::ASN1::Object obj)
+
+SV* OBJ_obj2txt(Crypt::OpenSSL3::ASN1::Object a, bool no_name = FALSE)
+CODE:
+	int buf_len = OBJ_obj2txt(NULL, 0, a, no_name);
+	if (buf_len > 0) {
+		char* ptr = make_buffer(&RETVAL, buf_len);
+		if (OBJ_obj2txt(ptr, buf_len, a, no_name) > 0)
+			set_buffer_length(RETVAL, buf_len);
+	}
+OUTPUT:
+	RETVAL
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::Integer	PREFIX = ASN1_INTEGER_
+
+Crypt::OpenSSL3::ASN1::Integer ASN1_INTEGER_new()
+C_ARGS:
+
+NO_OUTPUT int ASN1_INTEGER_get_int64(Crypt::OpenSSL3::ASN1::Integer a, OUTLIST int64_t pr)
+C_ARGS: &pr, a
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool ASN1_INTEGER_set_int64(Crypt::OpenSSL3::ASN1::Integer a, int64_t r)
+
+NO_OUTPUT int ASN1_INTEGER_get_uint64(Crypt::OpenSSL3::ASN1::Integer a, OUTLIST uint64_t pr)
+C_ARGS: &pr, a
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool ASN1_INTEGER_set_uint64(Crypt::OpenSSL3::ASN1::Integer a, uint64_t r)
+
+Crypt::OpenSSL3::BigNum ASN1_INTEGER_get_BN(Crypt::OpenSSL3::ASN1::Integer ai)
+
+bool ASN1_INTEGER_set_BN(Crypt::OpenSSL3::ASN1::Integer ai, Crypt::OpenSSL3::BigNum bn)
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::Enumerated	PREFIX = ASN1_ENUMERATED_
+
+Crypt::OpenSSL3::ASN1::Enumerated ASN1_ENUMERATED_new()
+C_ARGS:
+
+NO_OUTPUT int ASN1_ENUMERATED_get_int64(Crypt::OpenSSL3::ASN1::Enumerated a, OUTLIST int64_t pr)
+C_ARGS: &pr, a
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool ASN1_ENUMERATED_set_int64(Crypt::OpenSSL3::ASN1::Enumerated a, int64_t r)
+
+bool ASN1_ENUMERATED_set_BN(Crypt::OpenSSL3::ASN1::Integer ai, Crypt::OpenSSL3::BigNum bn)
+
+Crypt::OpenSSL3::BigNum ASN1_ENUMERATED_get_BN(Crypt::OpenSSL3::ASN1::Enumerated ai)
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::String	PREFIX = ASN1_STRING_
+
+BOOT:
+{
+	HV* stash = gv_stashpvs("Crypt::OpenSSL3::ASN1::String", GV_ADD | GV_ADDMULTI);
+	CONSTANT2(ASN1_STR, FLGS_ESC_2253);
+	CONSTANT2(ASN1_STR, FLGS_ESC_CTRL);
+	CONSTANT2(ASN1_STR, FLGS_ESC_MSB);
+	CONSTANT2(ASN1_STR, FLGS_UTF8_CONVERT);
+	CONSTANT2(ASN1_STR, FLGS_IGNORE_TYPE);
+	CONSTANT2(ASN1_STR, FLGS_SHOW_TYPE);
+	CONSTANT2(ASN1_STR, FLGS_DUMP_ALL);
+	CONSTANT2(ASN1_STR, FLGS_DUMP_UNKNOWN);
+	CONSTANT2(ASN1_STR, FLGS_DUMP_DER);
+	CONSTANT2(ASN1_STR, FLGS_ESC_2254);
+	CONSTANT2(ASN1_STR, FLGS_RFC2253);
+}
+
+int ASN1_STRING_length(Crypt::OpenSSL3::ASN1::String x)
+
+SV* ASN1_STRING_get_data(Crypt::OpenSSL3::ASN1::String x)
+CODE:
+	const char* data = ASN1_STRING_get0_data(x);
+	int length = ASN1_STRING_length(x);
+	RETVAL = newSVpvn(data, length);
+OUTPUT:
+	RETVAL
+
+Crypt::OpenSSL3::ASN1::String ASN1_STRING_dup(Crypt::OpenSSL3::ASN1::String a)
+
+int ASN1_STRING_cmp(Crypt::OpenSSL3::ASN1::String a, Crypt::OpenSSL3::ASN1::String b)
+
+int ASN1_STRING_set(Crypt::OpenSSL3::ASN1::String str, const char *data, int length(data))
+
+int ASN1_STRING_type(Crypt::OpenSSL3::ASN1::String x)
+
+SV* ASN1_STRING_to_UTF8(Crypt::OpenSSL3::ASN1::String in)
+CODE:
+	unsigned char* out = NULL;
+	int result = ASN1_STRING_to_UTF8(&out, in);
+	if (result > 0) {
+		RETVAL = newSVpvn_utf8(out, result, 1);
+		OPENSSL_free(out);
+	} else
+		RETVAL = &PL_sv_undef;
+OUTPUT:
+	RETVAL
+
+bool ASN1_STRING_print(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::ASN1::String str)
+
+PrintRet ASN1_STRING_print_ex(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::ASN1::String str, unsigned long flags)
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::String::Octet	PREFIX = ASN1_OCTET_STRING_
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::Time	PREFIX = ASN1_TIME_
+
+Crypt::OpenSSL3::ASN1::Time ASN1_TIME_new(class)
+C_ARGS:
+
+Crypt::OpenSSL3::ASN1::Time ASN1_TIME_dup(Crypt::OpenSSL3::ASN1::Time t);
+
+bool ASN1_TIME_set(Crypt::OpenSSL3::ASN1::Time s, time_t t)
+
+bool ASN1_TIME_adj(Crypt::OpenSSL3::ASN1::Time s, time_t t, int offset_day, long offset_sec)
+
+bool ASN1_TIME_set_string(Crypt::OpenSSL3::ASN1::Time s, const char *str)
+
+bool ASN1_TIME_set_string_X509(Crypt::OpenSSL3::ASN1::Time s, const char *str)
+
+bool ASN1_TIME_normalize(Crypt::OpenSSL3::ASN1::Time s)
+
+bool ASN1_TIME_check(Crypt::OpenSSL3::ASN1::Time t)
+
+bool ASN1_TIME_print(Crypt::OpenSSL3::BIO b, Crypt::OpenSSL3::ASN1::Time s)
+
+PrintRet ASN1_TIME_print_ex(Crypt::OpenSSL3::BIO bp, Crypt::OpenSSL3::ASN1::Time tm, unsigned long flags)
+
+NO_OUTPUT bool ASN1_TIME_diff(Crypt::OpenSSL3::ASN1::Time from, Crypt::OpenSSL3::ASN1::Time to, OUTLIST int pday, OUTLIST int psec)
+C_ARGS: &pday, &psec, from, to
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_EMPTY;
+
+int ASN1_TIME_cmp_time_t(Crypt::OpenSSL3::ASN1::Time s, time_t t)
+
+int ASN1_TIME_compare(Crypt::OpenSSL3::ASN1::Time a, Crypt::OpenSSL3::ASN1::Time b)
+POSTCALL:
+	if (RETVAL == -2)
+		XSRETURN_UNDEF;
+
+void ASN1_TIME_to_tm(Crypt::OpenSSL3::ASN1::Time s)
+PPCODE:
+	struct tm tm;
+	if (ASN1_TIME_to_tm(s, &tm)) {
+		EXTEND(SP, 9);
+		mPUSHi(tm.tm_sec);
+		mPUSHi(tm.tm_min);
+		mPUSHi(tm.tm_hour);
+		mPUSHi(tm.tm_mday);
+		mPUSHi(tm.tm_mon);
+		mPUSHi(tm.tm_year);
+		mPUSHi(tm.tm_wday);
+		mPUSHi(tm.tm_yday);
+		mPUSHi(tm.tm_isdst);
+	}
+
+Crypt::OpenSSL3::ASN1::Time::Generalized ASN1_TIME_to_generalizedtime(Crypt::OpenSSL3::ASN1::Time t)
+C_ARGS: t, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::Time::Generalized	PREFIX = ASN1_GENERALIZEDTIME_
+
+Crypt::OpenSSL3::ASN1::Time::Generalized ASN1_GENERALIZEDTIME_new(class)
+C_ARGS:
+
+Crypt::OpenSSL3::ASN1::Time::Generalized ASN1_GENERALIZEDTIME_dup(Crypt::OpenSSL3::ASN1::Time::Generalized t);
+
+bool ASN1_GENERALIZEDTIME_set(Crypt::OpenSSL3::ASN1::Time::Generalized s, time_t t)
+
+bool ASN1_GENERALIZEDTIME_adj(Crypt::OpenSSL3::ASN1::Time::Generalized s, time_t t, int offset_day, long offset_sec)
+
+bool ASN1_GENERALIZEDTIME_set_string(Crypt::OpenSSL3::ASN1::Time::Generalized s, const char *str)
+
+bool ASN1_GENERALIZEDTIME_check(Crypt::OpenSSL3::ASN1::Time::Generalized t)
+
+bool ASN1_GENERALIZEDTIME_print(Crypt::OpenSSL3::BIO b, Crypt::OpenSSL3::ASN1::Time::Generalized s)
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::Time::UTC	PREFIX = ASN1_UTCTIME_
+
+Crypt::OpenSSL3::ASN1::Time::UTC ASN1_UTCTIME_new(class)
+C_ARGS:
+
+Crypt::OpenSSL3::ASN1::Time::UTC ASN1_UTCTIME_dup(Crypt::OpenSSL3::ASN1::Time::UTC t);
+
+bool ASN1_UTCTIME_set(Crypt::OpenSSL3::ASN1::Time::UTC s, time_t t)
+
+bool ASN1_UTCTIME_adj(Crypt::OpenSSL3::ASN1::Time::UTC s, time_t t, int offset_day, long offset_sec)
+
+bool ASN1_UTCTIME_set_string(Crypt::OpenSSL3::ASN1::Time::UTC s, const char *str)
+
+int ASN1_UTCTIME_cmp_time_t(Crypt::OpenSSL3::ASN1::Time::UTC s, time_t t)
+
+bool ASN1_UTCTIME_check(Crypt::OpenSSL3::ASN1::Time::UTC t)
+
+bool ASN1_UTCTIME_print(Crypt::OpenSSL3::BIO b, Crypt::OpenSSL3::ASN1::Time::UTC s)
+
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509	PREFIX = X509_
 
@@ -2572,8 +2825,10 @@ bool EVP_PKEY_CTX_set_dh_kdf_type(Crypt::OpenSSL3::PKey::Context ctx, int kdf)
 bool EVP_PKEY_CTX_get_dh_kdf_type(Crypt::OpenSSL3::PKey::Context ctx)
 
 bool EVP_PKEY_CTX_set_dh_kdf_oid(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::ASN1::Object oid)
+C_ARGS: ctx, (ASN1_OBJECT*) oid
 
 bool EVP_PKEY_CTX_get_dh_kdf_oid(Crypt::OpenSSL3::PKey::Context ctx, OUT Crypt::OpenSSL3::ASN1::Object oid)
+C_ARGS: ctx, (ASN1_OBJECT**) &oid
 
 bool EVP_PKEY_CTX_set_dh_kdf_md(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::MD md)
 
