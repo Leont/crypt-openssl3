@@ -3,6 +3,8 @@ package Crypt::OpenSSL3::Cipher::Context;
 use strict;
 use warnings;
 
+use Crypt::OpenSSL3;
+
 1;
 
 # ABSTRACT: An instance of a symmetric encryption

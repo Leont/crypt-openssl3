@@ -3,6 +3,8 @@ package Crypt::OpenSSL3::KDF::Context;
 use strict;
 use warnings;
 
+use Crypt::OpenSSL3;
+
 1;
 
 # ABSTRACT: A KDF instance

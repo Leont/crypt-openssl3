@@ -3,6 +3,8 @@ package Crypt::OpenSSL3::MAC::Context;
 use strict;
 use warnings;
 
+use Crypt::OpenSSL3;
+
 1;
 
 # ABSTRACT: Message authentication code instances

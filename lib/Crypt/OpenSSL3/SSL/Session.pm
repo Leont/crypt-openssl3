@@ -3,6 +3,8 @@ package Crypt::OpenSSL3::SSL::Session;
 use strict;
 use warnings;
 
+use Crypt::OpenSSL3;
+
 1;
 
 # ABSTRACT: SSL Session state

@@ -3,6 +3,8 @@ package Crypt::OpenSSL3::BigNum;
 use strict;
 use warnings;
 
+use Crypt::OpenSSL3;
+
 1;
 
 # ABSTRACT: Big Numbers

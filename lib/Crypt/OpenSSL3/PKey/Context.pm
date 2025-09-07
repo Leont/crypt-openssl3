@@ -3,6 +3,8 @@ package Crypt::OpenSSL3::PKey::Context;
 use strict;
 use warnings;
 
+use Crypt::OpenSSL3;
+
 1;
 
 # ABSTRACT: An operation using a PKey

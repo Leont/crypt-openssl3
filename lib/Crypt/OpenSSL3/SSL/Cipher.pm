@@ -3,6 +3,8 @@ package Crypt::OpenSSL3::SSL::Cipher;
 use strict;
 use warnings;
 
+use Crypt::OpenSSL3;
+
 1;
 
 # ABSTRACT: An SSL Cipher

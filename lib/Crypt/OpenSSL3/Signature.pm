@@ -3,6 +3,8 @@ package Crypt::OpenSSL3::Signature;
 use strict;
 use warnings;
 
+use Crypt::OpenSSL3;
+
 1;
 
 # ABSTRACT: Signature algorithms

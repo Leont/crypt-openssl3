@@ -3,6 +3,8 @@ package Crypt::OpenSSL3::Random::Context;
 use strict;
 use warnings;
 
+use Crypt::OpenSSL3;
+
 1;
 
 # ABSTRACT: A instance of a random number generator

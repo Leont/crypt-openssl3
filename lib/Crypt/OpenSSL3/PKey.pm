@@ -3,6 +3,8 @@ package Crypt::OpenSSL3::PKey;
 use strict;
 use warnings;
 
+use Crypt::OpenSSL3;
+
 1;
 
 # ABSTRACT: An assymetrical key
