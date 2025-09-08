@@ -228,6 +228,8 @@ static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntyp
 #define EVP_SIGNATURE_get_name EVP_SIGNATURE_get0_name
 #define EVP_SIGNATURE_get_description EVP_SIGNATURE_get0_description
 
+#define EVP_PKEY_new_raw_private_key EVP_PKEY_new_raw_private_key_ex
+#define EVP_PKEY_new_raw_public_key EVP_PKEY_new_raw_public_key_ex
 #define EVP_PKEY_get_description EVP_PKEY_get0_description
 #define EVP_PKEY_get_type_name EVP_PKEY_get0_type_name
 #define EVP_PKEY_get_encoded_public_key EVP_PKEY_get1_encoded_public_key
@@ -2348,11 +2350,17 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKey	PREFIX = EVP_PKEY_
 Crypt::OpenSSL3::PKey EVP_PKEY_new(SV* class)
 C_ARGS:
 
-Crypt::OpenSSL3::PKey EVP_PKEY_new_raw_private_key_ex(SV* class, const char *keytype, const char *propq, const unsigned char *key, size_t length(key))
+Crypt::OpenSSL3::PKey EVP_PKEY_new_raw_private_key(SV* class, const char *keytype, const unsigned char *key, size_t length(key), const char *propq = "")
 C_ARGS: NULL, keytype, propq, key, STRLEN_length_of_key
+POSTCALL:
+	if (RETVAL == NULL)
+		XSRETURN_UNDEF;
 
-Crypt::OpenSSL3::PKey EVP_PKEY_new_raw_public_key_ex(SV* class, const char *keytype, const char *propq, const unsigned char *key, size_t length(key))
+Crypt::OpenSSL3::PKey EVP_PKEY_new_raw_public_key(SV* class, const char *keytype, const unsigned char *key, size_t length(key), const char *propq = "")
 C_ARGS: NULL, keytype, propq, key, STRLEN_length_of_key
+POSTCALL:
+	if (RETVAL == NULL)
+		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::PKey EVP_PKEY_dup(Crypt::OpenSSL3::PKey ctx)
 

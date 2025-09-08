@@ -11,9 +11,9 @@ use Crypt::OpenSSL3;
 
 =method new
 
-=method new_raw_private_key_ex
+=method new_raw_private_key
 
-=method new_raw_public_key_ex
+=method new_raw_public_key
 
 =method can_sign
 
