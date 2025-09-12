@@ -3,6 +3,11 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#ifndef __bool_true_false_are_defined
+#undef bool
+#include <stdbool.h>
+#endif
+
 #define NEED_mg_findext
 #include "ppport.h"
 
