@@ -271,7 +271,7 @@ static int EVP_PKEY_verify_init_ex2(EVP_PKEY_CTX *ctx, EVP_SIGNATURE *algo, cons
 #define CONSTANT2(PREFIX, VALUE) newCONSTSUB(stash, #VALUE, newSVuv(PREFIX##VALUE))
 
 static char* S_make_buffer(pTHX_ SV** retval, size_t size) {
-	*retval = newSVpv(NULL, 0);
+	*retval = newSVpv("", 0);
 	char* ptr = SvGROW(*retval, size);
 	return ptr;
 }
