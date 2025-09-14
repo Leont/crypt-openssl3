@@ -2452,9 +2452,13 @@ POSTCALL:
 
 bool EVP_PKEY_set_encoded_public_key(Crypt::OpenSSL3::PKey pkey, const unsigned char *pub, size_t length(pub))
 
-size_t EVP_PKEY_get_encoded_public_key(Crypt::OpenSSL3::PKey pkey, OUT unsigned char *ppub)
-CLEANUP:
-	OPENSSL_free(ppub);
+NO_OUTPUT size_t EVP_PKEY_get_encoded_public_key(Crypt::OpenSSL3::PKey pkey, OUTLIST SV* result)
+INIT:
+	unsigned char* ptr = NULL;
+C_ARGS: pkey, &ptr
+POSTCALL:
+	result = RETVAL > 0 ? newSVpvn(ptr, RETVAL) : &PL_sv_undef;
+	OPENSSL_free(ptr);
 
 SV* EVP_PKEY_get_param(Crypt::OpenSSL3::PKey pkey, const char* name)
 CODE:
