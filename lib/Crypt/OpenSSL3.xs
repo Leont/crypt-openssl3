@@ -136,11 +136,15 @@ SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, SSL::Context, const)
 #undef OPENSSL_VERSION_TEXT
 #define OPENSSL_VERSION_TEXT OPENSSL_VERSION
 
+#define BIO_new_mem() BIO_new(BIO_s_mem())
 #define BIO_POLL_DESCRIPTOR_new(class) safecalloc(1, sizeof(BIO_POLL_DESCRIPTOR))
 #define BIO_POLL_DESCRIPTOR_type(desc) ((desc)->type)
 #define BIO_POLL_DESCRIPTOR_fd(desc) ((desc)->value.fd)
 
 #define BN_generate_prime BN_generate_prime_ex2
+
+#define X509_read_pem PEM_read_bio_X509
+#define X509_write_pem PEM_write_bio_X509
 #define X509_verify_cert_error_code(value) value
 #define X509_verify_cert_ok(value) (value == X509_V_OK)
 
@@ -245,6 +249,10 @@ SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, SSL::Context, const)
 #define EVP_SIGNATURE_get_name EVP_SIGNATURE_get0_name
 #define EVP_SIGNATURE_get_description EVP_SIGNATURE_get0_description
 
+#define EVP_PKEY_read_pem_private_key PEM_read_bio_PrivateKey_ex
+#define EVP_PKEY_write_pem_private_key PEM_write_bio_PrivateKey_ex
+#define EVP_PKEY_read_pem_public_key PEM_read_bio_PUBKEY_ex
+#define EVP_PKEY_write_pem_public_key PEM_write_bio_PUBKEY_ex
 #define EVP_PKEY_new_raw_private_key EVP_PKEY_new_raw_private_key_ex
 #define EVP_PKEY_new_raw_public_key EVP_PKEY_new_raw_public_key_ex
 #define EVP_PKEY_get_description EVP_PKEY_get0_description
@@ -604,6 +612,9 @@ C_ARGS: sock, close_flag
 Crypt::OpenSSL3::BIO BIO_new_dgram(class, int sock, bool close_flag = FALSE)
 C_ARGS: sock, close_flag
 
+Crypt::OpenSSL3::BIO BIO_new_mem(class)
+C_ARGS:
+
 bool BIO_reset(Crypt::OpenSSL3::BIO b)
 
 int BIO_seek(Crypt::OpenSSL3::BIO b, int ofs)
@@ -956,19 +967,14 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509	PREFIX = X509_
 
 Crypt::OpenSSL3::X509 X509_dup(Crypt::OpenSSL3::X509 self)
 
-Crypt::OpenSSL3::X509 read_bio(class, Crypt::OpenSSL3::BIO bio)
-CODE:
-	RETVAL = PEM_read_bio_X509(bio, NULL, NULL, NULL);
+Crypt::OpenSSL3::X509 X509_read_pem(class, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, NULL, NULL, NULL
+POSTCALL:
 	if (!RETVAL)
 		XSRETURN_UNDEF;
-OUTPUT:
-	RETVAL
 
-bool write_bio(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::BIO bio)
-CODE:
-	RETVAL = PEM_write_bio_X509(bio, x);
-OUTPUT:
-	RETVAL
+bool X509_write_pem(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, x
 
 Crypt::OpenSSL3::X509::Name X509_get_subject_name(Crypt::OpenSSL3::X509 x)
 POSTCALL:
@@ -2395,6 +2401,30 @@ CODE:
 	result = EVP_PKEY_get_raw_public_key(pkey, ptr, &length);
 	if (result)
 		set_buffer_length(key, length);
+
+Crypt::OpenSSL3::PKey EVP_PKEY_read_pem_private_key(Crypt::OpenSSL3::BIO bio, SV* password_cb = undef, const char* propq = "")
+C_ARGS: bio, NULL, NULL, NULL, NULL, propq
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool EVP_PKEY_write_pem_private_key(Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::BIO bio, SV* cipher_sv = undef, SV* key = undef, const char* propq = "")
+INIT:
+	const EVP_CIPHER* cipher = SvOK(cipher_sv) ? get_EVP_CIPHER(aTHX_ cipher_sv) : NULL;
+	STRLEN klen = 0;
+	const char* kstr = NULL;
+	if (SvOK(key))
+		kstr = SvPV(key, klen);
+C_ARGS: bio, pkey, cipher, kstr, klen, NULL, NULL, NULL, propq
+
+Crypt::OpenSSL3::PKey EVP_PKEY_read_pem_public_key(Crypt::OpenSSL3::BIO bio, const char* propq = "")
+C_ARGS: bio, NULL, NULL, NULL, NULL, propq
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool EVP_PKEY_write_pem_public_key(Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::BIO bio, const char* propq = "")
+C_ARGS: bio, pkey, NULL, propq
 
 int EVP_PKEY_get_id(Crypt::OpenSSL3::PKey pkey)
 

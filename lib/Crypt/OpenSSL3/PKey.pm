@@ -15,6 +15,14 @@ use Crypt::OpenSSL3;
 
 =method new_raw_public_key
 
+=method read_pem_private_key
+
+=method read_pem_public_key
+
+=method write_pem_private_key
+
+=method write_pem_public_key
+
 =method can_sign
 
 =method digestsign_supports_digest

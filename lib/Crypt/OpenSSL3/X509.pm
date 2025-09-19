@@ -19,10 +19,10 @@ use Crypt::OpenSSL3;
 
 =method pubkey_digest
 
-=method read_bio
+=method read_pem
 
 =method set_issuer_name
 
 =method set_subject_name
 
-=method write_bio
+=method write_pem

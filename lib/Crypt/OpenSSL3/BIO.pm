@@ -17,6 +17,8 @@ use Crypt::OpenSSL3;
 
 =method new_file
 
+=method new_mem
+
 =method new_socket
 
 =method ctrl_pending
