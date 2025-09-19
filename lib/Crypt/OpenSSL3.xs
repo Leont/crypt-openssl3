@@ -23,39 +23,59 @@
 #include <openssl/dh.h>
 #include <openssl/ec.h>
 
-#define DUPLICATING_TYPE(c_prefix, xs_type)\
-typedef c_prefix * Crypt__OpenSSL3__ ## xs_type;\
-static int c_prefix ## _magic_dup(pTHX_ MAGIC* mg, CLONE_PARAMS* params) {\
-	mg->mg_ptr = (char*)c_prefix ## _dup((c_prefix*)mg->mg_ptr);\
-	return 0;\
-}\
-static int c_prefix ## _magic_free(pTHX_ SV* sv, MAGIC* mg) {\
-	c_prefix ## _free((c_prefix*)mg->mg_ptr);\
-	return 0;\
-}\
+#define TYPE_TYPE(c_type, xs_type) typedef c_type * Crypt__OpenSSL3__ ## xs_type;
+#define MAGIC_TABLE(xs_type, dup, free)\
 static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = {\
-	.svt_dup = c_prefix ## _magic_dup,\
-	.svt_free = c_prefix ## _magic_free,\
+	.svt_dup = dup,\
+	.svt_free = free,\
 };
 
-#define COUNTING_TYPE(c_prefix, xs_type)\
-typedef c_prefix * Crypt__OpenSSL3__ ## xs_type;\
-static int c_prefix ## _magic_dup(pTHX_ MAGIC* mg, CLONE_PARAMS* params) {\
-	c_prefix ## _up_ref((c_prefix*)mg->mg_ptr);\
-	return 0;\
+#define TYPE_COMMON(c_type, xs_type, p_type)\
+static SV* make_ ## c_type(pTHX_ void* var) {\
+	SV* result = newSV(0);\
+	const char* classname = "Crypt::OpenSSL3::" #p_type;\
+	const MGVTBL* mgvtbl = &Crypt__OpenSSL3__## xs_type ##_magic;\
+	MAGIC* magic = sv_magicext(newSVrv(result, classname), NULL, PERL_MAGIC_ext, mgvtbl, (const char*)var, 0);\
+	magic->mg_flags |= MGf_DUP;\
+	return result;\
 }\
-static int c_prefix ## _magic_free(pTHX_ SV* sv, MAGIC* mg) {\
-	c_prefix ## _free((c_prefix*)mg->mg_ptr);\
-	return 0;\
-}\
-static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = {\
-	.svt_dup = c_prefix ## _magic_dup,\
-	.svt_free = c_prefix ## _magic_free,\
-};
+static c_type* get_ ## c_type (pTHX_ SV* value) {\
+	if (!SvROK(value))\
+		return NULL;\
+	MAGIC* magic = mg_findext(SvRV(value), PERL_MAGIC_ext, &Crypt__OpenSSL3__## xs_type ##_magic);\
+	return magic ? (c_type*)magic->mg_ptr : NULL;\
+}
 
-#define SIMPLE_TYPE(c_prefix, xs_type, modifier)\
-typedef modifier c_prefix * Crypt__OpenSSL3__ ## xs_type;\
-static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = { NULL };
+#define DUPLICATING_TYPE(c_type, xs_type, p_type)\
+TYPE_TYPE(c_type, xs_type)\
+static int c_type ## _magic_dup(pTHX_ MAGIC* mg, CLONE_PARAMS* params) {\
+	mg->mg_ptr = (char*)c_type ## _dup((c_type*)mg->mg_ptr);\
+	return 0;\
+}\
+static int c_type ## _magic_free(pTHX_ SV* sv, MAGIC* mg) {\
+	c_type ## _free((c_type*)mg->mg_ptr);\
+	return 0;\
+}\
+MAGIC_TABLE(xs_type, c_type ## _magic_dup, c_type ## _magic_free)\
+TYPE_COMMON(c_type, xs_type, p_type)
+
+#define COUNTING_TYPE(c_type, xs_type, p_type)\
+typedef c_type * Crypt__OpenSSL3__ ## xs_type;\
+static int c_type ## _magic_dup(pTHX_ MAGIC* mg, CLONE_PARAMS* params) {\
+	c_type ## _up_ref((c_type*)mg->mg_ptr);\
+	return 0;\
+}\
+static int c_type ## _magic_free(pTHX_ SV* sv, MAGIC* mg) {\
+	c_type ## _free((c_type*)mg->mg_ptr);\
+	return 0;\
+}\
+MAGIC_TABLE(xs_type, c_type ## _magic_dup, c_type ## _magic_free)\
+TYPE_COMMON(c_type, xs_type, p_type)
+
+#define SIMPLE_TYPE(c_type, xs_type, p_type, modifier)\
+TYPE_TYPE(modifier c_type, xs_type)\
+MAGIC_TABLE(xs_type, NULL, NULL)\
+TYPE_COMMON(c_type, xs_type, p_type)
 
 #if !OPENSSL_VERSION_PREREQ(3, 2)
 static EVP_MD_CTX *EVP_MD_CTX_dup(const EVP_MD_CTX *in) {
@@ -73,53 +93,45 @@ static EVP_CIPHER_CTX *EVP_CIPHER_CTX_dup(const EVP_CIPHER_CTX *in) {
 #endif
 
 typedef unsigned long Crypt__OpenSSL3__Error;
-COUNTING_TYPE(EVP_RAND, Random)
-COUNTING_TYPE(EVP_RAND_CTX, Random__Context)
-COUNTING_TYPE(EVP_CIPHER, Cipher)
-DUPLICATING_TYPE(EVP_CIPHER_CTX, Cipher__Context)
-COUNTING_TYPE(EVP_MD, MD)
-DUPLICATING_TYPE(EVP_MD_CTX, MD__Context)
-COUNTING_TYPE(EVP_MAC, MAC)
-DUPLICATING_TYPE(EVP_MAC_CTX, MAC__Context)
-COUNTING_TYPE(EVP_KDF, KDF)
-DUPLICATING_TYPE(EVP_KDF_CTX, KDF__Context)
-COUNTING_TYPE(EVP_SIGNATURE, Signature)
-DUPLICATING_TYPE(EVP_PKEY, PKey)
-DUPLICATING_TYPE(EVP_PKEY_CTX, PKey__Context)
+COUNTING_TYPE(EVP_RAND, Random, Random)
+COUNTING_TYPE(EVP_RAND_CTX, Random__Context, Random::Context)
+COUNTING_TYPE(EVP_CIPHER, Cipher, Cipher)
+DUPLICATING_TYPE(EVP_CIPHER_CTX, Cipher__Context, Cipher::Context)
+COUNTING_TYPE(EVP_MD, MD, MD)
+DUPLICATING_TYPE(EVP_MD_CTX, MD__Context, MD::Context)
+COUNTING_TYPE(EVP_MAC, MAC, MAC)
+DUPLICATING_TYPE(EVP_MAC_CTX, MAC__Context, MAC::Context)
+COUNTING_TYPE(EVP_KDF, KDF, KDF)
+DUPLICATING_TYPE(EVP_KDF_CTX, KDF__Context, KDF::Context)
+COUNTING_TYPE(EVP_SIGNATURE, Signature, Signature)
+DUPLICATING_TYPE(EVP_PKEY, PKey, PKey)
+DUPLICATING_TYPE(EVP_PKEY_CTX, PKey__Context, PKey::Context)
 
 typedef BIGNUM BN;
-DUPLICATING_TYPE(BN, BigNum);
+DUPLICATING_TYPE(BN, BigNum, BigNum);
 #define BN_CTX_dup(old) BN_CTX_new()
-DUPLICATING_TYPE(BN_CTX, BigNum__Context)
-SIMPLE_TYPE(ASN1_OBJECT, ASN1__Object, )
-DUPLICATING_TYPE(X509, X509)
-COUNTING_TYPE(X509_STORE, X509__Store)
-DUPLICATING_TYPE(X509_NAME, X509__Name)
-DUPLICATING_TYPE(X509_NAME_ENTRY, X509__Name__Entry)
+DUPLICATING_TYPE(BN_CTX, BigNum__Context, BigNum::Context)
+SIMPLE_TYPE(ASN1_OBJECT, ASN1__Object, ASN1::Object, )
+DUPLICATING_TYPE(X509, X509, X509)
+COUNTING_TYPE(X509_STORE, X509__Store, X509::Store)
+DUPLICATING_TYPE(X509_NAME, X509__Name, X509::Name)
+DUPLICATING_TYPE(X509_NAME_ENTRY, X509__Name__Entry, X509::Name::Entry)
 typedef long Crypt__OpenSSL3__X509__VerifyResult;
 
-COUNTING_TYPE(BIO, BIO)
+COUNTING_TYPE(BIO, BIO, BIO)
 #if OPENSSL_VERSION_PREREQ(3, 2)
-DUPLICATING_TYPE(BIO_ADDR, BIO__Address)
+DUPLICATING_TYPE(BIO_ADDR, BIO__Address, BIO::Address)
 typedef BIO_POLL_DESCRIPTOR* Crypt__OpenSSL3__BIO__PollDescriptor;
 #endif
 
-SIMPLE_TYPE(SSL_METHOD, SSL__Method, const)
-COUNTING_TYPE(SSL_CTX, SSL__Context)
-COUNTING_TYPE(SSL, SSL)
-DUPLICATING_TYPE(SSL_SESSION, SSL__Session)
-SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, const)
+SIMPLE_TYPE(SSL_METHOD, SSL__Method, SSL::Method, const)
+COUNTING_TYPE(SSL_CTX, SSL__Context, SSL::Context)
+COUNTING_TYPE(SSL, SSL, SSL)
+DUPLICATING_TYPE(SSL_SESSION, SSL__Session, SSL::Session)
+SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, SSL::Context, const)
 
 #define PARAMS(a) OSSL_PARAM*
 #define CTX_PARAMS(a) OSSL_PARAM*
-
-static SV* S_make_object(pTHX_ void* var, const MGVTBL* mgvtbl, const char* ntype) {
-	SV* result = newSV(0);
-	MAGIC* magic = sv_magicext(newSVrv(result, ntype), NULL, PERL_MAGIC_ext, mgvtbl, (const char*)var, 0);
-	magic->mg_flags |= MGf_DUP;
-	return result;
-}
-#define make_object(var, magic, name) S_make_object(aTHX_ var, magic, name)
 
 #undef OPENSSL_VERSION_TEXT
 #define OPENSSL_VERSION_TEXT OPENSSL_VERSION
@@ -290,14 +302,6 @@ static inline void S_set_buffer_length(pTHX_ SV* buffer, ssize_t result) {
 }
 #define set_buffer_length(buffer, result) S_set_buffer_length(aTHX_ buffer, result)
 
-static const BIGNUM* S_get_BIGNUM(pTHX_ SV* value) {
-	if (!SvROK(value))
-		return NULL;
-	MAGIC* magic = mg_findext(SvRV(value), PERL_MAGIC_ext, &Crypt__OpenSSL3__BigNum_magic);
-	return magic ? (const BIGNUM*)magic->mg_ptr : NULL;
-}
-#define get_BIGNUM(value) S_get_BIGNUM(aTHX_ value)
-
 static OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* input) {
 	if (!SvROK(input) || SvTYPE(SvRV(input)) != SVt_PVHV)
 		return NULL;
@@ -315,12 +319,12 @@ static OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* input) {
 
 		if (found) {
 			if (found->data_type == OSSL_PARAM_INTEGER) {
-				if (const BIGNUM* big = get_BIGNUM(sv))
+				if (const BIGNUM* big = get_BN(aTHX_ sv))
 					OSSL_PARAM_BLD_push_BN(builder, found->key, big);
 				else
 					OSSL_PARAM_BLD_push_int64(builder, found->key, SvIV(sv));
 			} else if (found->data_type == OSSL_PARAM_UNSIGNED_INTEGER) {
-				if (const BIGNUM* big = get_BIGNUM(sv))
+				if (const BIGNUM* big = get_BN(aTHX_ sv))
 					OSSL_PARAM_BLD_push_BN(builder, found->key, big);
 				else
 					OSSL_PARAM_BLD_push_uint64(builder, found->key, SvUV(sv));
@@ -356,7 +360,7 @@ static SV* S_make_param_scalar(pTHX_ OSSL_PARAM* iter) {
 		} else {
 			BIGNUM* value = NULL;
 			OSSL_PARAM_get_BN(iter, &value);
-			return make_object(value, &Crypt__OpenSSL3__BigNum_magic, "Crypt::OpenSSL3::BigNum");
+			return make_BN(aTHX_ value);
 		}
 	}
 	else if (iter->data_type == OSSL_PARAM_UNSIGNED_INTEGER) {
@@ -369,7 +373,7 @@ static SV* S_make_param_scalar(pTHX_ OSSL_PARAM* iter) {
 		} else {
 			BIGNUM* value = NULL;
 			OSSL_PARAM_get_BN(iter, &value);
-			return make_object(value, &Crypt__OpenSSL3__BigNum_magic, "Crypt::OpenSSL3::BigNum");
+			return make_BN(aTHX_ value);
 		}
 	}
 	else if (iter->data_type == OSSL_PARAM_REAL) {
@@ -419,21 +423,21 @@ static void EVP_name_callback(const char* name, void* vdata) {
 	PUTBACK;
 }
 
-#define DEFINE_PROVIDED_CALLBACK(c_type, name)\
+#define DEFINE_PROVIDED_CALLBACK(c_type)\
 static void c_type ## _provided_callback(c_type* provided, void* vdata) {\
 	dTHXa((PerlInterpreter*)vdata);\
 	c_type ## _up_ref(provided);\
-	SV* object = make_object(provided, &Crypt__OpenSSL3__ ## name ## _magic, "Crypt::OpenSSL3::" #name);\
+	SV* object = make_ ## c_type(aTHX_ provided);\
 	dSP;\
 	mXPUSHs(object);\
 	PUTBACK;\
 }
-DEFINE_PROVIDED_CALLBACK(EVP_RAND, Random)
-DEFINE_PROVIDED_CALLBACK(EVP_CIPHER, Cipher)
-DEFINE_PROVIDED_CALLBACK(EVP_MD, MD)
-DEFINE_PROVIDED_CALLBACK(EVP_MAC, MAC)
-DEFINE_PROVIDED_CALLBACK(EVP_KDF, KDF)
-DEFINE_PROVIDED_CALLBACK(EVP_SIGNATURE, Signature)
+DEFINE_PROVIDED_CALLBACK(EVP_RAND)
+DEFINE_PROVIDED_CALLBACK(EVP_CIPHER)
+DEFINE_PROVIDED_CALLBACK(EVP_MD)
+DEFINE_PROVIDED_CALLBACK(EVP_MAC)
+DEFINE_PROVIDED_CALLBACK(EVP_KDF)
+DEFINE_PROVIDED_CALLBACK(EVP_SIGNATURE)
 
 typedef int Bool;
 typedef int Success;
