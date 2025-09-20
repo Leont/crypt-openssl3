@@ -56,6 +56,8 @@ Methods in this class generally match the C<SSL_CTX_*> namespace in C<libssl>.
 
 =method get_options
 
+=method get_param
+
 =method get_read_ahead
 
 =method load_verify_dir
@@ -121,6 +123,8 @@ Methods in this class generally match the C<SSL_CTX_*> namespace in C<libssl>.
 =method set_num_tickets
 
 =method set_options
+
+=method set_param
 
 =method set_post_handshake_auth
 

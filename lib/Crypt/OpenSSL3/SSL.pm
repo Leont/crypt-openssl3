@@ -84,6 +84,8 @@ Methods in this class generally match functions the C<SSL_*> namespace in C<libs
 
 =method get_finished
 
+=method get_param
+
 =method get_peer_certificate
 
 =method get_pending_cipher
@@ -231,6 +233,8 @@ Methods in this class generally match functions the C<SSL_*> namespace in C<libs
 =method set_num_tickets
 
 =method set_options
+
+=method set_param
 
 =method set_post_handshake_auth
 

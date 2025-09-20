@@ -13,7 +13,11 @@ use Crypt::OpenSSL3;
 
 =method check
 
-=method cmp_time_t
+=method cmp_current_time
+
+=method cmp_time
+
+=method cmp_timeframe
 
 =method compare
 

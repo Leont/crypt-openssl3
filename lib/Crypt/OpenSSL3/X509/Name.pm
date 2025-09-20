@@ -11,6 +11,8 @@ use Crypt::OpenSSL3;
 
 =method cmp
 
+=method digest
+
 =method dup
 
 =method entry_count
@@ -18,5 +20,7 @@ use Crypt::OpenSSL3;
 =method get_entry
 
 =method get_index_by_NID
+
+=method get_index_by_OBJ
 
 =method oneline
