@@ -1905,8 +1905,9 @@ bool EVP_CIPHER_CTX_is_encrypting(Crypt::OpenSSL3::Cipher::Context ctx)
 
 bool EVP_CIPHER_CTX_set_aead_ivlen(Crypt::OpenSSL3::Cipher::Context ctx, int length)
 
-NO_OUTPUT bool EVP_CIPHER_CTX_get_aead_tag(Crypt::OpenSSL3::Cipher::Context ctx, OUTLIST SV* tag, int length)
+NO_OUTPUT bool EVP_CIPHER_CTX_get_aead_tag(Crypt::OpenSSL3::Cipher::Context ctx, OUTLIST SV* tag)
 INIT:
+	int length = EVP_CIPHER_CTX_get_tag_length(ctx);
 	char* ptr = make_buffer(&tag, length);
 C_ARGS: ctx, ptr, length
 POSTCALL:
