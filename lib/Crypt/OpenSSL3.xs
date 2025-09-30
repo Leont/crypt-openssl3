@@ -515,6 +515,7 @@ PARAMS(EVP_MAC_CTX) T_PARAMS
 PARAMS(EVP_KDF_CTX) T_PARAMS
 PARAMS(EVP_PKEY) T_PARAMS
 PARAMS(EVP_PKEY_CTX) T_PARAMS
+CTX_PARAMS(EVP_SIGNATURE) T_CTX_PARAMS
 
 INPUT
 T_PARAMS
@@ -2732,13 +2733,27 @@ CODE:
 OUTPUT:
 	RETVAL
 
-Success EVP_PKEY_sign_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
-C_ARGS: ctx, algo, NULL
+Success EVP_PKEY_sign_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature type = NULL, CTX_PARAMS(EVP_SIGNATURE) params = NULL)
+
+SV* EVP_PKEY_sign(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *tbs, size_t length(tbs))
+CODE:
+	size_t sig_length;
+	if (EVP_PKEY_sign(ctx, NULL, &sig_length, tbs, XSauto_length_of_tbs) == 1) {
+		char* sig_ptr = make_buffer(&RETVAL, sig_length);
+
+		if (EVP_PKEY_sign(ctx, sig_ptr, &sig_length, tbs, XSauto_length_of_tbs) == 1)
+			set_buffer_length(RETVAL, sig_length);
+	} else
+		RETVAL = &PL_sv_undef;
+OUTPUT:
+	RETVAL
+
+Success EVP_PKEY_verify_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature type = NULL, CTX_PARAMS(EVP_SIGNATURE) params = NULL)
+
+Success EVP_PKEY_verify(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *sig, size_t length(sig), const unsigned char *tbs, size_t length(tbs))
 
 #if OPENSSL_VERSION_PREREQ(3, 4)
-
-Success EVP_PKEY_sign_message_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
-C_ARGS: ctx, algo, NULL
+Success EVP_PKEY_sign_message_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature type = NULL, CTX_PARAMS(EVP_SIGNATURE) params = NULL)
 
 Success EVP_PKEY_sign_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
 
@@ -2754,29 +2769,10 @@ CODE:
 OUTPUT:
 	RETVAL
 
-Success EVP_PKEY_verify_message_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
-C_ARGS: ctx, algo, NULL
+Success EVP_PKEY_verify_message_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature type = NULL, CTX_PARAMS(EVP_SIGNATURE) params = NULL)
 
 Success EVP_PKEY_verify_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
 
 Success EVP_PKEY_verify_message_final(Crypt::OpenSSL3::PKey::Context ctx)
 
 #endif
-
-SV* EVP_PKEY_sign(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *tbs, size_t length(tbs))
-CODE:
-	size_t sig_length;
-	if (EVP_PKEY_sign(ctx, NULL, &sig_length, tbs, XSauto_length_of_tbs) == 1) {
-		char* sig_ptr = make_buffer(&RETVAL, sig_length);
-
-		if (EVP_PKEY_sign(ctx, sig_ptr, &sig_length, tbs, XSauto_length_of_tbs) == 1)
-			set_buffer_length(RETVAL, sig_length);
-	} else
-		RETVAL = &PL_sv_undef;
-OUTPUT:
-	RETVAL
-
-Success EVP_PKEY_verify_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature algo = NULL)
-C_ARGS: ctx, algo, NULL
-
-Success EVP_PKEY_verify(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *sig, size_t length(sig), const unsigned char *tbs, size_t length(tbs))
