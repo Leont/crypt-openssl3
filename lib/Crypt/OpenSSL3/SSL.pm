@@ -9,6 +9,26 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: An SSL connection
 
+=head1 SYNOPSIS
+
+ my $method = Crypt::OpenSSL3::SSL::Protocol->TLS_client;
+ my $ctx = Crypt::OpenSSL3::SSL::Context->new($method);
+ $ctx->set_verify(Crypt::OpenSSL3::SSL::VERIFY_PEER);
+ $ctx->set_default_verify_paths();
+
+ my $ssl = Crypt::OpenSSL3::SSL->new($ctx);
+ $ssl->set_fd(fileno $socket);
+ $ssl->set_tlsext_host_name($hostname);
+ $ssl->set_host($hostname);
+
+ my $ret = $ssl->connect;
+ die 'Could not connect: ' . $ssl->get_error($ret) if $ret <= 0;
+
+ my $w_count = $ssl->write("GET / HTTP/1.1\r\nHost: www.google.com\r\n\r\n");
+ die 'Could not write: ' . $ssl->get_error($w_count) if $w_count <= 0;
+ my $r_count = $ssl->read(my $buffer, 2048);
+ die 'Could not write: ' . $ssl->get_error($r_count) if $r_count <= 0;
+
 =method new
 
 =method accept

@@ -9,6 +9,12 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: An OpenSSL IO instance
 
+=head1 SYNOPSIS
+
+ my $bio = Crypt::OpenSSL3::BIO->new_file('filename', 'r');
+
+ my ($left, $right) = Crypt::OpenSSL3::BIO->new_bio_pair;
+
 =method new_bio_pair
 
 =method new_dgram

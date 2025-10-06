@@ -9,6 +9,16 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: Signature algorithms
 
+=head1 SYNOPSIS
+
+ my $alg = Crypt::OpenSSL3::Signature->fetch('RSA-SHA2-512');
+ my $ctx = Crypt::OpenSSL3::PKey::Context->new($pkey);
+ $ctx->sign_message_init($alg, { 'pad-mode' => 'pss' });
+ while (my $data = $input->get_data) {
+   $ctx->sign_message_update($data);
+ }
+ my $signature = $ctx->sign_message_final;
+
 =method fetch
 
 =method get_description

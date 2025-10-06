@@ -9,6 +9,17 @@ use Crypt::OpenSSL3;
 
 #ABSTRACT: A context for SSL connections
 
+=head1 SYNOPSIS
+
+my $method = Crypt::OpenSSL3::SSL::Protocol->TLS_client;
+my $ctx = Crypt::OpenSSL3::SSL::Context->new($method);
+$ctx->set_verify(Crypt::OpenSSL3::SSL::VERIFY_PEER);
+$ctx->set_default_verify_paths();
+
+my $ssl = Crypt::OpenSSL3::SSL->new($ctx);
+my $ssl2 = Crypt::OpenSSL3::SSL->new($ctx);
+my $ssl3 = Crypt::OpenSSL3::SSL->new($ctx);
+
 =method new
 
 =method add_client_CA

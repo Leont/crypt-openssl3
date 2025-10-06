@@ -9,6 +9,13 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: An operation using a PKey
 
+=head1 SYNOPSIS
+
+ my $ctx = Crypt::OpenSSL3::PKey::Context->new_from_name('RSA');
+ $ctx->keygen_init;
+ $ctx->set_params({ bits => 2048, primes => 2, e => 65537 });
+ my $pkey = $ctx->generate;
+
 =method new
 
 =method new_from_name

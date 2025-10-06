@@ -9,6 +9,10 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: A kind of a random number generator
 
+=head1 SYNOPSIS
+
+ my $random_bytes = Crypt::OpenSSL3::Random->bytes(16);
+
 =method fetch
 
 =method bytes

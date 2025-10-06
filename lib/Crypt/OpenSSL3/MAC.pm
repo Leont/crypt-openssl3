@@ -9,6 +9,16 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: Message authentication code algorithms
 
+=head1 SYNOPSIS
+
+ my $algoritm = Crypt::OpenSSL3::MAC->fetch('HMAC');
+ my $context = Crypt::OpenSSL3::MAC::Context->new($algoritm);
+ my $key = "0123456789ABCDEF";
+ $context->init($key, { digest => 'SHA2-256' });
+
+ $context->update('Hello, World!');
+ my $mac = $context->final;
+
 =method fetch
 
 =method get_description

@@ -9,6 +9,16 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: message digest algorithms
 
+=head1 SYNOPSIS
+
+ my $md = Crypt::OpenSSL3::MD->fetch('SHA2-256');
+
+ my $context = Crypt::OpenSSL3::MD::Context->new;
+ $context->init($md);
+
+ $context->update("Hello, World!");
+ my $hash = $context->final;
+
 =method fetch
 
 =method digest

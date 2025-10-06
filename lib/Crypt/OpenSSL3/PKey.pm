@@ -9,6 +9,15 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: An assymetrical key
 
+=head1 SYNOPSIS
+
+ my $file = Crypt::OpenSSL3::BIO->new_file('priv.key', 'r');
+ my $key = Crypt::OpenSSL3::Pkey->read_pem_private_key($file);
+
+ my $ctx = Crypt::OpenSSL3::PKey::Context->new($key);
+ $ctx->sign_init;
+ my $signature = $ctx->sign($data);
+
 =method new
 
 =method new_raw_private_key
