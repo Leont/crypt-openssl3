@@ -29,6 +29,8 @@ use Crypt::OpenSSL3;
 
 =method dup
 
+=method eq
+
 =method get_base_id
 
 =method get_bits
@@ -72,6 +74,8 @@ use Crypt::OpenSSL3;
 =method get_utf8_string_param
 
 =method is_a
+
+=method parameters_eq
 
 =method print_params
 

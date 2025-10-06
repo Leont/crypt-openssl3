@@ -47,8 +47,6 @@ use Crypt::OpenSSL3;
 
 =method encrypt_init
 
-=method eq
-
 =method generate
 
 =method get_dh_kdf_md
@@ -94,8 +92,6 @@ use Crypt::OpenSSL3;
 =method is_a
 
 =method keygen_init
-
-=method parameters_eq
 
 =method paramgen_init
 

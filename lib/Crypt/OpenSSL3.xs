@@ -2282,6 +2282,10 @@ POSTCALL:
 
 Crypt::OpenSSL3::PKey EVP_PKEY_dup(Crypt::OpenSSL3::PKey ctx)
 
+bool EVP_PKEY_eq(Crypt::OpenSSL3::PKey a, Crypt::OpenSSL3::PKey b)
+
+bool EVP_PKEY_parameters_eq(Crypt::OpenSSL3::PKey a, Crypt::OpenSSL3::PKey b)
+
 NO_OUTPUT void EVP_PKEY_get_raw_private_key(Crypt::OpenSSL3::PKey pkey, OUTLIST SV* key)
 CODE:
 	size_t length;
@@ -2633,10 +2637,6 @@ INIT:
 POSTCALL:
 	if (RETVAL <= 0)
 		XSRETURN_UNDEF;
-
-bool EVP_PKEY_parameters_eq(Crypt::OpenSSL3::PKey a, Crypt::OpenSSL3::PKey b)
-
-bool EVP_PKEY_eq(Crypt::OpenSSL3::PKey a, Crypt::OpenSSL3::PKey b)
 
 Success EVP_PKEY_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx)
 C_ARGS: ctx, NULL
