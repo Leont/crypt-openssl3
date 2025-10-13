@@ -646,6 +646,10 @@ POSTCALL:
 
 int BIO_write(Crypt::OpenSSL3::BIO b, const char *data, int length(data))
 
+bool BIO_get_ktls_send(Crypt::OpenSSL3::BIO b)
+
+bool BIO_get_ktls_recv(Crypt::OpenSSL3::BIO b)
+
 #if OPENSSL_VERSION_PREREQ(3, 2)
 bool BIO_get_rpoll_descriptor(Crypt::OpenSSL3::BIO b, Crypt::OpenSSL3::BIO::PollDescriptor desc)
 
@@ -1347,6 +1351,8 @@ POSTCALL:
 		set_buffer_length(buffer, RETVAL);
 
 int SSL_write(Crypt::OpenSSL3::SSL ssl, const char* buf, int length(buf))
+
+ssize_t SSL_sendfile(Crypt::OpenSSL3::SSL s, int fd, uint64_t offset, size_t size, int flags)
 
 int SSL_shutdown(Crypt::OpenSSL3::SSL ssl)
 

@@ -191,6 +191,8 @@ use Crypt::OpenSSL3;
 
 =method rstate_string_long
 
+=method sendfile
+
 =method session_reused
 
 =method set_accept_state

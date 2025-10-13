@@ -37,6 +37,10 @@ use Crypt::OpenSSL3;
 
 =method get_close
 
+=method get_ktls_recv
+
+=method get_ktls_send
+
 =method get_line
 
 =method get_rpoll_descriptor
