@@ -11,12 +11,11 @@ use Crypt::OpenSSL3;
 
 =head1 SYNOPSIS
 
- my $method = Crypt::OpenSSL3::SSL::Protocol->TLS_client;
- my $ctx = Crypt::OpenSSL3::SSL::Context->new($method);
- $ctx->set_verify(Crypt::OpenSSL3::SSL::VERIFY_PEER);
- $ctx->set_default_verify_paths();
+ my $ctx = Crypt::OpenSSL3::SSL::Context->new;
+ $ctx->set_default_verify_paths;
 
  my $ssl = Crypt::OpenSSL3::SSL->new($ctx);
+ $ssl->set_verify(Crypt::OpenSSL3::SSL::VERIFY_PEER);
  $ssl->set_fd(fileno $socket);
  $ssl->set_tlsext_host_name($hostname);
  $ssl->set_host($hostname);

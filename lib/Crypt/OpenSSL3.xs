@@ -148,17 +148,17 @@ SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, SSL::Context, const)
 #define X509_verify_cert_error_code(value) value
 #define X509_verify_cert_ok(value) (value == X509_V_OK)
 
-#define TLS TLS_method
-#define TLS_server TLS_server_method
-#define TLS_client TLS_client_method
+#define SSL_Method_TLS TLS_method
+#define SSL_Method_TLS_server TLS_server_method
+#define SSL_Method_TLS_client TLS_client_method
 
-#define DTLS DTLS_method
-#define DTLS_server DTLS_server_method
-#define DTLS_client DTLS_client_method
+#define SSL_Method_DTLS DTLS_method
+#define SSL_Method_DTLS_server DTLS_server_method
+#define SSL_Method_DTLS_client DTLS_client_method
 
-#define QUIC_client OSSL_QUIC_client_method
-#define QUIC_client_thread OSSL_QUIC_client_thread_method
-#define QUIC_server OSSL_QUIC_server_method
+#define SSL_Method_QUIC_client OSSL_QUIC_client_method
+#define SSL_Method_QUIC_client_thread OSSL_QUIC_client_thread_method
+#define SSL_Method_QUIC_server OSSL_QUIC_server_method
 
 #define SSL_set_host SSL_set1_host
 #define SSL_set_rbio SSL_set0_rbio
@@ -1014,31 +1014,31 @@ bool X509_STORE_set_default_paths(Crypt::OpenSSL3::X509::Store store)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Method	PREFIX = SSL_Method_
 
-Crypt::OpenSSL3::SSL::Method TLS()
+Crypt::OpenSSL3::SSL::Method SSL_Method_TLS()
 
-Crypt::OpenSSL3::SSL::Method TLS_server()
+Crypt::OpenSSL3::SSL::Method SSL_Method_TLS_server()
 
-Crypt::OpenSSL3::SSL::Method TLS_client()
+Crypt::OpenSSL3::SSL::Method SSL_Method_TLS_client()
 
-Crypt::OpenSSL3::SSL::Method DTLS()
+Crypt::OpenSSL3::SSL::Method SSL_Method_DTLS()
 
-Crypt::OpenSSL3::SSL::Method DTLS_server()
+Crypt::OpenSSL3::SSL::Method SSL_Method_DTLS_server()
 
-Crypt::OpenSSL3::SSL::Method DTLS_client()
+Crypt::OpenSSL3::SSL::Method SSL_Method_DTLS_client()
 
 #if OPENSSL_VERSION_PREREQ(3, 2)
-Crypt::OpenSSL3::SSL::Method QUIC_client()
+Crypt::OpenSSL3::SSL::Method SSL_Method_QUIC_client()
 
-Crypt::OpenSSL3::SSL::Method QUIC_client_thread()
+Crypt::OpenSSL3::SSL::Method SSL_Method_QUIC_client_thread()
 #endif
 
 #if OPENSSL_VERSION_PREREQ(3, 5)
-Crypt::OpenSSL3::SSL::Method QUIC_server()
+Crypt::OpenSSL3::SSL::Method SSL_Method_QUIC_server()
 #endif
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Context	PREFIX = SSL_CTX_
 
-Crypt::OpenSSL3::SSL::Context SSL_CTX_new(SV* class, Crypt::OpenSSL3::SSL::Method method)
+Crypt::OpenSSL3::SSL::Context SSL_CTX_new(SV* class, Crypt::OpenSSL3::SSL::Method method = TLS_method())
 C_ARGS: method
 
 long SSL_CTX_set_options(Crypt::OpenSSL3::SSL::Context ctx, long options)

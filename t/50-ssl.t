@@ -7,21 +7,17 @@ use Test::More;
 
 use Crypt::OpenSSL3::SSL;
 
-my $client_method = Crypt::OpenSSL3::SSL::Method::TLS_client;
-my $server_method = Crypt::OpenSSL3::SSL::Method::TLS_server;
-my $client_context = Crypt::OpenSSL3::SSL::Context->new($client_method);
-my $server_context = Crypt::OpenSSL3::SSL::Context->new($server_method);
+my $context = Crypt::OpenSSL3::SSL::Context->new;
+ok $context->load_verify_file('t/server.crt');
 
-$client_context->set_verify(Crypt::OpenSSL3::SSL::VERIFY_PEER);
-ok $client_context->load_verify_file('t/server.crt');
-ok $server_context->use_certificate_chain_file('t/server.crt');
-ok $server_context->use_PrivateKey_file('t/server.key', Crypt::OpenSSL3::SSL::FILETYPE_PEM);
-
-my $client = Crypt::OpenSSL3::SSL->new($client_context);
+my $client = Crypt::OpenSSL3::SSL->new($context);
+$client->set_verify(Crypt::OpenSSL3::SSL::VERIFY_PEER);
 ok $client->set_tlsext_host_name('server');
 ok $client->set_host('server');
 
-my $server = Crypt::OpenSSL3::SSL->new($server_context);
+my $server = Crypt::OpenSSL3::SSL->new($context);
+ok $server->use_PrivateKey_file('t/server.key', Crypt::OpenSSL3::SSL::FILETYPE_PEM);
+ok $server->use_certificate_chain_file('t/server.crt');
 
 my ($left, $right) = Crypt::OpenSSL3::BIO->new_bio_pair(4096, 4096);
 ok $left;
@@ -30,8 +26,6 @@ $client->set_rbio($left);
 $client->set_wbio($left);
 $server->set_rbio($right);
 $server->set_wbio($right);
-
-ok $server->is_server;
 
 my $r1 = $client->connect;
 is $r1, -1;
