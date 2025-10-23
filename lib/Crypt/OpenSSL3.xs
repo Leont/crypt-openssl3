@@ -2157,10 +2157,10 @@ bool EVP_MAC_init(Crypt::OpenSSL3::MAC::Context ctx, const unsigned char *key, s
 
 bool EVP_MAC_update(Crypt::OpenSSL3::MAC::Context ctx, const unsigned char *data, size_t length(data))
 
-NO_OUTPUT bool EVP_MAC_final(Crypt::OpenSSL3::MAC::Context ctx, OUTLIST SV* code, ssize_t outsize = -1)
+NO_OUTPUT bool EVP_MAC_final(Crypt::OpenSSL3::MAC::Context ctx, OUTLIST SV* code)
 CODE:
-	if (outsize == -1)
-		EVP_MAC_final(ctx, NULL, &outsize, 0);
+	size_t outsize;
+	EVP_MAC_final(ctx, NULL, &outsize, 0);
 	unsigned char* ptr = make_buffer(&code, outsize);
 	int result = EVP_MAC_final(ctx, ptr, &outsize, outsize);
 	if (result)
