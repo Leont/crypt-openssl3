@@ -26,8 +26,8 @@
 #define TYPE_TYPE(c_type, xs_type) typedef c_type * Crypt__OpenSSL3__ ## xs_type;
 #define MAGIC_TABLE(xs_type, dup, free)\
 static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = {\
-	.svt_dup = dup,\
 	.svt_free = free,\
+	.svt_dup = dup,\
 };
 
 #define TYPE_COMMON(c_type, xs_type, p_type)\
@@ -600,14 +600,14 @@ OUTPUT:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BIO	PREFIX = BIO_
 
-Crypt::OpenSSL3::BIO BIO_new_file(SV* class, const char *filename, const char *mode)
+Crypt::OpenSSL3::BIO BIO_new_file(SV* classname, const char *filename, const char *mode)
 C_ARGS: filename, mode
 
 Crypt::OpenSSL3::BIO BIO_new_fd(class, int fd, bool close_flag = FALSE)
 INTERFACE: BIO_new_fd  BIO_new_socket  BIO_new_dgram
 C_ARGS: fd, close_flag
 
-NO_OUTPUT int BIO_new_bio_pair(SV* class, OUTLIST Crypt::OpenSSL3::BIO bio1, size_t writebuf1, OUTLIST Crypt::OpenSSL3::BIO bio2, size_t writebuf2);
+NO_OUTPUT int BIO_new_bio_pair(SV* classname, OUTLIST Crypt::OpenSSL3::BIO bio1, size_t writebuf1, OUTLIST Crypt::OpenSSL3::BIO bio2, size_t writebuf2);
 C_ARGS: &bio1, writebuf1, &bio2, writebuf2
 POSTCALL:
 	if (!RETVAL)
@@ -731,7 +731,7 @@ BOOT:
 }
 
 
-Crypt::OpenSSL3::BigNum BN_new(SV* class)
+Crypt::OpenSSL3::BigNum BN_new(SV* classname)
 INTERFACE: BN_new  BN_secure_new
 C_ARGS:
 
@@ -928,7 +928,7 @@ bool BN_rand(Crypt::OpenSSL3::BigNum rnd, int bits, int top, int bottom)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BigNum::Context	PREFIX = BN_CTX_
 
-Crypt::OpenSSL3::BigNum::Context BN_CTX_new(SV* class)
+Crypt::OpenSSL3::BigNum::Context BN_CTX_new(SV* classname)
 INTERFACE: BN_CTX_new  BN_CTX_secure_new
 C_ARGS:
 
@@ -1041,7 +1041,7 @@ Crypt::OpenSSL3::SSL::Method SSL_Method_QUIC_server()
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Context	PREFIX = SSL_CTX_
 
-Crypt::OpenSSL3::SSL::Context SSL_CTX_new(SV* class, Crypt::OpenSSL3::SSL::Method method = TLS_method())
+Crypt::OpenSSL3::SSL::Context SSL_CTX_new(SV* classname, Crypt::OpenSSL3::SSL::Method method = TLS_method())
 C_ARGS: method
 
 long SSL_CTX_set_options(Crypt::OpenSSL3::SSL::Context ctx, long options)
@@ -1239,7 +1239,7 @@ BOOT:
 #endif
 }
 
-Crypt::OpenSSL3::SSL SSL_new(SV* class, Crypt::OpenSSL3::SSL::Context context)
+Crypt::OpenSSL3::SSL SSL_new(SV* classname, Crypt::OpenSSL3::SSL::Context context)
 C_ARGS: context
 
 Crypt::OpenSSL3::SSL::Method SSL_get_ssl_method(Crypt::OpenSSL3::SSL ssl)
@@ -1538,7 +1538,7 @@ bool SSL_set_initial_peer_addr(Crypt::OpenSSL3::SSL s, Crypt::OpenSSL3::BIO::Add
 
 #if OPENSSL_VERSION_PREREQ(3, 5)
 
-Crypt::OpenSSL3::SSL SSL_new_listener(SV* class, Crypt::OpenSSL3::SSL::Context ctx, uint64_t flags)
+Crypt::OpenSSL3::SSL SSL_new_listener(SV* classname, Crypt::OpenSSL3::SSL::Context ctx, uint64_t flags)
 C_ARGS: ctx, flags
 
 Crypt::OpenSSL3::SSL SSL_new_listener_from(Crypt::OpenSSL3::SSL ssl, uint64_t flags)
@@ -1698,7 +1698,7 @@ bool SSL_SESSION_print_keylog(Crypt::OpenSSL3::BIO bp, Crypt::OpenSSL3::SSL::Ses
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random	PREFIX = EVP_RAND_
 
-Crypt::OpenSSL3::Random EVP_RAND_fetch(SV* class, const char* algorithm, const char* properties = "")
+Crypt::OpenSSL3::Random EVP_RAND_fetch(SV* classname, const char* algorithm, const char* properties = "")
 C_ARGS: NULL, algorithm, properties
 POSTCALL:
 	if (RETVAL == NULL)
@@ -1716,7 +1716,7 @@ PPCODE:
 	EVP_RAND_names_do_all(rand, EVP_name_callback, iTHX);
 	SPAGAIN;
 
-void EVP_RAND_list_all_provided(SV* class)
+void EVP_RAND_list_all_provided(SV* classname)
 PPCODE:
 	PUTBACK;
 	EVP_RAND_do_all_provided(NULL, EVP_RAND_provided_callback, iTHX);
@@ -1730,21 +1730,21 @@ OUTPUT:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random	PREFIX = RAND_
 
-NO_OUTPUT int RAND_bytes(SV* class, OUTLIST SV* buffer, int num)
+NO_OUTPUT int RAND_bytes(SV* classname, OUTLIST SV* buffer, int num)
 INTERFACE: RAND_bytes  RAND_priv_bytes
 INIT:
 	unsigned char* ptr = make_buffer(&buffer, num);
 	set_buffer_length(buffer, num);
 C_ARGS: ptr, num
 
-Crypt::OpenSSL3::Random::Context RAND_get_primary(SV* class)
+Crypt::OpenSSL3::Random::Context RAND_get_primary(SV* classname)
 INTERFACE: RAND_get_primary  RAND_get_public  RAND_get_private
 C_ARGS: NULL
 POSTCALL:
 	EVP_RAND_CTX_up_ref(RETVAL);
 
 #if OPENSSL_VERSION_PREREQ(3, 2)
-Bool RAND_set_public(SV* class, Crypt::OpenSSL3::Random::Context rand)
+Bool RAND_set_public(SV* classname, Crypt::OpenSSL3::Random::Context rand)
 INTERFACE: RAND_set_public  RAND_set_private
 C_ARGS: NULL, rand
 POSTCALL:
@@ -1754,7 +1754,7 @@ POSTCALL:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random::Context	PREFIX = EVP_RAND_CTX_
 
-Crypt::OpenSSL3::Random::Context EVP_RAND_CTX_new(SV* class, Crypt::OpenSSL3::Random type, Crypt::OpenSSL3::Random::Context parent = NULL)
+Crypt::OpenSSL3::Random::Context EVP_RAND_CTX_new(SV* classname, Crypt::OpenSSL3::Random type, Crypt::OpenSSL3::Random::Context parent = NULL)
 C_ARGS: type, parent
 
 Crypt::OpenSSL3::Random EVP_RAND_CTX_get_rand(Crypt::OpenSSL3::Random::Context ctx)
@@ -1795,7 +1795,7 @@ int EVP_RAND_get_state(Crypt::OpenSSL3::Random::Context ctx)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Cipher	PREFIX = EVP_CIPHER_
 
-Crypt::OpenSSL3::Cipher EVP_CIPHER_fetch(SV* class, const char* algorithm, const char* properties = "")
+Crypt::OpenSSL3::Cipher EVP_CIPHER_fetch(SV* classname, const char* algorithm, const char* properties = "")
 C_ARGS: NULL, algorithm, properties
 POSTCALL:
 	if (RETVAL == NULL)
@@ -1825,7 +1825,7 @@ PPCODE:
 	EVP_CIPHER_names_do_all(cipher, EVP_name_callback, iTHX);
 	SPAGAIN;
 
-void EVP_CIPHER_list_all_provided(SV* class)
+void EVP_CIPHER_list_all_provided(SV* classname)
 PPCODE:
 	PUTBACK;
 	EVP_CIPHER_do_all_provided(NULL, EVP_CIPHER_provided_callback, iTHX);
@@ -1840,7 +1840,7 @@ OUTPUT:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Cipher::Context	PREFIX = EVP_CIPHER_CTX_
 
-Crypt::OpenSSL3::Cipher::Context EVP_CIPHER_CTX_new(SV* class)
+Crypt::OpenSSL3::Cipher::Context EVP_CIPHER_CTX_new(SV* classname)
 C_ARGS:
 
 Crypt::OpenSSL3::Cipher::Context EVP_CIPHER_CTX_dup(Crypt::OpenSSL3::Cipher::Context ctx)
@@ -1931,7 +1931,7 @@ bool EVP_CIPHER_CTX_set_aead_tag(Crypt::OpenSSL3::Cipher::Context ctx, char* ptr
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MD	PREFIX = EVP_MD_
 
-Crypt::OpenSSL3::MD EVP_MD_fetch(SV* class, const char* algorithm, const char* properties = "")
+Crypt::OpenSSL3::MD EVP_MD_fetch(SV* classname, const char* algorithm, const char* properties = "")
 C_ARGS: NULL, algorithm, properties
 POSTCALL:
 	if (RETVAL == NULL)
@@ -1949,7 +1949,7 @@ PPCODE:
 	EVP_MD_names_do_all(md, EVP_name_callback, iTHX);
 	SPAGAIN;
 
-void EVP_MD_list_all_provided(SV* class)
+void EVP_MD_list_all_provided(SV* classname)
 PPCODE:
 	PUTBACK;
 	EVP_MD_do_all_provided(NULL, EVP_MD_provided_callback, iTHX);
@@ -1987,7 +1987,7 @@ POSTCALL:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MD::Context	PREFIX = EVP_MD_CTX_
 
-Crypt::OpenSSL3::MD::Context EVP_MD_CTX_new(SV* class)
+Crypt::OpenSSL3::MD::Context EVP_MD_CTX_new(SV* classname)
 C_ARGS:
 
 Crypt::OpenSSL3::MD::Context EVP_MD_CTX_dup(Crypt::OpenSSL3::MD::Context ctx)
@@ -2096,7 +2096,7 @@ int EVP_MD_CTX_get_type(Crypt::OpenSSL3::MD::Context ctx)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC	PREFIX = EVP_MAC_
 
-Crypt::OpenSSL3::MAC EVP_MAC_fetch(SV* class, const char* algorithm, const char* properties = "")
+Crypt::OpenSSL3::MAC EVP_MAC_fetch(SV* classname, const char* algorithm, const char* properties = "")
 C_ARGS: NULL, algorithm, properties
 POSTCALL:
 	if (RETVAL == NULL)
@@ -2114,7 +2114,7 @@ PPCODE:
 	EVP_MAC_names_do_all(mac, EVP_name_callback, iTHX);
 	SPAGAIN;
 
-void EVP_MAC_list_all_provided(SV* class)
+void EVP_MAC_list_all_provided(SV* classname)
 PPCODE:
 	PUTBACK;
 	EVP_MAC_do_all_provided(NULL, EVP_MAC_provided_callback, iTHX);
@@ -2130,7 +2130,7 @@ OUTPUT:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::MAC::Context	PREFIX = EVP_MAC_CTX_
 
-Crypt::OpenSSL3::MAC::Context EVP_MAC_CTX_new(SV* class, Crypt::OpenSSL3::MAC ctx)
+Crypt::OpenSSL3::MAC::Context EVP_MAC_CTX_new(SV* classname, Crypt::OpenSSL3::MAC ctx)
 C_ARGS: ctx
 
 Crypt::OpenSSL3::MAC::Context EVP_MAC_CTX_dup(Crypt::OpenSSL3::MAC::Context ctx)
@@ -2180,7 +2180,7 @@ POSTCALL:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF	PREFIX = EVP_KDF_
 
-Crypt::OpenSSL3::KDF EVP_KDF_fetch(SV* class, const char* algorithm, const char* properties = "")
+Crypt::OpenSSL3::KDF EVP_KDF_fetch(SV* classname, const char* algorithm, const char* properties = "")
 C_ARGS: NULL, algorithm, properties
 POSTCALL:
 	if (RETVAL == NULL)
@@ -2198,7 +2198,7 @@ PPCODE:
 	EVP_KDF_names_do_all(kdf, EVP_name_callback, iTHX);
 	SPAGAIN;
 
-void EVP_KDF_list_all_provided(SV* class)
+void EVP_KDF_list_all_provided(SV* classname)
 PPCODE:
 	PUTBACK;
 	EVP_KDF_do_all_provided(NULL, EVP_KDF_provided_callback, iTHX);
@@ -2213,7 +2213,7 @@ OUTPUT:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF::Context	PREFIX = EVP_KDF_CTX_
 
-Crypt::OpenSSL3::KDF::Context EVP_KDF_CTX_new(SV* class, Crypt::OpenSSL3::KDF ctx)
+Crypt::OpenSSL3::KDF::Context EVP_KDF_CTX_new(SV* classname, Crypt::OpenSSL3::KDF ctx)
 C_ARGS: ctx
 
 Crypt::OpenSSL3::KDF::Context EVP_KDF_CTX_dup(Crypt::OpenSSL3::KDF::Context ctx)
@@ -2249,7 +2249,7 @@ POSTCALL:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Signature	PREFIX = EVP_SIGNATURE_
 
-Crypt::OpenSSL3::Signature EVP_SIGNATURE_fetch(SV* class, const char* algorithm, const char* properties = "")
+Crypt::OpenSSL3::Signature EVP_SIGNATURE_fetch(SV* classname, const char* algorithm, const char* properties = "")
 C_ARGS: NULL, algorithm, properties
 POSTCALL:
 	if (RETVAL == NULL)
@@ -2267,7 +2267,7 @@ PPCODE:
 	EVP_SIGNATURE_names_do_all(signature, EVP_name_callback, iTHX);
 	SPAGAIN;
 
-void EVP_SIGNATURE_list_all_provided(SV* class)
+void EVP_SIGNATURE_list_all_provided(SV* classname)
 PPCODE:
 	PUTBACK;
 	EVP_SIGNATURE_do_all_provided(NULL, EVP_SIGNATURE_provided_callback, iTHX);
@@ -2276,16 +2276,16 @@ PPCODE:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKey	PREFIX = EVP_PKEY_
 
-Crypt::OpenSSL3::PKey EVP_PKEY_new(SV* class)
+Crypt::OpenSSL3::PKey EVP_PKEY_new(SV* classname)
 C_ARGS:
 
-Crypt::OpenSSL3::PKey EVP_PKEY_new_raw_private_key(SV* class, const char *keytype, const unsigned char *key, size_t length(key), const char *propq = "")
+Crypt::OpenSSL3::PKey EVP_PKEY_new_raw_private_key(SV* classname, const char *keytype, const unsigned char *key, size_t length(key), const char *propq = "")
 C_ARGS: NULL, keytype, propq, key, XSauto_length_of_key
 POSTCALL:
 	if (RETVAL == NULL)
 		XSRETURN_UNDEF;
 
-Crypt::OpenSSL3::PKey EVP_PKEY_new_raw_public_key(SV* class, const char *keytype, const unsigned char *key, size_t length(key), const char *propq = "")
+Crypt::OpenSSL3::PKey EVP_PKEY_new_raw_public_key(SV* classname, const char *keytype, const unsigned char *key, size_t length(key), const char *propq = "")
 C_ARGS: NULL, keytype, propq, key, XSauto_length_of_key
 POSTCALL:
 	if (RETVAL == NULL)
@@ -2452,16 +2452,16 @@ C_ARGS: out, pkey, indent, NULL
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKey::Context	PREFIX = EVP_PKEY_CTX_
 
 
-Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new(SV* class, Crypt::OpenSSL3::PKey pkey)
+Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new(SV* classname, Crypt::OpenSSL3::PKey pkey)
 C_ARGS: pkey, NULL
 
-Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_id(SV* class, int id)
+Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_id(SV* classname, int id)
 C_ARGS: id, NULL
 
-Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_from_name(SV* class, const char *name, const char *propquery = "")
+Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_from_name(SV* classname, const char *name, const char *propquery = "")
 C_ARGS: NULL, name, propquery
 
-Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_from_pkey(SV* class, Crypt::OpenSSL3::PKey pkey, const char *propquery = "")
+Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_from_pkey(SV* classname, Crypt::OpenSSL3::PKey pkey, const char *propquery = "")
 C_ARGS: NULL, pkey, propquery
 
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_dup(Crypt::OpenSSL3::PKey::Context ctx)
