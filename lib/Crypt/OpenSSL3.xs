@@ -326,13 +326,14 @@ static OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* input) {
 		const OSSL_PARAM* found = OSSL_PARAM_locate_const(settable, name);
 
 		if (found) {
+			const BIGNUM* big;
 			if (found->data_type == OSSL_PARAM_INTEGER) {
-				if (const BIGNUM* big = get_BN(aTHX_ sv))
+				if (big = get_BN(aTHX_ sv))
 					OSSL_PARAM_BLD_push_BN(builder, found->key, big);
 				else
 					OSSL_PARAM_BLD_push_int64(builder, found->key, SvIV(sv));
 			} else if (found->data_type == OSSL_PARAM_UNSIGNED_INTEGER) {
-				if (const BIGNUM* big = get_BN(aTHX_ sv))
+				if (big = get_BN(aTHX_ sv))
 					OSSL_PARAM_BLD_push_BN(builder, found->key, big);
 				else
 					OSSL_PARAM_BLD_push_uint64(builder, found->key, SvUV(sv));
