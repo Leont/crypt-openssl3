@@ -1108,7 +1108,8 @@ long SSL_CTX_clear_extra_chain_certs(Crypt::OpenSSL3::SSL::Context ctx)
 
 bool SSL_CTX_use_PrivateKey(Crypt::OpenSSL3::SSL::Context ctx, Crypt::OpenSSL3::PKey pkey)
 
-bool SSL_CTX_use_PrivateKey_ASN1(int pk, Crypt::OpenSSL3::SSL::Context ctx, unsigned char *d, long length(d))
+bool SSL_CTX_use_PrivateKey_ASN1(Crypt::OpenSSL3::SSL::Context ctx, int pk, const unsigned char *d, long length(d))
+C_ARGS: pk, ctx, d, XSauto_length_of_d
 
 bool SSL_CTX_use_PrivateKey_file(Crypt::OpenSSL3::SSL::Context ctx, const char *file, int type)
 
@@ -1290,7 +1291,8 @@ bool SSL_use_certificate_chain_file(Crypt::OpenSSL3::SSL ssl, const char *file)
 
 bool SSL_use_PrivateKey(Crypt::OpenSSL3::SSL ssl, Crypt::OpenSSL3::PKey pkey)
 
-bool SSL_use_PrivateKey_ASN1(int pk, Crypt::OpenSSL3::SSL ssl, const unsigned char *d, long length(d))
+bool SSL_use_PrivateKey_ASN1(Crypt::OpenSSL3::SSL ssl, int pk, const unsigned char *d, long length(d))
+C_ARGS: pk, ssl, d, XSauto_length_of_d
 
 bool SSL_use_PrivateKey_file(Crypt::OpenSSL3::SSL ssl, const char *file, int type)
 
