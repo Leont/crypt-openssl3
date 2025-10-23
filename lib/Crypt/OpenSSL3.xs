@@ -2297,7 +2297,7 @@ CODE:
 	size_t length;
 	int result = EVP_PKEY_get_raw_private_key(pkey, NULL, &length);
 	if (!result)
-		XSRETURN_NO;
+		XSRETURN_UNDEF;
 	char* ptr = make_buffer(&key, length);
 	result = EVP_PKEY_get_raw_private_key(pkey, ptr, &length);
 	if (result)
@@ -2309,7 +2309,7 @@ CODE:
 	size_t length;
 	int result = EVP_PKEY_get_raw_public_key(pkey, NULL, &length);
 	if (!result)
-		XSRETURN_NO;
+		XSRETURN_UNDEF;
 	char* ptr = make_buffer(&key, length);
 	result = EVP_PKEY_get_raw_public_key(pkey, ptr, &length);
 	if (result)
