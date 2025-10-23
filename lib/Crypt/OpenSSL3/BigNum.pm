@@ -9,6 +9,10 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: Big Numbers
 
+=head1 DESCRIPTION
+
+This class represents an arbitrarily large number. This is mainly useful when dealing with algorihtms based on such large numbers, such as RSA and Diffie-Hellman.
+
 =method new
 
 =method abs_is_word

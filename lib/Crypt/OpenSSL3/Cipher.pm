@@ -24,6 +24,10 @@ use Crypt::OpenSSL3;
  $context2->set_aead_tag($tag);
  $decoded .= $context2->final // die "Invalid tag";
 
+=head1 DESCRIPTION
+
+This class holds a symmetric cipher. It's used to create a L<cipher context|Crypt::OpenSSL3::Cipher::Context> that will do the actual encryption/decryption.
+
 =method fetch
 
 =method get_block_size

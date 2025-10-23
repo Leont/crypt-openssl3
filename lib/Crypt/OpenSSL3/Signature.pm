@@ -19,6 +19,10 @@ use Crypt::OpenSSL3;
  }
  my $signature = $ctx->sign_message_final;
 
+=head1 DESCRIPTION
+
+This class allows you to fetch various signing mechanisms, it's primary used with L<PKey contexts|Crypt::OpenSSL3::PKey::Context> to initialize signing or verifying.
+
 =method fetch
 
 =method get_description

@@ -19,6 +19,10 @@ use Crypt::OpenSSL3;
  $context->update("Hello, World!");
  my $hash = $context->final;
 
+=head1 DESCRIPTION
+
+This class holds a message digest. It's used to create a L<digest context|Crypt::OpenSSL3::Cipher::Context> that will do the actual digestion.
+
 =method fetch
 
 =method digest

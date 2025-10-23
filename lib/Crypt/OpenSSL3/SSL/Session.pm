@@ -9,6 +9,10 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: SSL Session state
 
+=head1 DESCRIPTION
+
+This is a class containing the current TLS/SSL session details for a connection: L<cipher|Crypt::OpenSSL3::SSL::Cipher>, client and server certificates, keys, etc.
+
 =method new
 
 =method dup

@@ -15,6 +15,10 @@ use Crypt::OpenSSL3;
 
  my ($left, $right) = Crypt::OpenSSL3::BIO->new_bio_pair;
 
+=head1 DESCRIPTION
+
+A BIO is a OpenSSL IO handle. It is needed for an L<SSL|Crypt::OpenSSL3::SSL> connection, and to read/write various file formats.
+
 =method new_bio_pair
 
 =method new_dgram

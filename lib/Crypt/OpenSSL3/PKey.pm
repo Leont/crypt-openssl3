@@ -18,6 +18,26 @@ use Crypt::OpenSSL3;
  $ctx->sign_init;
  my $signature = $ctx->sign($data);
 
+=head1 DESCRIPTION
+
+A PKey can be any kind of assymetrical key. This is a fat interface: no single key type supports all possible operations, and most operations aren't supported by all key types. At its core the operations are:
+
+=over 4
+
+=item * encrypt/decrypt
+
+=item * sign/verify
+
+=item * encapsulate/decapsulate
+
+=item * derivation
+
+=item * key generation
+
+=item * parameter generation
+
+=back
+
 =method new
 
 =method new_raw_private_key

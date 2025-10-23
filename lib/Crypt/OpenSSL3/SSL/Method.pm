@@ -9,6 +9,10 @@ use Crypt::OpenSSL3;
 
 #ABSTRACT: Connection funcs for SSL connections
 
+=head1 DESCRIPTION
+
+This is a dispatch structure describing the internal ssl library methods/functions which implement the various protocol versions (SSLv3 TLSv1, ...). It's needed to create a L<context|Crypt::OpenSSL3::SSL::Context>.
+
 =func TLS
 
 =func TLS_client

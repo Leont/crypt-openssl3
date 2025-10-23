@@ -20,6 +20,12 @@ my $ssl = Crypt::OpenSSL3::SSL->new($ctx);
 my $ssl2 = Crypt::OpenSSL3::SSL->new($ctx);
 my $ssl3 = Crypt::OpenSSL3::SSL->new($ctx);
 
+=head1 DESCRIPTION
+
+This is the global context class which is created by a server or client once per program life-time and which holds mainly default values for the SSL classes which are later created for the connections; these will have exactly the same name as in L<Crypt::OpenSSL3::SSL|Crypt::OpenSSL3::SSL>. It also contains the certificate store that is used to validate certificates and a session cache that facilitates fast reconnection.
+
+Methods in this class generally match the C<SSL_CTX_*> namespace in C<libssl>.
+
 =method new
 
 =method add_client_CA

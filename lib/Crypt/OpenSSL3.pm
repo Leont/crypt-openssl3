@@ -11,6 +11,29 @@ XSLoader::load(__PACKAGE__, __PACKAGE__->VERSION);
 
 # ABSTRACT: A modern OpenSSL wrapper
 
+=head1 DESCRIPTION
+
+This distribution provides access to the SSL implementation and cryptography provided by OpenSSL. Key packages in this distribution include:
+
+=over 4
+
+=item * L<Crypt::OpenSSL3::SSL|Crypt::OpenSSL3::SSL> - actual SSL connections
+
+=item * L<Crypt::OpenSSL3::PKey|Crypt::OpenSSL3::PKey> - Assymetrical keys
+
+=item * L<Crypt::OpenSSL3::Cipher|Crypt::OpenSSL3::Cipher> - Symmetric ciphers
+
+=item * L<Crypt::OpenSSL3::MD|Crypt::OpenSSL3::MD> - Message digests
+
+=item * L<Crypt::OpenSSL3::MAC|Crypt::OpenSSL3::MAC> - Message Authentication Codes
+
+=item * L<Crypt::OpenSSL3::KDF|Crypt::OpenSSL3::KDF> - Key Derivation Functions
+
+=item * L<Crypt::OpenSSL3::X509|Crypt::OpenSSL3::X509> - X509 certificates
+
+=back
+
+This package itself only two pieces of functionality: error handling and build configuration introspection.
 
 =func clear_error
 

@@ -9,6 +9,10 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: An SSL Cipher
 
+=head1 DESCRIPTION
+
+This class holds the algorithm information for a particular cipher which are a core part of the SSL/TLS protocol. The available ciphers are configured on a L<context|Crypt::OpenSSL3::SSL::Context> basis and the actual ones used are then part of the L<session|Crypt::OpenSSL3::SSL::Session>.
+
 =method description
 
 =method get_auth_nid

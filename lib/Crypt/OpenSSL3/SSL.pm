@@ -28,6 +28,12 @@ use Crypt::OpenSSL3;
  my $r_count = $ssl->read(my $buffer, 2048);
  die 'Could not write: ' . $ssl->get_error($r_count) if $r_count <= 0;
 
+=head1 DESCRIPTION
+
+This is the main SSL/TLS class which is created by a server or client per established connection. This actually is the core class in the SSL API. At run-time the application usually deals with this class which has links to mostly all other classes.
+
+Methods in this class generally match functions the C<SSL_*> namespace in C<libssl>.
+
 =method new
 
 =method accept
