@@ -663,8 +663,7 @@ CODE:
 	char* ptr = (char*)make_buffer(&RETVAL, length);
 	ERR_error_string_n(e, ptr, length);
 	set_buffer_length(RETVAL, strlen(ptr));
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::BIO	PREFIX = BIO_
 
@@ -753,8 +752,7 @@ CODE:
 			set_buffer_length(RETVAL, length);
 	} else
 		RETVAL = &PL_sv_undef;
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 unsigned short BIO_ADDR_rawport(Crypt::OpenSSL3::BIO::Address ap)
 
@@ -1029,8 +1027,7 @@ CODE:
 		if (OBJ_obj2txt(ptr, buf_len, a, no_name) > 0)
 			set_buffer_length(RETVAL, buf_len);
 	}
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::Integer	PREFIX = ASN1_INTEGER_
 
@@ -1099,8 +1096,7 @@ CODE:
 	const char* data = ASN1_STRING_get0_data(x);
 	int length = ASN1_STRING_length(x);
 	RETVAL = newSVpvn(data, length);
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 Crypt::OpenSSL3::ASN1::String ASN1_STRING_dup(Crypt::OpenSSL3::ASN1::String a)
 
@@ -1119,8 +1115,7 @@ CODE:
 		OPENSSL_free(out);
 	} else
 		RETVAL = &PL_sv_undef;
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 bool ASN1_STRING_print(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::ASN1::String str)
 
@@ -1493,8 +1488,7 @@ CODE:
 		default:
 			RETVAL = &PL_sv_undef;
 	}
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Algorithm	PREFIX = X509_ALGOR_
@@ -2317,8 +2311,7 @@ PPCODE:
 SV* EVP_RAND_get_param(Crypt::OpenSSL3::Random rand, const char* name)
 CODE:
 	GENERATE_GET_PARAM(EVP_RAND, rand, name)
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random	PREFIX = RAND_
 
@@ -2426,8 +2419,7 @@ PPCODE:
 SV* EVP_CIPHER_get_param(Crypt::OpenSSL3::Cipher cipher, const char* name)
 CODE:
 	GENERATE_GET_PARAM(EVP_CIPHER, cipher, name)
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Cipher::Context	PREFIX = EVP_CIPHER_CTX_
@@ -2470,8 +2462,7 @@ bool EVP_CIPHER_CTX_set_params(Crypt::OpenSSL3::Cipher::Context ctx, PARAMS(EVP_
 SV* EVP_CIPHER_CTX_get_param(Crypt::OpenSSL3::Cipher::Context ctx, const char* name)
 CODE:
 	GENERATE_GET_PARAM(EVP_CIPHER_CTX, ctx, name)
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 
 int EVP_CIPHER_CTX_get_nid(Crypt::OpenSSL3::Cipher::Context e)
@@ -2564,8 +2555,7 @@ bool EVP_MD_xof(Crypt::OpenSSL3::MD md)
 SV* EVP_MD_get_param(Crypt::OpenSSL3::MD md, const char* name)
 CODE:
 	GENERATE_GET_PARAM(EVP_MD, md, name)
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 NO_OUTPUT bool EVP_MD_digest(Crypt::OpenSSL3::MD md, const char* input, size_t length(input), OUTLIST SV* digest)
 INIT:
@@ -2633,8 +2623,7 @@ CODE:
 			set_buffer_length(RETVAL, size);
 	} else
 		RETVAL = &PL_sv_undef;
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 SV* EVP_MD_CTX_sign(Crypt::OpenSSL3::MD::Context ctx, const unsigned char *tbs, size_t length(tbs))
 CODE:
@@ -2645,8 +2634,7 @@ CODE:
 			set_buffer_length(RETVAL, size);
 	} else
 		RETVAL = &PL_sv_undef;
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 bool EVP_MD_CTX_verify_init(Crypt::OpenSSL3::MD::Context ctx, Crypt::OpenSSL3::MD type, Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::PKey::Context pctx = NULL)
 C_ARGS: ctx, pctx ? &pctx : NULL, type, NULL, pkey
@@ -2662,8 +2650,7 @@ bool EVP_MD_CTX_set_params(Crypt::OpenSSL3::MD::Context ctx, PARAMS(EVP_MD_CTX) 
 SV* EVP_MD_CTX_get_param(Crypt::OpenSSL3::MD::Context ctx, const char* name)
 CODE:
 	GENERATE_GET_PARAM(EVP_MD_CTX, ctx, name)
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 
 void EVP_MD_CTX_ctrl(Crypt::OpenSSL3::MD::Context ctx, int cmd, int p1, char* p2);
@@ -2715,8 +2702,7 @@ PPCODE:
 SV* EVP_MAC_get_param(Crypt::OpenSSL3::MAC mac, const char* name)
 CODE:
 	GENERATE_GET_PARAM(EVP_MAC, mac, name)
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 
 
@@ -2740,8 +2726,7 @@ bool EVP_MAC_CTX_set_params(Crypt::OpenSSL3::MAC::Context ctx, PARAMS(EVP_MAC_CT
 SV* EVP_MAC_CTX_get_param(Crypt::OpenSSL3::MAC::Context ctx, const char* name)
 CODE:
 	GENERATE_GET_PARAM(EVP_MAC_CTX, ctx, name)
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 
 
@@ -2799,8 +2784,7 @@ PPCODE:
 SV* EVP_KDF_get_param(Crypt::OpenSSL3::KDF kdf, const char* name)
 CODE:
 	GENERATE_GET_PARAM(EVP_KDF, kdf, name)
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::KDF::Context	PREFIX = EVP_KDF_CTX_
@@ -2819,8 +2803,7 @@ bool EVP_KDF_CTX_set_params(Crypt::OpenSSL3::KDF::Context ctx, PARAMS(EVP_KDF_CT
 SV* EVP_KDF_CTX_get_param(Crypt::OpenSSL3::KDF::Context ctx, const char* name)
 CODE:
 	GENERATE_GET_PARAM(EVP_KDF_CTX, ctx, name)
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 Crypt::OpenSSL3::KDF EVP_KDF_CTX_kdf(Crypt::OpenSSL3::KDF::Context ctx)
 POSTCALL:
@@ -3007,8 +2990,7 @@ POSTCALL:
 SV* EVP_PKEY_get_param(Crypt::OpenSSL3::PKey pkey, const char* name)
 CODE:
 	GENERATE_GET_PARAM(EVP_PKEY, pkey, name)
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 bool EVP_PKEY_get_int_param(Crypt::OpenSSL3::PKey pkey, const char *key_name, OUT int out)
 
@@ -3063,8 +3045,7 @@ bool EVP_PKEY_CTX_set_params(Crypt::OpenSSL3::PKey::Context ctx, PARAMS(EVP_PKEY
 SV* EVP_PKEY_CTX_get_param(Crypt::OpenSSL3::PKey::Context ctx, const char* name)
 CODE:
 	GENERATE_GET_PARAM(EVP_PKEY_CTX, ctx, name)
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 
 bool EVP_PKEY_CTX_is_a(Crypt::OpenSSL3::PKey::Context ctx, const char *keytype)
@@ -3210,8 +3191,7 @@ CODE:
 	RETVAL = EVP_PKEY_CTX_get1_id(ctx, ptr);
 	if (RETVAL)
 		set_buffer_length(id, length);
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 bool EVP_PKEY_CTX_set_hkdf_mode(Crypt::OpenSSL3::PKey::Context pctx, int mode)
 
@@ -3275,8 +3255,7 @@ CODE:
 			set_buffer_length(RETVAL, unwrapped_length);
 	} else
 		RETVAL = &PL_sv_undef;
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 #if OPENSSL_VERSION_PREREQ(3, 2)
 Success EVP_PKEY_auth_encapsulate_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::PKey authpriv)
@@ -3301,8 +3280,7 @@ CODE:
 			set_buffer_length(RETVAL, out_length);
 	} else
 		RETVAL = &PL_sv_undef;
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 bool EVP_PKEY_decrypt_init(Crypt::OpenSSL3::PKey::Context ctx)
 C_ARGS: ctx, NULL
@@ -3317,8 +3295,7 @@ CODE:
 			set_buffer_length(RETVAL, out_length);
 	} else
 		RETVAL = &PL_sv_undef;
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 bool EVP_PKEY_derive_init(Crypt::OpenSSL3::PKey::Context ctx)
 C_ARGS: ctx, NULL
@@ -3335,8 +3312,7 @@ CODE:
 			set_buffer_length(RETVAL, key_length);
 	} else
 		RETVAL = &PL_sv_undef;
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 Success EVP_PKEY_sign_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature type = NULL, CTX_PARAMS(EVP_SIGNATURE) params = NULL)
 
@@ -3350,8 +3326,7 @@ CODE:
 			set_buffer_length(RETVAL, sig_length);
 	} else
 		RETVAL = &PL_sv_undef;
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 Success EVP_PKEY_verify_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature type = NULL, CTX_PARAMS(EVP_SIGNATURE) params = NULL)
 
@@ -3371,8 +3346,7 @@ CODE:
 			set_buffer_length(RETVAL, sigsize);
 	} else
 		RETVAL = &PL_sv_undef;
-OUTPUT:
-	RETVAL
+OUTPUT: RETVAL
 
 Success EVP_PKEY_verify_message_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::Signature type = NULL, CTX_PARAMS(EVP_SIGNATURE) params = NULL)
 
