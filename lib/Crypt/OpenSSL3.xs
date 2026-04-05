@@ -277,6 +277,7 @@ SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, SSL::Context, const)
 #define EVP_MD_CTX_final_xof EVP_DigestFinalXOF
 #define EVP_MD_CTX_squeeze EVP_DigestSqueeze
 #define EVP_MD_CTX_sign_init EVP_DigestSignInit
+#define EVP_MD_CTX_sign_init_ex EVP_DigestSignInit_ex
 #define EVP_MD_CTX_sign_update EVP_DigestSignUpdate
 #define EVP_MD_CTX_sign_final EVP_DigestSignFinal
 #define EVP_MD_CTX_sign EVP_DigestSign
@@ -2611,7 +2612,10 @@ POSTCALL:
 
 bool EVP_MD_CTX_sign_init(Crypt::OpenSSL3::MD::Context ctx, Crypt::OpenSSL3::MD type, Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::PKey::Context pctx = NULL)
 C_ARGS: ctx, pctx ? &pctx : NULL, type, NULL, pkey
-	
+
+bool EVP_MD_CTX_sign_init_ex(Crypt::OpenSSL3::MD::Context ctx, const char* mdname, Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::PKey::Context pctx = NULL, const char* props = NULL)
+C_ARGS: ctx, pctx ? &pctx : NULL, mdname, NULL, props, pkey, NULL
+
 bool EVP_MD_CTX_sign_update(Crypt::OpenSSL3::MD::Context ctx, const char *d, size_t length(d))
 
 SV* EVP_MD_CTX_sign_final(Crypt::OpenSSL3::MD::Context ctx)

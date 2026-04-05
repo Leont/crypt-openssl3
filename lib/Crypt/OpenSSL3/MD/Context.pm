@@ -47,6 +47,8 @@ use Crypt::OpenSSL3;
 
 =method sign_init
 
+=method sign_init_ex
+
 =method sign_final
 
 =method sign_update
