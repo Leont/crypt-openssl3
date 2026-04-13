@@ -1424,7 +1424,9 @@ uint32_t X509_VERIFY_PARAM_get_inh_flags(Crypt::OpenSSL3::X509::VerifyParam para
 
 bool X509_VERIFY_PARAM_set_purpose(Crypt::OpenSSL3::X509::VerifyParam param, int purpose)
 
+#if OPENSSL_VERSION_PREREQ(3, 5)
 int X509_VERIFY_PARAM_get_purpose(Crypt::OpenSSL3::X509::VerifyParam param)
+#endif
 
 bool X509_VERIFY_PARAM_set_trust(Crypt::OpenSSL3::X509::VerifyParam param, int trust)
 
