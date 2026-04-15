@@ -113,7 +113,7 @@ DUPLICATING_TYPE(BN, BigNum, BigNum);
 #define BN_CTX_dup(old) BN_CTX_new()
 DUPLICATING_TYPE(BN_CTX, BigNum__Context, BigNum::Context)
 
-SIMPLE_TYPE(ASN1_OBJECT, ASN1__Object, ASN1::Object, )
+SIMPLE_TYPE(ASN1_OBJECT, ASN1__Object, ASN1::Object, const)
 DUPLICATING_TYPE(ASN1_INTEGER, ASN1__Integer, ASN1::Integer)
 #define ASN1_ENUMERATED_dup ASN1_INTEGER_dup
 DUPLICATING_TYPE(ASN1_ENUMERATED, ASN1__Enumerated, ASN1::Enumerated)
@@ -162,6 +162,7 @@ SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, SSL::Context, const)
 #define ASN1_INTEGER_set_BN(ai, bn) BN_to_ASN1_INTEGER(bn, ai)
 #define ASN1_ENUMERATED_set_BN(ai, bn) BN_to_ASN1_ENUMERATED(bn, ai)
 #define ASN1_ENUMERATED_get_BN(ai) ASN1_ENUMERATED_to_BN(ai, NULL)
+#define ASN1_TIME_cmp_time ASN1_TIME_cmp_time_t
 
 #define GENERAL_NAME_type(gn) (gn->type)
 
@@ -174,9 +175,12 @@ SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, SSL::Context, const)
 #define X509_get_authority_serial(c) (ASN1_INTEGER*)X509_get0_authority_serial(c)
 #define X509_set_notAfter X509_set1_notAfter
 #define X509_set_notBefore X509_set1_notBefore
-#define X509_get_distinguishing_id X509_get0_distinguishing_id
+#define X509_get_distinguishing_id(c) ASN1_OCTET_STRING_dup(X509_get0_distinguishing_id(c))
 #define X509_set_distinguishing_id X509_set0_distinguishing_id
-
+#define X509_get_ext(c, loc) X509_EXTENSION_dup(X509_get_ext(c, loc))
+#define X509_EXTENSION_get_object(e) X509_EXTENSION_get_object(e)
+#define X509_EXTENSION_get_data(e) ASN1_OCTET_STRING_dup(X509_EXTENSION_get_data(e))
+#define X509_NAME_get_entry(n, loc) X509_NAME_ENTRY_dup(X509_NAME_get_entry(n, loc))
 #define X509_ALGOR_get X509_ALGOR_get0
 #define X509_ALGOR_set X509_ALGOR_set0
 #define X509_verify_cert_error_code(value) value
@@ -208,6 +212,8 @@ SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, SSL::Context, const)
 #define SSL_CTX_set_param SSL_CTX_set1_param
 
 #define SSL_set_host SSL_set1_host
+#define SSL_set_dnsname SSL_set1_dnsname
+#define SSL_set_ipaddr SSL_set1_ipaddr
 #define SSL_set_rbio SSL_set0_rbio
 #define SSL_set_wbio SSL_set0_wbio
 #define SSL_get_context SSL_get_SSL_CTX
@@ -1153,6 +1159,8 @@ POSTCALL:
 	if (!RETVAL)
 		XSRETURN_EMPTY;
 
+int ASN1_TIME_cmp_time(Crypt::OpenSSL3::ASN1::Time s, time_t t)
+
 int ASN1_TIME_compare(Crypt::OpenSSL3::ASN1::Time a, Crypt::OpenSSL3::ASN1::Time b)
 POSTCALL:
 	if (RETVAL == -2)
@@ -1180,16 +1188,6 @@ POSTCALL:
 	if (!RETVAL)
 		XSRETURN_UNDEF;
 
-
-MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::Time	PREFIX = X509_
-
-int X509_cmp_time(Crypt::OpenSSL3::ASN1::Time asn1_time, time_t in_tm)
-C_ARGS: asn1_time, &in_tm
-
-int X509_cmp_current_time(Crypt::OpenSSL3::ASN1::Time asn1_time)
-
-int X509_cmp_timeframe(Crypt::OpenSSL3::ASN1::Time start, Crypt::OpenSSL3::ASN1::Time end, Crypt::OpenSSL3::X509::VerifyParam vpm)
-C_ARGS: vpm, start, end
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::Time::Generalized	PREFIX = ASN1_GENERALIZEDTIME_
 
@@ -1920,6 +1918,12 @@ const char* SSL_get_servername(Crypt::OpenSSL3::SSL s, int type)
 int SSL_get_servername_type(Crypt::OpenSSL3::SSL s)
 
 bool SSL_set_host(Crypt::OpenSSL3::SSL s, const char *hostname)
+
+#if OPENSSL_VERSION_PREREQ(4, 0)
+bool SSL_set_dnsname(Crypt::OpenSSL3::SSL s, const char *hostname)
+
+bool SSL_set_ipaddr(Crypt::OpenSSL3::SSL s, const char *hostname)
+#endif
 
 int SSL_connect(Crypt::OpenSSL3::SSL ssl)
 

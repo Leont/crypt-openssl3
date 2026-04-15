@@ -216,9 +216,13 @@ Methods in this class generally match functions the C<SSL_*> namespace in C<libs
 
 =method set_default_stream_mode
 
+=method set_dnsname
+
 =method set_fd
 
 =method set_host
+
+=method set_ipaddr
 
 =method set_incoming_stream_policy
 
