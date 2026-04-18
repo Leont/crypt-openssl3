@@ -1862,7 +1862,15 @@ void SSL_set_security_level(Crypt::OpenSSL3::SSL s, int level)
 
 int SSL_get_security_level(Crypt::OpenSSL3::SSL s)
 
-bool SSL_set_alpn_protos(Crypt::OpenSSL3::SSL ssl, const unsigned char *protos, unsigned int length(protos))
+bool SSL_set_alpn_protos(Crypt::OpenSSL3::SSL ssl, ...)
+CODE:
+	SV* buffer = sv_2mortal(newSVpvs(""));
+	static const char pattern[] = "(C/a)*";
+	packlist(buffer, pattern, pattern + sizeof pattern - 1, &ST(1), &ST(items));
+	STRLEN raw_len;
+	const char* raw = SvPVbyte(buffer, raw_len);
+	RETVAL = SSL_set_alpn_protos(ssl, SvPV_nolen(buffer), raw_len);
+OUTPUT: RETVAL
 
 bool SSL_use_certificate(Crypt::OpenSSL3::SSL ssl, Crypt::OpenSSL3::X509 x)
 
