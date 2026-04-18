@@ -1858,6 +1858,10 @@ bool SSL_set_min_proto_version(Crypt::OpenSSL3::SSL ssl, int version)
 
 bool SSL_set_max_proto_version(Crypt::OpenSSL3::SSL ssl, int version)
 
+int SSL_get_min_proto_version(Crypt::OpenSSL3::SSL ssl)
+
+int SSL_get_max_proto_version(Crypt::OpenSSL3::SSL ssl)
+
 void SSL_set_security_level(Crypt::OpenSSL3::SSL s, int level)
 
 int SSL_get_security_level(Crypt::OpenSSL3::SSL s)

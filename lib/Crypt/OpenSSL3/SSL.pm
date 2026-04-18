@@ -96,6 +96,10 @@ Methods in this class generally match functions the C<SSL_*> namespace in C<libs
 
 =method get_listener
 
+=method get_max_proto_version
+
+=method get_min_proto_version
+
 =method get_mode
 
 =method get_num_tickets
