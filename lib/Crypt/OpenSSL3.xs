@@ -2002,8 +2002,6 @@ bool SSL_set_session(Crypt::OpenSSL3::SSL ssl, Crypt::OpenSSL3::SSL::Session ses
 
 bool SSL_session_reused(Crypt::OpenSSL3::SSL ssl)
 
-void SSL_copy_session_id(Crypt::OpenSSL3::SSL to, Crypt::OpenSSL3::SSL from)
-
 Crypt::OpenSSL3::X509 SSL_get_certificate(Crypt::OpenSSL3::SSL ssl)
 INTERFACE: SSL_get_certificate  SSL_get_peer_certificate
 POSTCALL:

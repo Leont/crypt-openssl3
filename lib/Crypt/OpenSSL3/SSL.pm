@@ -56,8 +56,6 @@ Methods in this class generally match functions the C<SSL_*> namespace in C<libs
 
 =method connect
 
-=method copy_session_id
-
 =method do_handshake
 
 =method get_accept_connection_queue_len
