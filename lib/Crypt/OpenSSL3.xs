@@ -19,11 +19,6 @@
 #include <openssl/x509v3.h>
 #include <openssl/opensslv.h>
 
-#include <openssl/rsa.h>
-#include <openssl/dsa.h>
-#include <openssl/dh.h>
-#include <openssl/ec.h>
-
 #define TYPE_TYPE(c_type, xs_type) typedef c_type * Crypt__OpenSSL3__ ## xs_type;
 #define MAGIC_TABLE(xs_type, dup, free)\
 static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = {\
@@ -319,14 +314,6 @@ SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, SSL::Context, const)
 #define EVP_PKEY_decrypt_init EVP_PKEY_decrypt_init_ex
 #define EVP_PKEY_derive_init EVP_PKEY_derive_init_ex
 #define EVP_PKEY_derive_set_peer EVP_PKEY_derive_set_peer_ex
-#define EVP_PKEY_CTX_add_hkdf_info EVP_PKEY_CTX_add1_hkdf_info
-#define EVP_PKEY_CTX_set_hkdf_salt EVP_PKEY_CTX_set1_hkdf_salt
-#define EVP_PKEY_CTX_set_hkdf_key EVP_PKEY_CTX_set1_hkdf_key
-#define EVP_PKEY_CTX_get_dh_kdf_oid EVP_PKEY_CTX_get0_dh_kdf_oid
-#define EVP_PKEY_CTX_set_dh_kdf_oid EVP_PKEY_CTX_set0_dh_kdf_oid
-#define EVP_PKEY_CTX_get_rsa_oaep_label EVP_PKEY_CTX_get0_rsa_oaep_label
-#define EVP_PKEY_CTX_set_rsa_oaep_label EVP_PKEY_CTX_set0_rsa_oaep_label
-#define EVP_PKEY_CTX_set_id EVP_PKEY_CTX_set1_id
 
 #if !OPENSSL_VERSION_PREREQ(3, 4)
 static int EVP_PKEY_sign_init_ex2(EVP_PKEY_CTX *ctx, EVP_SIGNATURE *algo, const OSSL_PARAM params[]) {
@@ -3070,164 +3057,9 @@ OUTPUT: RETVAL
 
 bool EVP_PKEY_CTX_is_a(Crypt::OpenSSL3::PKey::Context ctx, const char *keytype)
 
-bool EVP_PKEY_CTX_set_signature_md(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::MD md)
-
-void EVP_PKEY_CTX_get_signature_md(Crypt::OpenSSL3::PKey::Context ctx, OUTLIST Crypt::OpenSSL3::MD md)
-C_ARGS: ctx, (const EVP_MD**)&md
-
-bool EVP_PKEY_CTX_set_mac_key(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *key, int length(key))
-
-bool EVP_PKEY_CTX_set_group_name(Crypt::OpenSSL3::PKey::Context ctx, const char *name)
-
-NO_OUTPUT bool EVP_PKEY_CTX_get_group_name(Crypt::OpenSSL3::PKey::Context ctx, OUTLIST SV* name, size_t size = 32)
-INIT:
-	char* ptr = (char*)make_buffer(&name, size);
-C_ARGS: ctx, ptr, size + 1
-POSTCALL:
-	if (RETVAL)
-		set_buffer_length(name, strlen(ptr));
-
-bool EVP_PKEY_CTX_set_kem_op(Crypt::OpenSSL3::PKey::Context ctx, const char *op)
-
-
-bool EVP_PKEY_CTX_set_rsa_padding(Crypt::OpenSSL3::PKey::Context ctx, int pad)
-
-bool EVP_PKEY_CTX_get_rsa_padding(Crypt::OpenSSL3::PKey::Context ctx, OUT int pad)
-
-bool EVP_PKEY_CTX_set_rsa_pss_saltlen(Crypt::OpenSSL3::PKey::Context ctx, int saltlen)
-
-bool EVP_PKEY_CTX_get_rsa_pss_saltlen(Crypt::OpenSSL3::PKey::Context ctx, OUT int saltlen)
-
-bool EVP_PKEY_CTX_set_rsa_keygen_bits(Crypt::OpenSSL3::PKey::Context ctx, int mbits)
-
-bool EVP_PKEY_CTX_set_rsa_keygen_primes(Crypt::OpenSSL3::PKey::Context ctx, int primes)
-
-bool EVP_PKEY_CTX_set_rsa_mgf1_md_name(Crypt::OpenSSL3::PKey::Context ctx, const char *mdname, const char *mdprops)
-
-bool EVP_PKEY_CTX_set_rsa_mgf1_md(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::MD md)
-
-bool EVP_PKEY_CTX_get_rsa_mgf1_md(Crypt::OpenSSL3::PKey::Context ctx, OUT Crypt::OpenSSL3::MD md)
-C_ARGS: ctx, (const EVP_MD**)&md
-
-bool EVP_PKEY_CTX_get_rsa_mgf1_md_name(Crypt::OpenSSL3::PKey::Context ctx, char *name, size_t length(name))
-
-bool EVP_PKEY_CTX_set_rsa_oaep_md_name(Crypt::OpenSSL3::PKey::Context ctx, const char *mdname, const char *mdprops)
-
-bool EVP_PKEY_CTX_set_rsa_oaep_md(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::MD md)
-
-bool EVP_PKEY_CTX_get_rsa_oaep_md(Crypt::OpenSSL3::PKey::Context ctx, OUT Crypt::OpenSSL3::MD md)
-C_ARGS: ctx, (const EVP_MD**)&md
-
-bool EVP_PKEY_CTX_get_rsa_oaep_md_name(Crypt::OpenSSL3::PKey::Context ctx, char *name, size_t length(name))
-
-bool EVP_PKEY_CTX_set_rsa_oaep_label(Crypt::OpenSSL3::PKey::Context ctx, char *label, int length(label))
-
-bool EVP_PKEY_CTX_get_rsa_oaep_label(Crypt::OpenSSL3::PKey::Context ctx, OUT unsigned char *label)
-
-
-bool EVP_PKEY_CTX_set_dsa_paramgen_bits(Crypt::OpenSSL3::PKey::Context ctx, int nbits)
-
-bool EVP_PKEY_CTX_set_dsa_paramgen_q_bits(Crypt::OpenSSL3::PKey::Context ctx, int qbits)
-
-bool EVP_PKEY_CTX_set_dsa_paramgen_md(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::MD md)
-
-bool EVP_PKEY_CTX_set_dsa_paramgen_md_props(Crypt::OpenSSL3::PKey::Context ctx, const char *md_name, const char *md_properties)
-
-bool EVP_PKEY_CTX_set_dsa_paramgen_type(Crypt::OpenSSL3::PKey::Context ctx, const char *name)
-
-bool EVP_PKEY_CTX_set_dsa_paramgen_gindex(Crypt::OpenSSL3::PKey::Context ctx, int gindex)
-
-bool EVP_PKEY_CTX_set_dsa_paramgen_seed(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *seed, size_t length(seed))
-
-
-bool EVP_PKEY_CTX_set_dh_paramgen_prime_len(Crypt::OpenSSL3::PKey::Context ctx, int len)
-
-bool EVP_PKEY_CTX_set_dh_paramgen_subprime_len(Crypt::OpenSSL3::PKey::Context ctx, int len)
-
-bool EVP_PKEY_CTX_set_dh_paramgen_generator(Crypt::OpenSSL3::PKey::Context ctx, int gen)
-
-bool EVP_PKEY_CTX_set_dh_paramgen_type(Crypt::OpenSSL3::PKey::Context ctx, int type)
-
-bool EVP_PKEY_CTX_set_dh_pad(Crypt::OpenSSL3::PKey::Context ctx, int pad)
-
-bool EVP_PKEY_CTX_set_dh_nid(Crypt::OpenSSL3::PKey::Context ctx, int nid)
-
-bool EVP_PKEY_CTX_set_dh_rfc5114(Crypt::OpenSSL3::PKey::Context ctx, int rfc5114)
-
-bool EVP_PKEY_CTX_set_dhx_rfc5114(Crypt::OpenSSL3::PKey::Context ctx, int rfc5114)
-
-bool EVP_PKEY_CTX_set_dh_paramgen_gindex(Crypt::OpenSSL3::PKey::Context ctx, int gindex)
-
-bool EVP_PKEY_CTX_set_dh_paramgen_seed(Crypt::OpenSSL3::PKey::Context ctx, const unsigned char *seed, size_t length(seed))
-
-bool EVP_PKEY_CTX_set_dh_kdf_type(Crypt::OpenSSL3::PKey::Context ctx, int kdf)
-
-bool EVP_PKEY_CTX_get_dh_kdf_type(Crypt::OpenSSL3::PKey::Context ctx)
-
-bool EVP_PKEY_CTX_set_dh_kdf_oid(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::ASN1::Object oid)
-C_ARGS: ctx, (ASN1_OBJECT*) oid
-
-bool EVP_PKEY_CTX_get_dh_kdf_oid(Crypt::OpenSSL3::PKey::Context ctx, OUT Crypt::OpenSSL3::ASN1::Object oid)
-C_ARGS: ctx, (ASN1_OBJECT**) &oid
-
-bool EVP_PKEY_CTX_set_dh_kdf_md(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::MD md)
-
-bool EVP_PKEY_CTX_get_dh_kdf_md(Crypt::OpenSSL3::PKey::Context ctx, OUT Crypt::OpenSSL3::MD md)
-C_ARGS: ctx, (const EVP_MD**)&md
-
-bool EVP_PKEY_CTX_set_dh_kdf_outlen(Crypt::OpenSSL3::PKey::Context ctx, int len)
-
-bool EVP_PKEY_CTX_get_dh_kdf_outlen(Crypt::OpenSSL3::PKey::Context ctx, OUT int len)
-
-
-bool EVP_PKEY_CTX_set_ec_paramgen_curve_nid(Crypt::OpenSSL3::PKey::Context ctx, int nid)
-
-bool EVP_PKEY_CTX_set_ec_param_enc(Crypt::OpenSSL3::PKey::Context ctx, int param_enc)
-
-bool EVP_PKEY_CTX_set_ecdh_cofactor_mode(Crypt::OpenSSL3::PKey::Context ctx, int cofactor_mode)
-
-bool EVP_PKEY_CTX_get_ecdh_cofactor_mode(Crypt::OpenSSL3::PKey::Context ctx)
-
-bool EVP_PKEY_CTX_set_ecdh_kdf_type(Crypt::OpenSSL3::PKey::Context ctx, int kdf)
-
-bool EVP_PKEY_CTX_get_ecdh_kdf_type(Crypt::OpenSSL3::PKey::Context ctx)
-
-bool EVP_PKEY_CTX_set_ecdh_kdf_md(Crypt::OpenSSL3::PKey::Context ctx, Crypt::OpenSSL3::MD md)
-
-bool EVP_PKEY_CTX_get_ecdh_kdf_md(Crypt::OpenSSL3::PKey::Context ctx, OUT Crypt::OpenSSL3::MD md)
-C_ARGS: ctx, (const EVP_MD**)&md
-
-bool EVP_PKEY_CTX_set_ecdh_kdf_outlen(Crypt::OpenSSL3::PKey::Context ctx, int len)
-
-bool EVP_PKEY_CTX_get_ecdh_kdf_outlen(Crypt::OpenSSL3::PKey::Context ctx, OUT int len)
-
-bool EVP_PKEY_CTX_set_id(Crypt::OpenSSL3::PKey::Context ctx, const char* id, size_t length(id))
-
-bool EVP_PKEY_CTX_get_id(Crypt::OpenSSL3::PKey::Context ctx, SV* id)
-CODE:
-	size_t length;
-	EVP_PKEY_CTX_get1_id_len(ctx, &length);
-	char* ptr = grow_buffer(id, length);
-	RETVAL = EVP_PKEY_CTX_get1_id(ctx, ptr);
-	if (RETVAL)
-		set_buffer_length(id, length);
-OUTPUT: RETVAL
-
-bool EVP_PKEY_CTX_set_hkdf_mode(Crypt::OpenSSL3::PKey::Context pctx, int mode)
-
-bool EVP_PKEY_CTX_set_hkdf_md(Crypt::OpenSSL3::PKey::Context pctx, Crypt::OpenSSL3::MD md)
-
-bool EVP_PKEY_CTX_set_hkdf_salt(Crypt::OpenSSL3::PKey::Context pctx, unsigned char *salt, int length(salt))
-
-bool EVP_PKEY_CTX_set_hkdf_key(Crypt::OpenSSL3::PKey::Context pctx, unsigned char *key, int length(key))
-
-bool EVP_PKEY_CTX_add_hkdf_info(Crypt::OpenSSL3::PKey::Context pctx, unsigned char *info, int length(info))
-
 #if OPENSSL_VERSION_PREREQ(3, 4)
 bool EVP_PKEY_CTX_set_signature(Crypt::OpenSSL3::PKey::Context pctx, const unsigned char *sig, size_t length(sig))
 #endif
-
-int EVP_PKEY_CTX_get_keygen_info(Crypt::OpenSSL3::PKey::Context ctx, int idx)
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKey::Context	PREFIX = EVP_PKEY_
