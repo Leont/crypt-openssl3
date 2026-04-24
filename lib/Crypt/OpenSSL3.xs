@@ -1323,6 +1323,8 @@ C_ARGS: cert, NULL, NULL
 Crypt::OpenSSL3::ASN1::String::Octet X509_get_distinguishing_id(Crypt::OpenSSL3::X509 x)
 
 void X509_set_distinguishing_id(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::ASN1::String::Octet distid)
+INIT:
+	distid = ASN1_OCTET_STRING_dup(distid);
 
 bool X509_check_ca(Crypt::OpenSSL3::X509 cert)
 
