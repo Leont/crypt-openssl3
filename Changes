@@ -1,6 +1,8 @@
 Revision history for Crypt-OpenSSL3
 
 {{$NEXT}}
+
+0.005     2026-04-25 10:43:07+02:00 Europe/Brussels
           - Adapt to OpenSSL 4.0
           - Make set_alpn_protos take a list of protocols
           - Remove copy_session_id
