@@ -18,6 +18,9 @@
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
 #include <openssl/opensslv.h>
+#if OPENSSL_VERSION_PREREQ(3, 2)
+#include <openssl/hpke.h>
+#endif
 
 #define TYPE_TYPE(c_type, xs_type) typedef c_type * Crypt__OpenSSL3__ ## xs_type;
 #define MAGIC_TABLE(xs_type, dup, free)\
@@ -138,6 +141,23 @@ COUNTING_TYPE(SSL_CTX, SSL__Context, SSL::Context)
 COUNTING_TYPE(SSL, SSL, SSL)
 DUPLICATING_TYPE(SSL_SESSION, SSL__Session, SSL::Session)
 SIMPLE_TYPE(SSL_CIPHER, SSL__Cipher, SSL::Context, const)
+
+#if OPENSSL_VERSION_PREREQ(3, 2)
+typedef struct HPKE {
+	OSSL_HPKE_CTX* context;
+	OSSL_HPKE_SUITE suite;
+} HPKE;
+
+#define HPKE_dup(hpke) NULL
+
+static void HPKE_free(HPKE* hpke) {
+	OSSL_HPKE_CTX_free(hpke->context);
+	Safefree(hpke);
+}
+
+DUPLICATING_TYPE(HPKE, HPKE__Context, HPKE::Context)
+typedef OSSL_HPKE_SUITE* Crypt__OpenSSL3__HPKE;
+#endif
 
 #define PARAMS(a) OSSL_PARAM*
 #define CTX_PARAMS(a) OSSL_PARAM*
@@ -331,6 +351,19 @@ static int EVP_PKEY_verify_init_ex2(EVP_PKEY_CTX *ctx, EVP_SIGNATURE *algo, cons
 #define EVP_PKEY_sign_init EVP_PKEY_sign_init_ex2
 #define EVP_PKEY_verify_init EVP_PKEY_verify_init_ex2
 
+
+#if OPENSSL_VERSION_PREREQ(3, 2)
+#define OSSL_HPKE_CTX_set_authpriv OSSL_HPKE_CTX_set1_authpriv
+#define OSSL_HPKE_CTX_set_authpub OSSL_HPKE_CTX_set1_authpub
+#define OSSL_HPKE_CTX_set_psk OSSL_HPKE_CTX_set1_psk
+#define OSSL_HPKE_CTX_set_ikme OSSL_HPKE_CTX_set1_ikme
+#define OSSL_HPKE_decapsulate OSSL_HPKE_decap
+#define OSSL_HPKE_check OSSL_HPKE_suite_check
+#define OSSL_HPKE_kem_id(suite) (suite)->kem_id
+#define OSSL_HPKE_kdf_id(suite) (suite)->kdf_id
+#define OSSL_HPKE_aead_id(suite) (suite)->aead_id
+#endif
+
 #define CONSTANT2(PREFIX, VALUE) newCONSTSUB(stash, #VALUE, newSVuv(PREFIX##VALUE))
 
 static unsigned char* S_make_buffer(pTHX_ SV** retval, size_t size) {
@@ -496,6 +529,8 @@ typedef int Success;
 typedef int PrintRet;
 #define undef &PL_sv_undef
 
+#define CLONE_SKIP(class) 1
+
 // This will force byte semantics on all strings
 // This should come as the last thing in the C section of this file
 #undef SvPV
@@ -566,6 +601,9 @@ Crypt::OpenSSL3::SSL::Context T_MAGICEXT
 Crypt::OpenSSL3::SSL T_MAGICEXT
 Crypt::OpenSSL3::SSL::Session T_MAGICEXT
 Crypt::OpenSSL3::SSL::Cipher T_MAGICEXT
+
+Crypt::OpenSSL3::HPKE T_MAGICBUF
+Crypt::OpenSSL3::HPKE::Context T_MAGICEXT
 
 PARAMS(EVP_RAND_CTX) T_PARAMS
 PARAMS(EVP_CIPHER_CTX) T_PARAMS
@@ -3207,5 +3245,195 @@ Success EVP_PKEY_verify_message_init(Crypt::OpenSSL3::PKey::Context ctx, Crypt::
 Success EVP_PKEY_verify_message_update(Crypt::OpenSSL3::PKey::Context ctx, unsigned char *in, size_t length(in))
 
 Success EVP_PKEY_verify_message_final(Crypt::OpenSSL3::PKey::Context ctx)
+
+#endif
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::HPKE	PREFIX = OSSL_HPKE_
+
+
+BOOT:
+{
+#if OPENSSL_VERSION_PREREQ(3, 2)
+	HV* stash = gv_stashpvs("Crypt::OpenSSL3::HPKE", GV_ADD | GV_ADDMULTI);
+	CONSTANT2(OSSL_HPKE_, KEM_ID_P256);
+	CONSTANT2(OSSL_HPKE_, KEM_ID_P384);
+	CONSTANT2(OSSL_HPKE_, KEM_ID_P521);
+	CONSTANT2(OSSL_HPKE_, KEM_ID_X25519);
+	CONSTANT2(OSSL_HPKE_, KEM_ID_X448);
+
+	CONSTANT2(OSSL_HPKE_, KDF_ID_HKDF_SHA256);
+	CONSTANT2(OSSL_HPKE_, KDF_ID_HKDF_SHA384);
+	CONSTANT2(OSSL_HPKE_, KDF_ID_HKDF_SHA512);
+
+	CONSTANT2(OSSL_HPKE_, AEAD_ID_AES_GCM_128);
+	CONSTANT2(OSSL_HPKE_, AEAD_ID_AES_GCM_256);
+	CONSTANT2(OSSL_HPKE_, AEAD_ID_CHACHA_POLY1305);
+	CONSTANT2(OSSL_HPKE_, AEAD_ID_EXPORTONLY);
+
+	CONSTANT2(OSSL_HPKE_, ROLE_SENDER);
+	CONSTANT2(OSSL_HPKE_, ROLE_RECEIVER);
+
+	CONSTANT2(OSSL_HPKE_, MODE_BASE);
+	CONSTANT2(OSSL_HPKE_, MODE_PSK);
+	CONSTANT2(OSSL_HPKE_, MODE_AUTH);
+	CONSTANT2(OSSL_HPKE_, MODE_PSKAUTH);
+
+	CONSTANT2(OSSL_HPKE_, MAX_PARMLEN);
+	CONSTANT2(OSSL_HPKE_, MIN_PSKLEN);
+	CONSTANT2(OSSL_HPKE_, MAX_INFOLEN);
+#endif
+}
+
+#if OPENSSL_VERSION_PREREQ(3, 2)
+
+Crypt::OpenSSL3::HPKE OSSL_HPKE_new(class, unsigned short kem, unsigned short kdf, unsigned short aead)
+CODE:
+	RETVAL = safemalloc(sizeof(OSSL_HPKE_SUITE));
+	RETVAL->kem_id = kem;
+	RETVAL->kdf_id = kdf;
+	RETVAL->aead_id = aead;
+OUTPUT: RETVAL
+
+Crypt::OpenSSL3::HPKE OSSL_HPKE_from_string(class, const char *str)
+CODE:
+	RETVAL = safemalloc(sizeof(OSSL_HPKE_SUITE));
+	if (!OSSL_HPKE_str2suite(str, RETVAL)) {
+		Safefree(RETVAL);
+		XSRETURN_UNDEF;
+	}
+OUTPUT: RETVAL
+
+Crypt::OpenSSL3::HPKE OSSL_HPKE_default(class)
+CODE:
+	RETVAL = safemalloc(sizeof(OSSL_HPKE_SUITE));
+	*RETVAL = (OSSL_HPKE_SUITE)OSSL_HPKE_SUITE_DEFAULT;
+OUTPUT: RETVAL
+
+Bool OSSL_HPKE_check(Crypt::OpenSSL3::HPKE suite)
+C_ARGS: *suite
+
+size_t OSSL_HPKE_get_ciphertext_size(Crypt::OpenSSL3::HPKE suite, size_t clearlen)
+C_ARGS: *suite, clearlen
+
+size_t OSSL_HPKE_get_public_encap_size(Crypt::OpenSSL3::HPKE suite)
+C_ARGS: *suite
+
+size_t OSSL_HPKE_get_recommended_ikmelen(Crypt::OpenSSL3::HPKE suite);
+C_ARGS: *suite
+
+SV* OSSL_HPKE_keygen(Crypt::OpenSSL3::HPKE suite, OUTLIST Crypt::OpenSSL3::PKey priv, const char *propq = NULL)
+CODE:
+	size_t pub_len = OSSL_HPKE_get_public_encap_size(*suite);
+	unsigned char* pub = make_buffer(&RETVAL, pub_len);
+	if (OSSL_HPKE_keygen(*suite, pub, &pub_len, &priv, NULL, 0, NULL, propq))
+		set_buffer_length(RETVAL, pub_len);
+	else
+		XSRETURN_EMPTY;
+OUTPUT: RETVAL
+
+SV* OSSL_HPKE_suite(Crypt::OpenSSL3::HPKE suite)
+CODE:
+	RETVAL = newSVpvn((const char*)suite, sizeof *suite);
+OUTPUT: RETVAL
+
+unsigned short OSSL_HPKE_kem_id(Crypt::OpenSSL3::HPKE suite)
+
+unsigned short OSSL_HPKE_kdf_id(Crypt::OpenSSL3::HPKE suite)
+
+unsigned short OSSL_HPKE_aead_id(Crypt::OpenSSL3::HPKE suite)
+
+void OSSL_HPKE_get_grease_value(Crypt::OpenSSL3::HPKE suite, OUTLIST SV* enc, OUTLIST SV* ct, size_t pt_length, const char *propq = NULL)
+CODE:
+	size_t enc_length = OSSL_HPKE_get_public_encap_size(*suite);
+	unsigned char* enc_ptr = make_buffer(&enc, enc_length);
+	size_t ct_length = OSSL_HPKE_get_ciphertext_size(*suite, pt_length);
+	unsigned char* ct_ptr = make_buffer(&ct, ct_length);
+	int retval = OSSL_HPKE_get_grease_value(suite, suite, enc_ptr, &enc_length, ct_ptr, ct_length, NULL, propq);
+	if (retval) {
+		set_buffer_length(enc, enc_length);
+		set_buffer_length(ct, ct_length);
+	}
+	else
+		XSRETURN_EMPTY;
+
+#endif
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::HPKE::Context	PREFIX = OSSL_HPKE_
+
+#if OPENSSL_VERSION_PREREQ(3, 2)
+
+SV* OSSL_HPKE_encapsulate(Crypt::OpenSSL3::HPKE::Context hpke, const unsigned char *pub, size_t length(pub), const unsigned char *info, size_t length(info))
+CODE:
+	size_t enc_length = OSSL_HPKE_get_public_encap_size(hpke->suite);
+	unsigned char* enc_ptr = make_buffer(&RETVAL, enc_length);
+	if (OSSL_HPKE_encap(hpke->context, enc_ptr, &enc_length, pub, XSauto_length_of_pub, info, XSauto_length_of_info))
+		set_buffer_length(RETVAL, enc_length);
+OUTPUT: RETVAL
+
+SV* OSSL_HPKE_seal(Crypt::OpenSSL3::HPKE::Context hpke, const unsigned char *pt, size_t length(pt), const unsigned char *aad, size_t length(aad))
+CODE:
+	size_t enc_length = OSSL_HPKE_get_ciphertext_size(hpke->suite, XSauto_length_of_pt);
+	unsigned char* enc_ptr = make_buffer(&RETVAL, enc_length);
+	if (OSSL_HPKE_seal(hpke->context, enc_ptr, &enc_length, aad, XSauto_length_of_aad, pt, XSauto_length_of_pt))
+		set_buffer_length(RETVAL, enc_length);
+OUTPUT: RETVAL
+
+Bool OSSL_HPKE_decapsulate(Crypt::OpenSSL3::HPKE::Context hpke, const unsigned char *enc, size_t length(enc), Crypt::OpenSSL3::PKey recippriv, const unsigned char *info, size_t length(info))
+C_ARGS: hpke->context, enc, XSauto_length_of_enc, recippriv, info, XSauto_length_of_info
+
+SV* OSSL_HPKE_open(Crypt::OpenSSL3::HPKE::Context hpke, const unsigned char *ct, size_t length(ct), const unsigned char *aad, size_t length(aad))
+CODE:
+	size_t pt_length = XSauto_length_of_ct;
+	unsigned char* pt_ptr = make_buffer(&RETVAL, pt_length);
+	if (OSSL_HPKE_open(hpke->context, pt_ptr, &pt_length, aad, XSauto_length_of_aad, ct, XSauto_length_of_ct))
+		set_buffer_length(RETVAL, pt_length);
+OUTPUT: RETVAL
+
+SV* OSSL_HPKE_export(Crypt::OpenSSL3::HPKE::Context hpke, size_t secret_length, const unsigned char *label, size_t length(label))
+CODE:
+	unsigned char* secret = make_buffer(&RETVAL, secret_length);
+	if (OSSL_HPKE_export(hpke->context, secret, secret_length, label, XSauto_length_of_label))
+		set_buffer_length(RETVAL, secret_length);
+OUTPUT: RETVAL
+
+#endif
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::HPKE::Context	PREFIX = OSSL_HPKE_CTX_
+
+
+#if OPENSSL_VERSION_PREREQ(3, 2)
+
+Crypt::OpenSSL3::HPKE::Context OSSL_HPKE_CTX_new(class, Crypt::OpenSSL3::HPKE suite, int role, int mode = OSSL_HPKE_MODE_BASE, const char *propq = NULL)
+CODE:
+	OSSL_HPKE_CTX* ctx = OSSL_HPKE_CTX_new(mode, *suite, role, NULL, propq);
+	if (!ctx)
+		XSRETURN_UNDEF;
+	RETVAL = safemalloc(sizeof(HPKE));
+	RETVAL->suite = *suite;
+	RETVAL->context = ctx;
+OUTPUT: RETVAL
+
+bool OSSL_HPKE_CTX_set_authpriv(Crypt::OpenSSL3::HPKE::Context hpke, Crypt::OpenSSL3::PKey priv)
+C_ARGS: hpke->context, priv
+
+bool OSSL_HPKE_CTX_set_authpub(Crypt::OpenSSL3::HPKE::Context hpke, unsigned char *input, size_t length(input))
+INTERFACE: OSSL_HPKE_CTX_set_authpub OSSL_HPKE_CTX_set_ikme
+C_ARGS: hpke->context, input, XSauto_length_of_input
+
+bool OSSL_HPKE_CTX_set_psk(Crypt::OpenSSL3::HPKE::Context hpke, const char *pskid, const unsigned char *psk, size_t length(psk))
+C_ARGS: hpke->context, pskid, psk, XSauto_length_of_psk
+
+NO_OUTPUT int OSSL_HPKE_CTX_get_seq(Crypt::OpenSSL3::HPKE::Context hpke, OUTLIST uint64_t seq)
+C_ARGS: hpke->context, &seq
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool OSSL_HPKE_CTX_set_seq(Crypt::OpenSSL3::HPKE::Context hpke, uint64_t seq)
+C_ARGS: hpke->context, seq
+
+Bool CLONE_SKIP(...)
 
 #endif
