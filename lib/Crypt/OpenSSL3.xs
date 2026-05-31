@@ -196,6 +196,9 @@ typedef OSSL_HPKE_SUITE* Crypt__OpenSSL3__HPKE;
 #define X509_EXTENSION_get_object(e) X509_EXTENSION_get_object(e)
 #define X509_EXTENSION_get_data(e) ASN1_OCTET_STRING_dup(X509_EXTENSION_get_data(e))
 #define X509_NAME_get_entry(n, loc) X509_NAME_ENTRY_dup(X509_NAME_get_entry(n, loc))
+#undef X509_NAME_hash
+#define X509_NAME_hash X509_NAME_hash_ex
+#define X509_NAME_print X509_NAME_print_ex
 #define X509_ALGOR_get X509_ALGOR_get0
 #define X509_ALGOR_set X509_ALGOR_set0
 #define X509_verify_cert_error_code(value) value
@@ -1600,9 +1603,31 @@ POSTCALL:
 	if (RETVAL)
 		set_buffer_length(hash, len);
 
+bool X509_NAME_add_entry_by_txt(Crypt::OpenSSL3::X509::Name name, const char *field, int type, const unsigned char *bytes, int len, int loc, int set)
+
+bool X509_NAME_add_entry_by_OBJ(Crypt::OpenSSL3::X509::Name name, Crypt::OpenSSL3::ASN1::Object obj, int type, const unsigned char *bytes, int length(bytes), int loc, int set)
+
+bool X509_NAME_add_entry_by_NID(Crypt::OpenSSL3::X509::Name name, int nid, int type, const unsigned char *bytes, int len, int loc, int set)
+
+bool X509_NAME_add_entry(Crypt::OpenSSL3::X509::Name name, Crypt::OpenSSL3::X509::Name::Entry ne, int loc, int set)
+
+Crypt::OpenSSL3::X509::Name::Entry X509_NAME_delete_entry(Crypt::OpenSSL3::X509::Name name, int loc)
+
+int X509_NAME_print(Crypt::OpenSSL3::X509::Name nm, Crypt::OpenSSL3::BIO out, int indent, unsigned long flags)
+C_ARGS: out, nm, indent, flags
+
+unsigned long X509_NAME_hash(Crypt::OpenSSL3::X509::Name x, const char *propq = NULL)
+C_ARGS: x, NULL, propq, NULL
+
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Name::Entry	PREFIX = X509_NAME_ENTRY
 
+Crypt::OpenSSL3::ASN1::Object X509_NAME_ENTRY_get_object(Crypt::OpenSSL3::X509::Name::Entry ne)
 
+Crypt::OpenSSL3::ASN1::String X509_NAME_ENTRY_get_data(Crypt::OpenSSL3::X509::Name::Entry ne)
+
+bool X509_NAME_ENTRY_set_object(Crypt::OpenSSL3::X509::Name::Entry ne, Crypt::OpenSSL3::ASN1::Object obj)
+
+bool X509_NAME_ENTRY_set_data(Crypt::OpenSSL3::X509::Name::Entry ne, int type, const unsigned char *bytes, int length(bytes))
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Store	PREFIX = X509_STORE_
 

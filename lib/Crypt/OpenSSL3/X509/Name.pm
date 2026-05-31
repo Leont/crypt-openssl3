@@ -9,7 +9,17 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: A name in a X509 certificate
 
+=method add_entry
+
+=method add_entry_by_NID
+
+=method add_entry_by_OBJ
+
+=method add_entry_by_txt
+
 =method cmp
+
+=method delete_entry
 
 =method digest
 
@@ -23,4 +33,8 @@ use Crypt::OpenSSL3;
 
 =method get_index_by_OBJ
 
+=method hash
+
 =method oneline
+
+=method print
