@@ -116,7 +116,6 @@ DUPLICATING_TYPE(ASN1_INTEGER, ASN1__Integer, ASN1::Integer)
 #define ASN1_ENUMERATED_dup ASN1_INTEGER_dup
 DUPLICATING_TYPE(ASN1_ENUMERATED, ASN1__Enumerated, ASN1::Enumerated)
 DUPLICATING_TYPE(ASN1_STRING, ASN1__String, ASN1::String)
-DUPLICATING_TYPE(ASN1_OCTET_STRING, ASN1__String__Octet, ASN1::String::Octet)
 DUPLICATING_TYPE(ASN1_TIME, ASN1__Time, ASN1::Time)
 DUPLICATING_TYPE(ASN1_GENERALIZEDTIME, ASN1__Time__Generalized, ASN1::Time::Generalized)
 DUPLICATING_TYPE(ASN1_UTCTIME, ASN1__Time__UTC, ASN1::Time::UTC)
@@ -583,7 +582,6 @@ Crypt::OpenSSL3::ASN1::Object	T_MAGICEXT
 Crypt::OpenSSL3::ASN1::Integer	T_MAGICEXT
 Crypt::OpenSSL3::ASN1::Enumerated	T_MAGICEXT
 Crypt::OpenSSL3::ASN1::String	T_MAGICEXT
-Crypt::OpenSSL3::ASN1::String::Octet	T_MAGICEXT
 Crypt::OpenSSL3::ASN1::String::UTF8	T_MAGICEXT
 Crypt::OpenSSL3::ASN1::Time	T_MAGICEXT
 Crypt::OpenSSL3::ASN1::Time::Generalized	T_MAGICEXT
@@ -1156,8 +1154,6 @@ bool ASN1_STRING_print(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::ASN1::String s
 
 PrintRet ASN1_STRING_print_ex(Crypt::OpenSSL3::BIO out, Crypt::OpenSSL3::ASN1::String str, unsigned long flags)
 
-MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::String::Octet	PREFIX = ASN1_OCTET_STRING_
-
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::Time	PREFIX = ASN1_TIME_
 
 Crypt::OpenSSL3::ASN1::Time ASN1_TIME_new(class)
@@ -1310,7 +1306,7 @@ long X509_get_version(Crypt::OpenSSL3::X509 x)
 
 bool X509_set_version(Crypt::OpenSSL3::X509 x, long version)
 
-void X509_get_signature(Crypt::OpenSSL3::X509 x, OUTLIST Crypt::OpenSSL3::ASN1::String::Octet psig, OUTLIST Crypt::OpenSSL3::X509::Algorithm palg)
+void X509_get_signature(Crypt::OpenSSL3::X509 x, OUTLIST Crypt::OpenSSL3::ASN1::String psig, OUTLIST Crypt::OpenSSL3::X509::Algorithm palg)
 C_ARGS: (const ASN1_BIT_STRING**)&psig, (const X509_ALGOR**)&palg, x
 POSTCALL:
 	psig = ASN1_STRING_dup(psig);
@@ -1358,12 +1354,12 @@ POSTCALL:
 	if (RETVAL)
 		set_buffer_length(digest, output_length);
 
-Crypt::OpenSSL3::ASN1::String::Octet X509_digest_sig(Crypt::OpenSSL3::X509 cert)
+Crypt::OpenSSL3::ASN1::String X509_digest_sig(Crypt::OpenSSL3::X509 cert)
 C_ARGS: cert, NULL, NULL
 
-Crypt::OpenSSL3::ASN1::String::Octet X509_get_distinguishing_id(Crypt::OpenSSL3::X509 x)
+Crypt::OpenSSL3::ASN1::String X509_get_distinguishing_id(Crypt::OpenSSL3::X509 x)
 
-void X509_set_distinguishing_id(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::ASN1::String::Octet distid)
+void X509_set_distinguishing_id(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::ASN1::String distid)
 INIT:
 	distid = ASN1_OCTET_STRING_dup(distid);
 
@@ -1397,11 +1393,11 @@ uint32_t X509_get_key_usage(Crypt::OpenSSL3::X509 x)
 
 uint32_t X509_get_extended_key_usage(Crypt::OpenSSL3::X509 x)
 
-Crypt::OpenSSL3::ASN1::String::Octet X509_get_subject_key_id(Crypt::OpenSSL3::X509 x)
+Crypt::OpenSSL3::ASN1::String X509_get_subject_key_id(Crypt::OpenSSL3::X509 x)
 POSTCALL:
 	RETVAL = ASN1_OCTET_STRING_dup(RETVAL);
 
-Crypt::OpenSSL3::ASN1::String::Octet X509_get_authority_key_id(Crypt::OpenSSL3::X509 x)
+Crypt::OpenSSL3::ASN1::String X509_get_authority_key_id(Crypt::OpenSSL3::X509 x)
 POSTCALL:
 	RETVAL = ASN1_OCTET_STRING_dup(RETVAL);
 
@@ -1549,19 +1545,19 @@ bool X509_EXTENSION_set_object(Crypt::OpenSSL3::X509::Extension ex, Crypt::OpenS
 
 bool X509_EXTENSION_set_critical(Crypt::OpenSSL3::X509::Extension ex, bool crit)
 
-bool X509_EXTENSION_set_data(Crypt::OpenSSL3::X509::Extension ex, Crypt::OpenSSL3::ASN1::String::Octet data)
+bool X509_EXTENSION_set_data(Crypt::OpenSSL3::X509::Extension ex, Crypt::OpenSSL3::ASN1::String data)
 
-Crypt::OpenSSL3::X509::Extension X509_EXTENSION_create_by_NID(int nid, bool crit, Crypt::OpenSSL3::ASN1::String::Octet data)
+Crypt::OpenSSL3::X509::Extension X509_EXTENSION_create_by_NID(int nid, bool crit, Crypt::OpenSSL3::ASN1::String data)
 C_ARGS: NULL, nid, crit, data
 
-Crypt::OpenSSL3::X509::Extension X509_EXTENSION_create_by_OBJ(Crypt::OpenSSL3::ASN1::Object obj, bool crit, Crypt::OpenSSL3::ASN1::String::Octet data)
+Crypt::OpenSSL3::X509::Extension X509_EXTENSION_create_by_OBJ(Crypt::OpenSSL3::ASN1::Object obj, bool crit, Crypt::OpenSSL3::ASN1::String data)
 C_ARGS: NULL, obj, crit, data
 
 Crypt::OpenSSL3::ASN1::Object X509_EXTENSION_get_object(Crypt::OpenSSL3::X509::Extension ex)
 
 bool X509_EXTENSION_get_critical(Crypt::OpenSSL3::X509::Extension ex)
 
-Crypt::OpenSSL3::ASN1::String::Octet X509_EXTENSION_get_data(Crypt::OpenSSL3::X509::Extension ne)
+Crypt::OpenSSL3::ASN1::String X509_EXTENSION_get_data(Crypt::OpenSSL3::X509::Extension ne)
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::VerifyResult	PREFIX = X509_verify_cert_
