@@ -123,6 +123,7 @@ DUPLICATING_TYPE(X509, X509, X509)
 COUNTING_TYPE(X509_STORE, X509__Store, X509::Store)
 DUPLICATING_TYPE(X509_NAME, X509__Name, X509::Name)
 DUPLICATING_TYPE(X509_NAME_ENTRY, X509__Name__Entry, X509::Name::Entry)
+DUPLICATING_TYPE(X509_REQ, X509__Request, X509::Request)
 DUPLICATING_TYPE(X509_ALGOR, X509__Algorithm, X509::Algoritm)
 DUPLICATING_TYPE(X509_EXTENSION, X509__Extension, X509::Extension)
 DUPLICATING_TYPE(X509_ATTRIBUTE, X509__Attribute, X509::Attribute)
@@ -217,6 +218,18 @@ typedef OSSL_HPKE_SUITE* Crypt__OpenSSL3__HPKE;
 #define X509_VERIFY_PARAM_get_ip_asc X509_VERIFY_PARAM_get1_ip_asc
 #define X509_VERIFY_PARAM_set_ip X509_VERIFY_PARAM_set1_ip
 #define X509_VERIFY_PARAM_set_ip_asc X509_VERIFY_PARAM_set1_ip_asc
+#define X509_REQ_new X509_REQ_new_ex
+#define X509_REQ_add_attr X509_REQ_add1_attr
+#define X509_REQ_add_attr_by_NID X509_REQ_add1_attr_by_NID
+#define X509_REQ_add_attr_by_OBJ X509_REQ_add1_attr_by_OBJ
+#define X509_REQ_add_attr_by_txt X509_REQ_add1_attr_by_txt
+#define X509_REQ_get_X509_pubkey X509_REQ_get_X509_PUBKEY
+#define X509_REQ_get_distinguishing_id(c) ASN1_OCTET_STRING_dup(X509_REQ_get0_distinguishing_id(c))
+#define X509_REQ_set_distinguishing_id X509_REQ_set0_distinguishing_id
+#define X509_REQ_get_signature X509_REQ_get0_signature
+#define X509_REQ_set_signature X509_REQ_set0_signature
+#define X509_REQ_set_signature_algo X509_REQ_set1_signature_algo
+#define X509_REQ_verify X509_REQ_verify_ex
 
 #define SSL_Method_TLS TLS_method
 #define SSL_Method_TLS_server TLS_server_method
@@ -602,6 +615,7 @@ Crypt::OpenSSL3::X509::GeneralName	T_MAGICEXT
 Crypt::OpenSSL3::X509::Extension	T_MAGICEXT
 Crypt::OpenSSL3::X509::Attribute	T_MAGICEXT
 Crypt::OpenSSL3::X509::VerifyParam	T_MAGICEXT
+Crypt::OpenSSL3::X509::Request	T_MAGICEXT
 
 Crypt::OpenSSL3::SSL::Method T_MAGICEXT
 Crypt::OpenSSL3::SSL::Context T_MAGICEXT
@@ -1707,6 +1721,83 @@ bool X509_STORE_set_trust(Crypt::OpenSSL3::X509::Store store, int trust)
 bool X509_STORE_load_locations(Crypt::OpenSSL3::X509::Store store, const char *file, const char *dir)
 
 bool X509_STORE_set_default_paths(Crypt::OpenSSL3::X509::Store store)
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Request	PREFIX = X509_REQ_
+
+Crypt::OpenSSL3::X509::Request X509_REQ_new(class, const char *propq = NULL)
+C_ARGS: NULL, propq
+
+Crypt::OpenSSL3::X509::Request X509_REQ_dup(Crypt::OpenSSL3::X509::Request req)
+
+int X509_REQ_get_attr_count(Crypt::OpenSSL3::X509::Request req)
+
+int X509_REQ_get_attr_by_NID(Crypt::OpenSSL3::X509::Request req, int nid, int lastpos)
+
+int X509_REQ_get_attr_by_OBJ(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::ASN1::Object obj, int lastpos)
+
+Crypt::OpenSSL3::X509::Attribute X509_REQ_get_attr(Crypt::OpenSSL3::X509::Request req, int loc)
+
+Crypt::OpenSSL3::X509::Attribute X509_REQ_delete_attr(Crypt::OpenSSL3::X509::Request req, int loc)
+
+int X509_REQ_add_attr(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::X509::Attribute attr)
+
+int X509_REQ_add_attr_by_OBJ(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::ASN1::Object obj, int type, const unsigned char *bytes, int length(bytes))
+
+int X509_REQ_add_attr_by_NID(Crypt::OpenSSL3::X509::Request req, int nid, int type, const unsigned char *bytes, int len)
+
+int X509_REQ_add_attr_by_txt(Crypt::OpenSSL3::X509::Request req, const char *attrname, int type, const unsigned char *bytes, int len)
+
+bool X509_REQ_check_private_key(Crypt::OpenSSL3::X509::Request cert, Crypt::OpenSSL3::PKey pkey)
+
+NO_OUTPUT Bool X509_REQ_digest(Crypt::OpenSSL3::X509::Request data, Crypt::OpenSSL3::MD type, OUTLIST SV* digest)
+INIT:
+	unsigned int output_length = EVP_MD_size(type);
+	unsigned char* ptr = make_buffer(&digest, output_length);
+C_ARGS: data, type, ptr, &output_length
+POSTCALL:
+	if (RETVAL)
+		set_buffer_length(digest, output_length);
+
+Crypt::OpenSSL3::ASN1::String X509_REQ_get_distinguishing_id(Crypt::OpenSSL3::X509::Request x)
+
+void X509_REQ_set_distinguishing_id(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::ASN1::String distid)
+INIT:
+	distid = ASN1_OCTET_STRING_dup(distid);
+
+Crypt::OpenSSL3::PKey X509_REQ_get_pubkey(Crypt::OpenSSL3::X509::Request x)
+
+bool X509_REQ_set_pubkey(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::PKey pkey)
+
+
+Crypt::OpenSSL3::X509::Name X509_REQ_get_subject_name(Crypt::OpenSSL3::X509::Request x)
+POSTCALL:
+	RETVAL = X509_NAME_dup(RETVAL);
+
+bool X509_REQ_set_subject_name(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::X509::Name name)
+
+void X509_REQ_set_signature(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::ASN1::String psig)
+
+void X509_REQ_get_signature(Crypt::OpenSSL3::X509::Request req, OUTLIST Crypt::OpenSSL3::ASN1::String psig, OUTLIST Crypt::OpenSSL3::X509::Algorithm palg)
+C_ARGS: req, (const ASN1_BIT_STRING**)&psig, (const X509_ALGOR**)&palg
+POSTCALL:
+	psig = ASN1_OCTET_STRING_dup(psig);
+	palg = X509_ALGOR_dup(palg);
+	
+int X509_REQ_set_signature_algo(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::X509::Algorithm palg)
+
+int X509_REQ_get_signature_nid(Crypt::OpenSSL3::X509::Request req)
+
+long X509_REQ_get_version(Crypt::OpenSSL3::X509::Request req)
+
+int X509_REQ_set_version(Crypt::OpenSSL3::X509::Request x, long version)
+
+int X509_REQ_verify(Crypt::OpenSSL3::X509::Request a, Crypt::OpenSSL3::PKey r, const char *propq = NULL)
+C_ARGS: a, r, NULL, propq
+
+int X509_REQ_sign(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::MD md)
+
+int X509_REQ_sign_ctx(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::MD::Context ctx)
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Method	PREFIX = SSL_Method_

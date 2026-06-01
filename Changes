@@ -2,6 +2,7 @@ Revision history for Crypt-OpenSSL3
 
 {{$NEXT}}
           - Add HPKE support
+          - Add certificate request support
 
 0.005     2026-04-25 10:43:07+02:00 Europe/Brussels
           - Adapt to OpenSSL 4.0
