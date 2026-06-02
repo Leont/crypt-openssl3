@@ -125,6 +125,7 @@ DUPLICATING_TYPE(X509_NAME, X509__Name, X509::Name)
 DUPLICATING_TYPE(X509_NAME_ENTRY, X509__Name__Entry, X509::Name::Entry)
 DUPLICATING_TYPE(X509_ALGOR, X509__Algorithm, X509::Algoritm)
 DUPLICATING_TYPE(X509_EXTENSION, X509__Extension, X509::Extension)
+DUPLICATING_TYPE(X509_ATTRIBUTE, X509__Attribute, X509::Attribute)
 SIMPLE_TYPE(X509_VERIFY_PARAM, X509__VerifyParam, X509::VerifyParam, )
 DUPLICATING_TYPE(GENERAL_NAME, X509__GeneralName, X509::GeneralName)
 typedef long Crypt__OpenSSL3__X509__VerifyResult;
@@ -194,6 +195,10 @@ typedef OSSL_HPKE_SUITE* Crypt__OpenSSL3__HPKE;
 #define X509_get_ext(c, loc) X509_EXTENSION_dup(X509_get_ext(c, loc))
 #define X509_EXTENSION_get_object(e) X509_EXTENSION_get_object(e)
 #define X509_EXTENSION_get_data(e) ASN1_OCTET_STRING_dup(X509_EXTENSION_get_data(e))
+#define X509_ATTRIBUTE_get_data X509_ATTRIBUTE_get0_data
+#define X509_ATTRIBUTE_set_data X509_ATTRIBUTE_set1_data
+#define X509_ATTRIBUTE_get_object X509_ATTRIBUTE_get0_object
+#define X509_ATTRIBUTE_set_object X509_ATTRIBUTE_set1_object
 #define X509_NAME_get_entry(n, loc) X509_NAME_ENTRY_dup(X509_NAME_get_entry(n, loc))
 #undef X509_NAME_hash
 #define X509_NAME_hash X509_NAME_hash_ex
@@ -595,6 +600,7 @@ Crypt::OpenSSL3::X509::Algorithm	T_MAGICEXT
 Crypt::OpenSSL3::X509::VerifyResult T_INTOBJ
 Crypt::OpenSSL3::X509::GeneralName	T_MAGICEXT
 Crypt::OpenSSL3::X509::Extension	T_MAGICEXT
+Crypt::OpenSSL3::X509::Attribute	T_MAGICEXT
 Crypt::OpenSSL3::X509::VerifyParam	T_MAGICEXT
 
 Crypt::OpenSSL3::SSL::Method T_MAGICEXT
@@ -1570,7 +1576,32 @@ int X509_ALGOR_cmp(Crypt::OpenSSL3::X509::Algorithm a, Crypt::OpenSSL3::X509::Al
 
 bool X509_ALGOR_copy(Crypt::OpenSSL3::X509::Algorithm dest, Crypt::OpenSSL3::X509::Algorithm src)
 
+
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Attribute	PREFIX = X509_ATTRIBUTE_
+
+
+Crypt::OpenSSL3::X509::Attribute X509_ATTRIBUTE_create(class, int nid, int atrtype, char *value)
+C_ARGS: nid, atrtype, value
+
+Crypt::OpenSSL3::X509::Attribute X509_ATTRIBUTE_create_by_NID(class, int nid, int atrtype, const char *data, int length(data))
+C_ARGS: NULL, nid, atrtype, data, XSauto_length_of_data
+
+Crypt::OpenSSL3::X509::Attribute X509_ATTRIBUTE_create_by_OBJ(class, Crypt::OpenSSL3::ASN1::Object obj, int atrtype, const char *data, int length(data))
+C_ARGS: NULL, obj, atrtype, data, XSauto_length_of_data
+
+Crypt::OpenSSL3::X509::Attribute X509_ATTRIBUTE_create_by_txt(class, const char *atrname, int type, const unsigned char *bytes, int length(bytes))
+C_ARGS: NULL, atrname, type, bytes, XSauto_length_of_bytes
+
+bool X509_ATTRIBUTE_set_object(Crypt::OpenSSL3::X509::Attribute attr, Crypt::OpenSSL3::ASN1::Object obj)
+
+bool X509_ATTRIBUTE_set_data(Crypt::OpenSSL3::X509::Attribute attr, int attrtype, const char *data, int length(data))
+
+const char *X509_ATTRIBUTE_get_data(Crypt::OpenSSL3::X509::Attribute attr, int idx, int atrtype)
+C_ARGS: attr, idx, atrtype, NULL
+
+PrintRet X509_ATTRIBUTE_count(Crypt::OpenSSL3::X509::Attribute attr)
+
+Crypt::OpenSSL3::ASN1::Object X509_ATTRIBUTE_get_object(Crypt::OpenSSL3::X509::Attribute attr)
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Extension	PREFIX = X509_EXTENSION_
