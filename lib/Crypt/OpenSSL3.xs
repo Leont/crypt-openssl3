@@ -1191,7 +1191,7 @@ Crypt::OpenSSL3::ASN1::String ASN1_STRING_dup(Crypt::OpenSSL3::ASN1::String a)
 
 int ASN1_STRING_cmp(Crypt::OpenSSL3::ASN1::String a, Crypt::OpenSSL3::ASN1::String b)
 
-int ASN1_STRING_set(Crypt::OpenSSL3::ASN1::String str, const char *data, int length(data))
+bool ASN1_STRING_set(Crypt::OpenSSL3::ASN1::String str, const char *data, int length(data))
 
 int ASN1_STRING_type(Crypt::OpenSSL3::ASN1::String x)
 
