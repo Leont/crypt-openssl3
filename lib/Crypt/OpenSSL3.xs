@@ -911,31 +911,17 @@ POSTCALL:
 		set_buffer_length(out, RETVAL);
 
 Crypt::OpenSSL3::BigNum BN_bin2bn(const unsigned char *s, int length(s))
+INTERFACE: BN_bin2bn BN_lebin2bn BN_native2bn
 C_ARGS: s, XSauto_length_of_s, NULL
-
 
 NO_OUTPUT int BN_bn2lebinpad(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out, int tolen)
+INTERFACE: BN_bn2lebinpad BN_bn2nativepad
 INIT:
 	unsigned char* ptr = make_buffer(&out, tolen);
 C_ARGS: a, ptr, tolen
 POSTCALL:
 	if (RETVAL >= 0)
 		set_buffer_length(out, RETVAL);
-
-Crypt::OpenSSL3::BigNum BN_lebin2bn(const unsigned char *s, int length(s))
-C_ARGS: s, XSauto_length_of_s, NULL
-
-
-NO_OUTPUT int BN_bn2nativepad(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out, int tolen)
-INIT:
-	unsigned char* ptr = make_buffer(&out, tolen);
-C_ARGS: a, ptr, tolen
-POSTCALL:
-	if (RETVAL >= 0)
-		set_buffer_length(out, RETVAL);
-
-Crypt::OpenSSL3::BigNum BN_native2bn(const unsigned char *s, int length(s))
-C_ARGS: s, XSauto_length_of_s, NULL
 
 #if OPENSSL_VERSION_PREREQ(3, 2)
 NO_OUTPUT int BN_signed_bn2lebin(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out, int tolen = BN_num_bytes(a))
@@ -948,22 +934,9 @@ POSTCALL:
 		set_buffer_length(out, RETVAL);
 
 Crypt::OpenSSL3::BigNum BN_signed_bin2bn(const unsigned char *s, int length(s))
+INTERFACE: BN_signed_bin2bn BN_signed_lebin2bn BN_signed_native2bn
 C_ARGS: s, XSauto_length_of_s, NULL
 
-Crypt::OpenSSL3::BigNum BN_signed_lebin2bn(const unsigned char *s, int length(s))
-C_ARGS: s, XSauto_length_of_s, NULL
-
-
-NO_OUTPUT int BN_signed_bn2native(Crypt::OpenSSL3::BigNum a, OUTLIST SV* out, int tolen)
-INIT:
-	unsigned char* ptr = make_buffer(&out, tolen);
-C_ARGS: a, ptr, tolen
-POSTCALL:
-	if (RETVAL >= 0)
-		set_buffer_length(out, RETVAL);
-
-Crypt::OpenSSL3::BigNum BN_signed_native2bn(const unsigned char *s, int length(s))
-C_ARGS: s, XSauto_length_of_s, NULL
 #endif
 
 char *BN_bn2hex(Crypt::OpenSSL3::BigNum a)
@@ -971,8 +944,9 @@ INTERFACE: BN_bn2hex  BN_bn2dec
 CLEANUP:
 	OPENSSL_free(RETVAL);
 
-NO_OUTPUT int BN_hex2bn(OUTLIST a, const char *str)
-	Crypt::OpenSSL3::BigNum a = NULL;
+NO_OUTPUT int BN_hex2bn(OUTLIST Crypt::OpenSSL3::BigNum a, const char *str)
+INIT:
+	a = NULL;
 INTERFACE: BN_hex2bn BN_dec2bn
 C_ARGS: &a, str
 POSTCALL:
@@ -1379,10 +1353,7 @@ POSTCALL:
 	RETVAL = X509_ALGOR_dup(RETVAL);
 
 Crypt::OpenSSL3::ASN1::Time X509_get_notBefore(Crypt::OpenSSL3::X509 x)
-POSTCALL:
-	RETVAL = ASN1_TIME_dup(RETVAL);
-
-Crypt::OpenSSL3::ASN1::Time X509_get_notAfter(Crypt::OpenSSL3::X509 x)
+INTERFACE: X509_get_notBefore X509_get_notAfter
 POSTCALL:
 	RETVAL = ASN1_TIME_dup(RETVAL);
 
@@ -2278,17 +2249,11 @@ size_t SSL_get_num_tickets(Crypt::OpenSSL3::SSL s)
 bool SSL_new_session_ticket(Crypt::OpenSSL3::SSL s)
 
 NO_OUTPUT size_t SSL_get_finished(Crypt::OpenSSL3::SSL ssl, OUTLIST SV* result)
+	size_t max_size = EVP_MAX_MD_SIZE;
+INTERFACE: SSL_get_finished SSL_get_peer_finished
 INIT:
-	unsigned char* ptr = make_buffer(&result, EVP_MAX_MD_SIZE);
-C_ARGS: ssl, ptr, EVP_MAX_MD_SIZE
-POSTCALL:
-	if (RETVAL)
-		set_buffer_length(result, RETVAL);
-
-NO_OUTPUT size_t SSL_get_peer_finished(Crypt::OpenSSL3::SSL ssl, OUTLIST SV* result)
-INIT:
-	unsigned char* ptr = make_buffer(&result, EVP_MAX_MD_SIZE);
-C_ARGS: ssl, ptr, EVP_MAX_MD_SIZE
+	unsigned char* ptr = make_buffer(&result, max_size);
+C_ARGS: ssl, ptr, max_size
 POSTCALL:
 	if (RETVAL)
 		set_buffer_length(result, RETVAL);
