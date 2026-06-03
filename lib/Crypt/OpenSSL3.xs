@@ -971,9 +971,13 @@ INTERFACE: BN_bn2hex  BN_bn2dec
 CLEANUP:
 	OPENSSL_free(RETVAL);
 
-int BN_hex2bn(Crypt::OpenSSL3::BigNum a, const char *str)
-INTERFACE: BN_hex2bn  BN_dec2bn
+NO_OUTPUT int BN_hex2bn(OUTLIST a, const char *str)
+	Crypt::OpenSSL3::BigNum a = NULL;
+INTERFACE: BN_hex2bn BN_dec2bn
 C_ARGS: &a, str
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
 
 bool BN_print(Crypt::OpenSSL3::BIO fp, Crypt::OpenSSL3::BigNum a)
 
