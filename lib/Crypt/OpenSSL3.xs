@@ -2628,7 +2628,7 @@ bool EVP_CIPHER_CTX_copy(Crypt::OpenSSL3::Cipher::Context self, Crypt::OpenSSL3:
 
 bool EVP_CIPHER_CTX_reset(Crypt::OpenSSL3::Cipher::Context ctx)
 
-bool EVP_CIPHER_CTX_init(Crypt::OpenSSL3::Cipher::Context ctx, Crypt::OpenSSL3::Cipher type, const unsigned char* key, size_t length(key), const unsigned char* iv, size_t length(iv), bool enc, CTX_PARAMS(EVP_CIPHER) params = NULL)
+bool EVP_CIPHER_CTX_init(Crypt::OpenSSL3::Cipher::Context ctx, Crypt::OpenSSL3::Cipher type, const unsigned char* key, int length(key), const unsigned char* iv, int length(iv), bool enc, CTX_PARAMS(EVP_CIPHER) params = NULL)
 INIT:
 	if (XSauto_length_of_key != EVP_CIPHER_get_key_length(type) || XSauto_length_of_iv != EVP_CIPHER_get_iv_length(type))
 		XSRETURN_NO;
