@@ -178,6 +178,9 @@ typedef OSSL_HPKE_SUITE* Crypt__OpenSSL3__HPKE;
 #define BN_generate_prime BN_generate_prime_ex2
 
 #define OBJ_get_data OBJ_get0_data
+#define OBJ_from_nid OBJ_nid2obj
+#define OBJ_from_text OBJ_txt2obj
+#define OBJ_to_nid OBJ_obj2nid
 #define ASN1_INTEGER_get_BN(ai) ASN1_INTEGER_to_BN(ai, NULL)
 #define ASN1_INTEGER_set_BN(ai, bn) BN_to_ASN1_INTEGER(bn, ai)
 #define ASN1_ENUMERATED_set_BN(ai, bn) BN_to_ASN1_ENUMERATED(bn, ai)
@@ -1078,19 +1081,19 @@ POSTCALL:
 	if (RETVAL == NID_undef)
 		XSRETURN_UNDEF;
 
-Crypt::OpenSSL3::ASN1::Object OBJ_txt2obj(const char *s, bool no_name = FALSE)
+Crypt::OpenSSL3::ASN1::Object OBJ_from_text(const char *s, bool no_name = FALSE)
 
-Crypt::OpenSSL3::ASN1::Object OBJ_nid2obj(int n)
+Crypt::OpenSSL3::ASN1::Object OBJ_from_nid(int n)
 
 int OBJ_cmp(Crypt::OpenSSL3::ASN1::Object a, Crypt::OpenSSL3::ASN1::Object b)
 
-int OBJ_obj2nid(Crypt::OpenSSL3::ASN1::Object o)
+int OBJ_to_nid(Crypt::OpenSSL3::ASN1::Object o)
 
 size_t OBJ_length(Crypt::OpenSSL3::ASN1::Object obj)
 
 const unsigned char *OBJ_get_data(Crypt::OpenSSL3::ASN1::Object obj)
 
-SV* OBJ_obj2txt(Crypt::OpenSSL3::ASN1::Object a, bool no_name = FALSE)
+SV* OBJ_to_text(Crypt::OpenSSL3::ASN1::Object a, bool no_name = FALSE)
 CODE:
 	int buf_len = OBJ_obj2txt(NULL, 0, a, no_name);
 	if (buf_len > 0) {

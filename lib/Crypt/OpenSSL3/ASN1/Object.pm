@@ -13,14 +13,14 @@ use Crypt::OpenSSL3;
 
 =method create
 
+=method from_nid
+
+=method from_text
+
 =method get_data
 
 =method length
 
-=method nid2obj
+=method to_nid
 
-=method obj2nid
-
-=method obj2txt
-
-=method txt2obj
+=method to_text
