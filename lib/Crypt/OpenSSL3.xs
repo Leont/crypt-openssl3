@@ -48,10 +48,12 @@ static inline c_type* get_ ## c_type (pTHX_ SV* value) {\
 #define DUPLICATING_TYPE(c_type, xs_type, p_type)\
 TYPE_TYPE(c_type, xs_type)\
 static int c_type ## _magic_dup(pTHX_ MAGIC* mg, CLONE_PARAMS* params) {\
+	PERL_UNUSED_VAR(params);\
 	mg->mg_ptr = (char*)c_type ## _dup((c_type*)mg->mg_ptr);\
 	return 0;\
 }\
 static int c_type ## _magic_free(pTHX_ SV* sv, MAGIC* mg) {\
+	PERL_UNUSED_VAR(sv);\
 	c_type ## _free((c_type*)mg->mg_ptr);\
 	return 0;\
 }\
@@ -61,10 +63,12 @@ TYPE_COMMON(c_type, xs_type, p_type)
 #define COUNTING_TYPE(c_type, xs_type, p_type)\
 typedef c_type * Crypt__OpenSSL3__ ## xs_type;\
 static int c_type ## _magic_dup(pTHX_ MAGIC* mg, CLONE_PARAMS* params) {\
+	PERL_UNUSED_VAR(params);\
 	c_type ## _up_ref((c_type*)mg->mg_ptr);\
 	return 0;\
 }\
 static int c_type ## _magic_free(pTHX_ SV* sv, MAGIC* mg) {\
+	PERL_UNUSED_VAR(sv);\
 	c_type ## _free((c_type*)mg->mg_ptr);\
 	return 0;\
 }\
