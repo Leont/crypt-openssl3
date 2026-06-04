@@ -1090,10 +1090,11 @@ SV* OBJ_obj2txt(Crypt::OpenSSL3::ASN1::Object a, bool no_name = FALSE)
 CODE:
 	int buf_len = OBJ_obj2txt(NULL, 0, a, no_name);
 	if (buf_len > 0) {
-		char* ptr = make_buffer(&RETVAL, buf_len);
-		if (OBJ_obj2txt(ptr, buf_len, a, no_name) > 0)
+		unsigned char* ptr = make_buffer(&RETVAL, buf_len);
+		if (OBJ_obj2txt((char*)ptr, buf_len, a, no_name) > 0)
 			set_buffer_length(RETVAL, buf_len);
-	}
+	} else
+		RETVAL = &PL_sv_undef;
 OUTPUT: RETVAL
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::Integer	PREFIX = ASN1_INTEGER_
@@ -1160,9 +1161,9 @@ int ASN1_STRING_length(Crypt::OpenSSL3::ASN1::String x)
 
 SV* ASN1_STRING_get_data(Crypt::OpenSSL3::ASN1::String x)
 CODE:
-	const char* data = ASN1_STRING_get0_data(x);
+	const unsigned char* data = ASN1_STRING_get0_data(x);
 	int length = ASN1_STRING_length(x);
-	RETVAL = newSVpvn(data, length);
+	RETVAL = newSVpvn((const char*)data, length);
 OUTPUT: RETVAL
 
 Crypt::OpenSSL3::ASN1::String ASN1_STRING_dup(Crypt::OpenSSL3::ASN1::String a)
@@ -1178,7 +1179,7 @@ CODE:
 	unsigned char* out = NULL;
 	int result = ASN1_STRING_to_UTF8(&out, in);
 	if (result > 0) {
-		RETVAL = newSVpvn_utf8(out, result, 1);
+		RETVAL = newSVpvn_utf8((char*)out, result, 1);
 		OPENSSL_free(out);
 	} else
 		RETVAL = &PL_sv_undef;
@@ -1540,7 +1541,7 @@ CODE:
 	switch (gn->type) {
 		case GEN_OTHERNAME: {
 			ASN1_UTF8STRING* str = gn->d.otherName->value->value.utf8string;
-			RETVAL = newSVpvn(ASN1_STRING_get0_data(str), ASN1_STRING_length(str));
+			RETVAL = newSVpvn((const char*)ASN1_STRING_get0_data(str), ASN1_STRING_length(str));
 			break;
 		}
 		default:
@@ -1649,7 +1650,7 @@ char* X509_NAME_oneline(Crypt::OpenSSL3::X509::Name a)
 NO_OUTPUT int X509_NAME_digest(Crypt::OpenSSL3::X509::Name data, Crypt::OpenSSL3::MD type, OUTLIST SV* hash)
 INIT:
 	unsigned len = EVP_MD_size(type);
-	char* ptr = make_buffer(&hash, len);
+	unsigned char* ptr = make_buffer(&hash, len);
 C_ARGS: data, type, ptr, &len
 POSTCALL:
 	if (RETVAL)
@@ -2054,7 +2055,7 @@ CODE:
 	packlist(buffer, pattern, pattern + sizeof pattern - 1, &ST(1), &ST(items));
 	STRLEN raw_len;
 	const char* raw = SvPVbyte(buffer, raw_len);
-	RETVAL = SSL_set_alpn_protos(ssl, SvPV_nolen(buffer), raw_len);
+	RETVAL = SSL_set_alpn_protos(ssl, (unsigned char*)raw, raw_len);
 OUTPUT: RETVAL
 
 bool SSL_use_certificate(Crypt::OpenSSL3::SSL ssl, Crypt::OpenSSL3::X509 x)
@@ -2511,8 +2512,10 @@ NO_OUTPUT int RAND_bytes(classname, OUTLIST SV* buffer, int num)
 INTERFACE: RAND_bytes  RAND_priv_bytes
 INIT:
 	unsigned char* ptr = make_buffer(&buffer, num);
-	set_buffer_length(buffer, num);
 C_ARGS: ptr, num
+POSTCALL:
+	if (RETVAL > 0)
+		set_buffer_length(buffer, num);
 
 Crypt::OpenSSL3::Random::Context RAND_get_primary(classname)
 INTERFACE: RAND_get_primary  RAND_get_public  RAND_get_private
@@ -2931,14 +2934,15 @@ bool EVP_MAC_init(Crypt::OpenSSL3::MAC::Context ctx, const unsigned char *key, s
 
 bool EVP_MAC_update(Crypt::OpenSSL3::MAC::Context ctx, const unsigned char *data, size_t length(data))
 
-NO_OUTPUT bool EVP_MAC_final(Crypt::OpenSSL3::MAC::Context ctx, OUTLIST SV* code)
+SV* EVP_MAC_final(Crypt::OpenSSL3::MAC::Context ctx)
 CODE:
 	size_t outsize;
 	EVP_MAC_final(ctx, NULL, &outsize, 0);
-	unsigned char* ptr = make_buffer(&code, outsize);
+	unsigned char* ptr = make_buffer(&RETVAL, outsize);
 	int result = EVP_MAC_final(ctx, ptr, &outsize, outsize);
 	if (result)
-		set_buffer_length(code, outsize);
+		set_buffer_length(RETVAL, outsize);
+OUTPUT: RETVAL
 
 NO_OUTPUT int EVP_MAC_finalXOF(Crypt::OpenSSL3::MAC::Context ctx, OUTLIST SV* code, size_t outsize)
 INIT:
