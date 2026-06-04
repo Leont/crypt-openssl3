@@ -30,7 +30,7 @@ static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = {\
 };
 
 #define TYPE_COMMON(c_type, xs_type, p_type)\
-static SV* make_ ## c_type(pTHX_ void* var) {\
+static inline SV* make_ ## c_type(pTHX_ void* var) {\
 	SV* result = newSV(0);\
 	const char* classname = "Crypt::OpenSSL3::" #p_type;\
 	const MGVTBL* mgvtbl = &Crypt__OpenSSL3__## xs_type ##_magic;\
@@ -38,7 +38,7 @@ static SV* make_ ## c_type(pTHX_ void* var) {\
 	magic->mg_flags |= MGf_DUP;\
 	return result;\
 }\
-static c_type* get_ ## c_type (pTHX_ SV* value) {\
+static inline c_type* get_ ## c_type (pTHX_ SV* value) {\
 	if (!SvROK(value))\
 		return NULL;\
 	MAGIC* magic = mg_findext(SvRV(value), PERL_MAGIC_ext, &Crypt__OpenSSL3__## xs_type ##_magic);\
@@ -529,7 +529,7 @@ static void EVP_name_callback(const char* name, void* vdata) {
 }
 
 #define DEFINE_PROVIDED_CALLBACK(c_type)\
-static void c_type ## _provided_callback(c_type* provided, void* vdata) {\
+static inline void c_type ## _provided_callback(c_type* provided, void* vdata) {\
 	dTHXa((PerlInterpreter*)vdata);\
 	c_type ## _up_ref(provided);\
 	SV* object = make_ ## c_type(aTHX_ provided);\
