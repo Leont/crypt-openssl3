@@ -8,6 +8,8 @@ use warnings;
 # ABSTRACT: A X509 / PKCS10 certificate signing request
 
 
+=method new
+
 =method add_attr
 
 =method add_attr_by_NID
@@ -46,7 +48,7 @@ use warnings;
 
 =method get_version
 
-=method new
+=method read_pem
 
 =method set_distinguishing_id
 
@@ -65,3 +67,5 @@ use warnings;
 =method sign_ctx
 
 =method verify
+
+=method write_pem

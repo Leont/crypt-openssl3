@@ -226,6 +226,8 @@ typedef OSSL_HPKE_SUITE* Crypt__OpenSSL3__HPKE;
 #define X509_VERIFY_PARAM_set_ip X509_VERIFY_PARAM_set1_ip
 #define X509_VERIFY_PARAM_set_ip_asc X509_VERIFY_PARAM_set1_ip_asc
 #define X509_REQ_new X509_REQ_new_ex
+#define X509_REQ_read_pem PEM_read_bio_X509_REQ
+#define X509_REQ_write_pem PEM_write_bio_X509_REQ
 #define X509_REQ_add_attr X509_REQ_add1_attr
 #define X509_REQ_add_attr_by_NID X509_REQ_add1_attr_by_NID
 #define X509_REQ_add_attr_by_OBJ X509_REQ_add1_attr_by_OBJ
@@ -1712,6 +1714,15 @@ Crypt::OpenSSL3::X509::Request X509_REQ_new(class, const char *propq = NULL)
 C_ARGS: NULL, propq
 
 Crypt::OpenSSL3::X509::Request X509_REQ_dup(Crypt::OpenSSL3::X509::Request req)
+
+Crypt::OpenSSL3::X509::Request X509_REQ_read_pem(class, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, NULL, NULL, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool X509_REQ_write_pem(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, x
 
 int X509_REQ_get_attr_count(Crypt::OpenSSL3::X509::Request req)
 
