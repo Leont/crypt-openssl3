@@ -189,6 +189,8 @@ typedef OSSL_HPKE_SUITE* Crypt__OpenSSL3__HPKE;
 
 #define GENERAL_NAME_type(gn) (gn->type)
 
+#define X509_read_der d2i_X509_bio
+#define X509_write_der i2d_X509_bio
 #define X509_read_pem PEM_read_bio_X509
 #define X509_write_pem PEM_write_bio_X509
 #define X509_get_tbs_sigalg(c) (X509_ALGOR*)X509_get0_tbs_sigalg(c)
@@ -226,6 +228,8 @@ typedef OSSL_HPKE_SUITE* Crypt__OpenSSL3__HPKE;
 #define X509_VERIFY_PARAM_set_ip X509_VERIFY_PARAM_set1_ip
 #define X509_VERIFY_PARAM_set_ip_asc X509_VERIFY_PARAM_set1_ip_asc
 #define X509_REQ_new X509_REQ_new_ex
+#define X509_REQ_read_der d2i_X509_REQ_bio
+#define X509_REQ_write_der i2d_X509_REQ_bio
 #define X509_REQ_read_pem PEM_read_bio_X509_REQ
 #define X509_REQ_write_pem PEM_write_bio_X509_REQ
 #define X509_REQ_add_attr X509_REQ_add1_attr
@@ -273,6 +277,8 @@ typedef OSSL_HPKE_SUITE* Crypt__OpenSSL3__HPKE;
 #define SSL_is_quic(s) FALSE
 #endif
 
+#define SSL_SESSION_read_der d2i_SSL_SESSION_bio
+#define SSL_SESSION_write_der i2d_SSL_SESSION_bio
 #define SSL_SESSION_get_peer SSL_SESSION_get0_peer
 #define SSL_SESSION_get_alpn_selected SSL_SESSION_get0_alpn_selected
 #define SSL_SESSION_get_cipher SSL_SESSION_get0_cipher
@@ -353,6 +359,13 @@ typedef OSSL_HPKE_SUITE* Crypt__OpenSSL3__HPKE;
 #define EVP_PKEY_write_pem_private_key PEM_write_bio_PrivateKey_ex
 #define EVP_PKEY_read_pem_public_key PEM_read_bio_PUBKEY_ex
 #define EVP_PKEY_write_pem_public_key PEM_write_bio_PUBKEY_ex
+#define EVP_PKEY_read_der_private_key d2i_PrivateKey_ex_bio
+#define EVP_PKEY_write_der_private_key i2d_PrivateKey_bio
+#if !OPENSSL_VERSION_PREREQ(3, 2)
+#define d2i_PUBKEY_ex_bio(bio, ptr, lib, propq) d2i_PUBKEY_bio(bio, ptr)
+#endif
+#define EVP_PKEY_read_der_public_key d2i_PUBKEY_ex_bio
+#define EVP_PKEY_write_der_public_key i2d_PUBKEY_bio
 #define EVP_PKEY_new_raw_private_key EVP_PKEY_new_raw_private_key_ex
 #define EVP_PKEY_new_raw_public_key EVP_PKEY_new_raw_public_key_ex
 #define EVP_PKEY_get_description EVP_PKEY_get0_description
@@ -1322,6 +1335,15 @@ POSTCALL:
 bool X509_write_pem(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::BIO bio)
 C_ARGS: bio, x
 
+Crypt::OpenSSL3::X509 X509_read_der(class, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool X509_write_der(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, x
+
 const char *X509_get_default_cert_file(class)
 C_ARGS:
 
@@ -1722,6 +1744,15 @@ POSTCALL:
 		XSRETURN_UNDEF;
 
 bool X509_REQ_write_pem(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, x
+
+Crypt::OpenSSL3::X509::Request X509_REQ_read_der(class, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool X509_REQ_write_der(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::BIO bio)
 C_ARGS: bio, x
 
 int X509_REQ_get_attr_count(Crypt::OpenSSL3::X509::Request req)
@@ -2418,6 +2449,15 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Session	PREFIX = SSL_SE
 
 Crypt::OpenSSL3::SSL::Session SSL_SESSION_new(class)
 C_ARGS:
+
+Crypt::OpenSSL3::SSL::Session SSL_SESSION_read_der(class, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool SSL_SESSION_write_der(Crypt::OpenSSL3::SSL::Session x, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, x
 
 Crypt::OpenSSL3::SSL::Session SSL_SESSION_dup(Crypt::OpenSSL3::SSL::Session s)
 
@@ -3135,6 +3175,22 @@ POSTCALL:
 
 bool EVP_PKEY_write_pem_public_key(Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::BIO bio, const char* propq = "")
 C_ARGS: bio, pkey, NULL, propq
+
+Crypt::OpenSSL3::PKey EVP_PKEY_read_der_public_key(Crypt::OpenSSL3::BIO bio, const char* propq = NULL)
+C_ARGS: bio, NULL, NULL, propq
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+Crypt::OpenSSL3::PKey EVP_PKEY_read_der_private_key(Crypt::OpenSSL3::BIO bio, const char* propq = NULL)
+C_ARGS: bio, NULL, NULL, propq
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool EVP_PKEY_write_der_public_key(Crypt::OpenSSL3::PKey a, Crypt::OpenSSL3::BIO bio)
+INTERFACE: EVP_PKEY_write_der_public_key EVP_PKEY_write_der_private_key
+C_ARGS: bio, a
 
 int EVP_PKEY_get_id(Crypt::OpenSSL3::PKey pkey)
 

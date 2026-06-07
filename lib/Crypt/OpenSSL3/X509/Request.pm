@@ -48,6 +48,8 @@ use warnings;
 
 =method get_version
 
+=method read_der
+
 =method read_pem
 
 =method set_distinguishing_id
@@ -67,5 +69,7 @@ use warnings;
 =method sign_ctx
 
 =method verify
+
+=method write_der
 
 =method write_pem

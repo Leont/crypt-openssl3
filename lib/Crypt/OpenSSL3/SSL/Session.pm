@@ -15,6 +15,10 @@ This is a class containing the current TLS/SSL session details for a connection:
 
 =method new
 
+=method read_der
+
+=method write_der
+
 =method dup
 
 =method get_alpn_selected

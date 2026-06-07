@@ -101,6 +101,8 @@ use Crypt::OpenSSL3;
 
 =method pubkey_digest
 
+=method read_der
+
 =method read_pem
 
 =method self_signed
@@ -134,6 +136,8 @@ use Crypt::OpenSSL3;
 =method subject_name_hash
 
 =method verify
+
+=method write_der
 
 =method write_pem
 

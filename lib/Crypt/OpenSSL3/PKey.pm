@@ -44,9 +44,17 @@ A PKey can be any kind of assymetrical key. This is a fat interface: no single k
 
 =method new_raw_public_key
 
+=method read_der_private_key
+
+=method read_der_public_key
+
 =method read_pem_private_key
 
 =method read_pem_public_key
+
+=method write_der_private_key
+
+=method write_der_public_key
 
 =method write_pem_private_key
 
