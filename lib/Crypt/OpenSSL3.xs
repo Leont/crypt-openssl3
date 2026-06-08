@@ -80,6 +80,23 @@ TYPE_TYPE(modifier c_type, xs_type)\
 MAGIC_TABLE(xs_type, NULL, NULL)\
 TYPE_COMMON(c_type, xs_type, p_type)
 
+#define STACK_TYPE(c_prefix, xs_type)\
+typedef STACK_OF(c_prefix) * Crypt__OpenSSL3__ ## xs_type ## __Stack;\
+static int c_prefix ## __Stack_magic_dup(pTHX_ MAGIC* mg, CLONE_PARAMS* params) {\
+	PERL_UNUSED_VAR(params);\
+	mg->mg_ptr = (char*)sk_ ## c_prefix ## _dup((STACK_OF(c_prefix)*)mg->mg_ptr);\
+	return 0;\
+}\
+static int c_prefix ## __Stack_magic_free(pTHX_ SV* sv, MAGIC* mg) {\
+	PERL_UNUSED_VAR(sv);\
+	sk_ ## c_prefix ## _free((STACK_OF(c_prefix)*)mg->mg_ptr);\
+	return 0;\
+}\
+static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## __Stack_magic = {\
+	.svt_dup = c_prefix ## __Stack_magic_dup,\
+	.svt_free = c_prefix ## __Stack_magic_free,\
+};
+
 #if !OPENSSL_VERSION_PREREQ(3, 2)
 static EVP_MD_CTX *EVP_MD_CTX_dup(const EVP_MD_CTX *in) {
 	EVP_MD_CTX* result = EVP_MD_CTX_new();
@@ -124,6 +141,7 @@ DUPLICATING_TYPE(ASN1_TIME, ASN1__Time, ASN1::Time)
 DUPLICATING_TYPE(ASN1_GENERALIZEDTIME, ASN1__Time__Generalized, ASN1::Time::Generalized)
 DUPLICATING_TYPE(ASN1_UTCTIME, ASN1__Time__UTC, ASN1::Time::UTC)
 DUPLICATING_TYPE(X509, X509, X509)
+STACK_TYPE(X509, X509)
 COUNTING_TYPE(X509_STORE, X509__Store, X509::Store)
 DUPLICATING_TYPE(X509_NAME, X509__Name, X509::Name)
 DUPLICATING_TYPE(X509_NAME_ENTRY, X509__Name__Entry, X509::Name::Entry)
@@ -628,6 +646,7 @@ Crypt::OpenSSL3::ASN1::Time::Generalized	T_MAGICEXT
 Crypt::OpenSSL3::ASN1::Time::UTC	T_MAGICEXT
 
 Crypt::OpenSSL3::X509	T_MAGICEXT
+Crypt::OpenSSL3::X509::Stack	T_MAGICEXT
 Crypt::OpenSSL3::X509::Store	T_MAGICEXT
 Crypt::OpenSSL3::X509::Name	T_MAGICEXT
 Crypt::OpenSSL3::X509::Name::Entry	T_MAGICEXT
@@ -1646,6 +1665,51 @@ Crypt::OpenSSL3::ASN1::Object X509_EXTENSION_get_object(Crypt::OpenSSL3::X509::E
 bool X509_EXTENSION_get_critical(Crypt::OpenSSL3::X509::Extension ex)
 
 Crypt::OpenSSL3::ASN1::String X509_EXTENSION_get_data(Crypt::OpenSSL3::X509::Extension ne)
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Stack	PREFIX = sk_X509_
+
+int sk_X509_num(Crypt::OpenSSL3::X509::Stack sk)
+
+Crypt::OpenSSL3::X509 sk_X509_value(Crypt::OpenSSL3::X509::Stack sk, int idx)
+
+Crypt::OpenSSL3::X509::Stack sk_X509_new(class)
+C_ARGS: NULL
+
+int sk_X509_reserve(Crypt::OpenSSL3::X509::Stack sk, int n)
+
+void sk_X509_free(Crypt::OpenSSL3::X509::Stack sk)
+
+void sk_X509_zero(Crypt::OpenSSL3::X509::Stack sk)
+
+Crypt::OpenSSL3::X509 sk_X509_delete(Crypt::OpenSSL3::X509::Stack sk, int i)
+
+Crypt::OpenSSL3::X509 sk_X509_delete_ptr(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr)
+
+int sk_X509_push(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr)
+
+int sk_X509_unshift(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr)
+
+Crypt::OpenSSL3::X509 sk_X509_pop(Crypt::OpenSSL3::X509::Stack sk)
+
+Crypt::OpenSSL3::X509 sk_X509_shift(Crypt::OpenSSL3::X509::Stack sk)
+
+void sk_X509_pop_free(Crypt::OpenSSL3::X509::Stack sk)
+C_ARGS: sk, X509_free
+
+int sk_X509_insert(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr, int idx)
+
+Crypt::OpenSSL3::X509 sk_X509_set(Crypt::OpenSSL3::X509::Stack sk, int idx, Crypt::OpenSSL3::X509 ptr)
+
+int sk_X509_find(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr)
+
+int sk_X509_find_ex(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr)
+
+int sk_X509_find_all(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr, OUT int pnum)
+
+void sk_X509_sort(Crypt::OpenSSL3::X509::Stack sk)
+
+int sk_X509_is_sorted(Crypt::OpenSSL3::X509::Stack sk)
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::VerifyResult	PREFIX = X509_verify_cert_
