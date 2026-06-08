@@ -172,6 +172,7 @@ DUPLICATING_TYPE(X509_ATTRIBUTE, X509__Attribute, X509::Attribute)
 SIMPLE_TYPE(X509_VERIFY_PARAM, X509__VerifyParam, X509::VerifyParam, )
 DUPLICATING_TYPE(GENERAL_NAME, X509__GeneralName, X509::GeneralName)
 typedef long Crypt__OpenSSL3__X509__VerifyResult;
+DUPLICATING_TYPE(PKCS7, PKCS7, PKCS7)
 
 COUNTING_TYPE(BIO, BIO, BIO)
 #if OPENSSL_VERSION_PREREQ(3, 2)
@@ -297,6 +298,15 @@ SV* S_OBJ_to_text(pTHX_ const ASN1_OBJECT* object, bool no_name) {
 #define X509_REQ_set_signature X509_REQ_set0_signature
 #define X509_REQ_set_signature_algo X509_REQ_set1_signature_algo
 #define X509_REQ_verify X509_REQ_verify_ex
+
+#define PKCS7_new PKCS7_new_ex
+#define PKCS7_read_pem PEM_read_bio_PKCS7
+#define PKCS7_write_pem PEM_write_bio_PKCS7
+#define PKCS7_read_der d2i_PKCS7_bio
+#define PKCS7_write_der i2d_PKCS7_bio
+#define PKCS7_sign PKCS7_sign_ex
+#define PKCS7_get_signers PKCS7_get0_signers
+#define PKCS7_encrypt PKCS7_encrypt_ex
 
 #define SSL_Method_TLS TLS_method
 #define SSL_Method_TLS_server TLS_server_method
@@ -673,6 +683,8 @@ Crypt::OpenSSL3::X509::Extension	T_MAGICEXT
 Crypt::OpenSSL3::X509::Attribute	T_MAGICEXT
 Crypt::OpenSSL3::X509::VerifyParam	T_MAGICEXT
 Crypt::OpenSSL3::X509::Request	T_MAGICEXT
+
+Crypt::OpenSSL3::PKCS7	T_MAGICEXT
 
 Crypt::OpenSSL3::SSL::Method T_MAGICEXT
 Crypt::OpenSSL3::SSL::Context T_MAGICEXT
@@ -1998,6 +2010,76 @@ C_ARGS: a, r, NULL, propq
 int X509_REQ_sign(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::MD md)
 
 int X509_REQ_sign_ctx(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::MD::Context ctx)
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKCS7	PREFIX = PKCS7_
+
+BOOT:
+{
+	HV* stash = gv_stashpvs("Crypt::OpenSSL3::PKCS7", GV_ADD | GV_ADDMULTI);
+	CONSTANT2(PKCS7_, TEXT);
+	CONSTANT2(PKCS7_, BINARY);
+	CONSTANT2(PKCS7_, NOCERTS);
+	CONSTANT2(PKCS7_, DETACHED);
+	CONSTANT2(PKCS7_, NOATTR);
+	CONSTANT2(PKCS7_, NOSMIMECAP);
+	CONSTANT2(PKCS7_, STREAM);
+}
+
+Crypt::OpenSSL3::PKCS7 PKCS7_new(class, const char* propq = NULL)
+C_ARGS: NULL, propq
+
+Crypt::OpenSSL3::PKCS7 PKCS7_read_pem(class, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, NULL, NULL, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool PKCS7_write_pem(Crypt::OpenSSL3::PKCS7 x, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, x
+
+Crypt::OpenSSL3::PKCS7 PKCS7_read_der(class, Crypt::OpenSSL3::BIO bp)
+C_ARGS: bp, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+int PKCS7_write_der(Crypt::OpenSSL3::PKCS7 p7, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, p7
+
+bool PKCS7_add_certificate(Crypt::OpenSSL3::PKCS7 p7, Crypt::OpenSSL3::X509 cert)
+
+Crypt::OpenSSL3::PKCS7 PKCS7_sign(class, Crypt::OpenSSL3::X509 signcert, Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::X509::Stack certs, Crypt::OpenSSL3::BIO data, int flags, const char *propq = NULL)
+C_ARGS: signcert, pkey, certs, data, flags, NULL, propq
+
+bool PKCS7_verify(Crypt::OpenSSL3::PKCS7 p7, Crypt::OpenSSL3::X509::Stack certs, Crypt::OpenSSL3::X509::Store store, Crypt::OpenSSL3::BIO indata, Crypt::OpenSSL3::BIO out, int flags)
+
+Crypt::OpenSSL3::X509::Stack PKCS7_get_signers(Crypt::OpenSSL3::PKCS7 p7, Crypt::OpenSSL3::X509::Stack certs, int flags)
+POSTCALL:
+	if (RETVAL)
+		sk_X509_dup(RETVAL);
+
+Crypt::OpenSSL3::PKCS7 PKCS7_encrypt(class, Crypt::OpenSSL3::X509::Stack certs, Crypt::OpenSSL3::BIO in, Crypt::OpenSSL3::Cipher cipher, int flags, const char* propq = NULL)
+C_ARGS: certs, in, cipher, flags, NULL, propq
+
+bool PKCS7_decrypt(Crypt::OpenSSL3::PKCS7 p7, Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::X509 cert, Crypt::OpenSSL3::BIO data, int flags)
+
+Crypt::OpenSSL3::ASN1::String PKCS7_get_octet_string(Crypt::OpenSSL3::PKCS7 p7);
+
+bool PKCS7_type_is_signed(Crypt::OpenSSL3::PKCS7 a)
+
+bool PKCS7_type_is_encrypted(Crypt::OpenSSL3::PKCS7 a)
+
+bool PKCS7_type_is_enveloped(Crypt::OpenSSL3::PKCS7 a)
+
+bool PKCS7_type_is_signedAndEnveloped(Crypt::OpenSSL3::PKCS7 a)
+
+bool PKCS7_type_is_data(Crypt::OpenSSL3::PKCS7 a)
+
+bool PKCS7_type_is_digest(Crypt::OpenSSL3::PKCS7 a)
+
+bool PKCS7_type_is_other(Crypt::OpenSSL3::PKCS7 p7)
+
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::SSL::Method	PREFIX = SSL_Method_
