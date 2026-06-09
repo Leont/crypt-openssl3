@@ -56,6 +56,8 @@ use Crypt::OpenSSL3;
 
 =method generate
 
+=method get_algor
+
 =method get_param
 
 =method is_a

@@ -9,6 +9,8 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: A name in a X509 certificate
 
+=method new
+
 =method add_entry
 
 =method add_entry_by_NID

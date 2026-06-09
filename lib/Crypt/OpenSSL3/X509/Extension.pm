@@ -9,6 +9,8 @@ use Crypt::OpenSSL3;
 
 #ABSTRACT: A X509 extension.
 
+=method new
+
 =method dup
 
 =method create_by_NID

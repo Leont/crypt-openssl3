@@ -9,6 +9,8 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: An ASN1 string
 
+=method new
+
 =method cmp
 
 =method dup

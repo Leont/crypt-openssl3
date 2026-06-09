@@ -23,6 +23,8 @@ use Crypt::OpenSSL3;
 
 =method get_aead_tag
 
+=method get_algor
+
 =method get_block_size
 
 =method get_cipher

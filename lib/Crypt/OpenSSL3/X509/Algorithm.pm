@@ -9,6 +9,8 @@ use Crypt::OpenSSL3;
 
 #ABSTRACT: A X509 algorithm identifier
 
+=method new
+
 =method dup
 
 =method cmp

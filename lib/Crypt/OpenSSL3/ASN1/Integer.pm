@@ -22,3 +22,5 @@ use Crypt::OpenSSL3;
 =method set_int64
 
 =method set_uint64
+
+=method set_buffer

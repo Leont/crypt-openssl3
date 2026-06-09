@@ -9,6 +9,8 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: X509 Verification parameters
 
+=method new
+
 =method add_policy
 
 =method add_host

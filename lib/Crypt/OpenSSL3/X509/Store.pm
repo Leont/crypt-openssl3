@@ -9,9 +9,19 @@ use Crypt::OpenSSL3;
 
 # ABSTRACT: An X509 certificate store
 
+=method new
+
 =method add_cert
 
+=method load_file
+
 =method load_locations
+
+=method load_path
+
+=method load_store
+
+=method lock
 
 =method set_default_paths
 
@@ -22,3 +32,5 @@ use Crypt::OpenSSL3;
 =method set_purpose
 
 =method set_trust
+
+=method unlock

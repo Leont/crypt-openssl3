@@ -37,6 +37,8 @@ use Crypt::OpenSSL3;
 
 =method digest_sig
 
+=method get_authority_issuer
+
 =method get_authority_key_id
 
 =method get_authority_serial
