@@ -17,6 +17,7 @@
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
+#include <openssl/ts.h>
 #include <openssl/opensslv.h>
 #if OPENSSL_VERSION_PREREQ(3, 2)
 #include <openssl/hpke.h>
@@ -174,6 +175,15 @@ DUPLICATING_TYPE(GENERAL_NAME, X509__GeneralName, X509::GeneralName)
 typedef long Crypt__OpenSSL3__X509__VerifyResult;
 DUPLICATING_TYPE(PKCS7, PKCS7, PKCS7)
 
+DUPLICATING_TYPE(TS_REQ, Timestamp__Request, Timestamp::Request)
+DUPLICATING_TYPE(TS_RESP, Timestamp__Response, Timestamp::Respone)
+DUPLICATING_TYPE(TS_MSG_IMPRINT, Timestamp__Imprint, Timestamp::Imprint)
+DUPLICATING_TYPE(TS_TST_INFO, Timestamp__TokenInfo, Timestamp::TokenInfo)
+DUPLICATING_TYPE(TS_STATUS_INFO, Timestamp__StatusInfo, Timestamp::StatusInfo)
+DUPLICATING_TYPE(TS_ACCURACY, Timestamp__Accuracy, Timestamp::Accuracy)
+#define TS_VERIFY_CTX_dup(ctx) NULL
+DUPLICATING_TYPE(TS_VERIFY_CTX, Timestamp__Verifier, Timestamp::Verifier)
+
 COUNTING_TYPE(BIO, BIO, BIO)
 #if OPENSSL_VERSION_PREREQ(3, 2)
 DUPLICATING_TYPE(BIO_ADDR, BIO__Address, BIO::Address)
@@ -307,6 +317,36 @@ SV* S_OBJ_to_text(pTHX_ const ASN1_OBJECT* object, bool no_name) {
 #define PKCS7_sign PKCS7_sign_ex
 #define PKCS7_get_signers PKCS7_get0_signers
 #define PKCS7_encrypt PKCS7_encrypt_ex
+
+#define TS_REQ_print(t, b) TS_REQ_print_bio(b, t)
+#define TS_REQ_read_der d2i_TS_REQ_bio
+#define TS_REQ_write_der i2d_TS_REQ_bio
+#define TS_REQ_get_nonce(req) ASN1_INTEGER_dup(TS_REQ_get_nonce(req))
+#define TS_TST_INFO_print(t, b) TS_TST_INFO_print_bio(b, t)
+#define TS_TST_INFO_read_der d2i_TS_TST_INFO_bio
+#define TS_TST_INFO_write_der i2d_TS_TST_INFO_bio
+#define TS_RESP_print(t, b) TS_RESP_print_bio(b, t)
+#define TS_RESP_read_der d2i_TS_RESP_bio
+#define TS_RESP_write_der i2d_TS_RESP_bio
+#define TS_MSG_IMPRINT_print(t, b) TS_MSG_IMPRINT_print_bio(b, t)
+#define TS_MSG_IMPRINT_read_der d2i_TS_MSG_IMPRINT_bio
+#define TS_MSG_IMPRINT_write_der i2d_TS_MSG_IMPRINT_bio
+#define TS_TST_INFO_get_serial(tst) ASN1_INTEGER_dup(TS_TST_INFO_get_serial(tst))
+#define TS_TST_INFO_get_time(tst) ASN1_GENERALIZEDTIME_dup(TS_TST_INFO_get_time(tst))
+#define TS_TST_INFO_get_nonce(tst) ASN1_INTEGER_dup(TS_TST_INFO_get_nonce(tst))
+#define TS_STATUS_INFO_get_status(status) ASN1_INTEGER_dup(TS_STATUS_INFO_get0_status(status))
+#define TS_STATUS_INFO_get_failure_info(status) ASN1_INTEGER_dup(TS_STATUS_INFO_get0_failure_info(status))
+#define TS_ACCURACY_get_seconds(status) ASN1_INTEGER_dup(TS_ACCURACY_get_seconds(status))
+#define TS_ACCURACY_get_millis(status) ASN1_INTEGER_dup(TS_ACCURACY_get_millis(status))
+#define TS_ACCURACY_get_micros(status) ASN1_INTEGER_dup(TS_ACCURACY_get_micros(status))
+#define TS_VERIFY_CTX_init_from_request(ctx, req) TS_REQ_to_TS_VERIFY_CTX(req, ctx)
+#if OPENSSL_VERSION_PREREQ(3, 4)
+#define TS_VERIFY_CTX_set_data TS_VERIFY_CTX_set0_data
+#define TS_VERIFY_CTX_set_imprint TS_VERIFY_CTX_set0_imprint
+#define TS_VERIFY_CTX_set_store TS_VERIFY_CTX_set0_store
+#define TS_VERIFY_CTX_set_certs TS_VERIFY_CTX_set0_certs
+#endif
+#define TS_VERIFY_CTX_verify_response TS_RESP_verify_response
 
 #define SSL_Method_TLS TLS_method
 #define SSL_Method_TLS_server TLS_server_method
@@ -615,7 +655,7 @@ typedef int Success;
 typedef int PrintRet;
 #define undef &PL_sv_undef
 
-#define CLONE_SKIP(class) 1
+#define CLONE_SKIP(...) 1
 
 // This will force byte semantics on all strings
 // This should come as the last thing in the C section of this file
@@ -685,6 +725,14 @@ Crypt::OpenSSL3::X509::VerifyParam	T_MAGICEXT
 Crypt::OpenSSL3::X509::Request	T_MAGICEXT
 
 Crypt::OpenSSL3::PKCS7	T_MAGICEXT
+
+Crypt::OpenSSL3::Timestamp::Request	T_MAGICEXT
+Crypt::OpenSSL3::Timestamp::Response	T_MAGICEXT
+Crypt::OpenSSL3::Timestamp::Imprint	T_MAGICEXT
+Crypt::OpenSSL3::Timestamp::TokenInfo	T_MAGICEXT
+Crypt::OpenSSL3::Timestamp::StatusInfo	T_MAGICEXT
+Crypt::OpenSSL3::Timestamp::Accuracy	T_MAGICEXT
+Crypt::OpenSSL3::Timestamp::Verifier	T_MAGICEXT
 
 Crypt::OpenSSL3::SSL::Method T_MAGICEXT
 Crypt::OpenSSL3::SSL::Context T_MAGICEXT
@@ -2790,6 +2838,253 @@ bool SSL_SESSION_print(Crypt::OpenSSL3::BIO fp, Crypt::OpenSSL3::SSL::Session se
 bool SSL_SESSION_print_keylog(Crypt::OpenSSL3::BIO bp, Crypt::OpenSSL3::SSL::Session x)
 
 
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Timestamp::Request	PREFIX = TS_REQ_
+
+Crypt::OpenSSL3::Timestamp::Request TS_REQ_new(class)
+C_ARGS:
+
+bool TS_REQ_set_version(Crypt::OpenSSL3::Timestamp::Request a, long version)
+
+long TS_REQ_get_version(Crypt::OpenSSL3::Timestamp::Request a)
+
+bool TS_REQ_set_msg_imprint(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::Timestamp::Imprint msg_imprint)
+
+Crypt::OpenSSL3::Timestamp::Imprint TS_REQ_get_msg_imprint(Crypt::OpenSSL3::Timestamp::Request a)
+
+bool TS_REQ_set_policy_id(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::ASN1::Object policy)
+
+Crypt::OpenSSL3::ASN1::Object TS_REQ_get_policy_id(Crypt::OpenSSL3::Timestamp::Request a)
+
+bool TS_REQ_set_nonce(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::ASN1::Integer nonce)
+
+Crypt::OpenSSL3::ASN1::Integer TS_REQ_get_nonce(Crypt::OpenSSL3::Timestamp::Request a)
+
+bool TS_REQ_set_cert_req(Crypt::OpenSSL3::Timestamp::Request a, int cert_req)
+
+int TS_REQ_get_cert_req(Crypt::OpenSSL3::Timestamp::Request a)
+
+# STACK_OF(X509_EXTENSION) *TS_REQ_get_exts(Crypt::OpenSSL3::Timestamp::Request a)
+
+int TS_REQ_get_ext_count(Crypt::OpenSSL3::Timestamp::Request a)
+
+int TS_REQ_get_ext_by_NID(Crypt::OpenSSL3::Timestamp::Request a, int nid, int lastpos)
+
+int TS_REQ_get_ext_by_OBJ(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::ASN1::Object obj, int lastpos)
+
+int TS_REQ_get_ext_by_critical(Crypt::OpenSSL3::Timestamp::Request a, int crit, int lastpos)
+
+Crypt::OpenSSL3::X509::Extension TS_REQ_get_ext(Crypt::OpenSSL3::Timestamp::Request a, int loc)
+
+Crypt::OpenSSL3::X509::Extension TS_REQ_delete_ext(Crypt::OpenSSL3::Timestamp::Request a, int loc)
+
+bool TS_REQ_add_ext(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::X509::Extension ex, int loc)
+
+PrintRet TS_REQ_print(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::BIO bio)
+
+Crypt::OpenSSL3::Timestamp::Request TS_REQ_read_der(class, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool TS_REQ_write_der(Crypt::OpenSSL3::Timestamp::Request x, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, x
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Timestamp::Imprint	PREFIX = TS_MSG_IMPRINT_
+
+Crypt::OpenSSL3::Timestamp::Imprint TS_MSG_IMPRINT_new(class)
+C_ARGS:
+
+bool TS_MSG_IMPRINT_set_algo(Crypt::OpenSSL3::Timestamp::Imprint a, Crypt::OpenSSL3::X509::Algorithm alg)
+
+Crypt::OpenSSL3::X509::Algorithm TS_MSG_IMPRINT_get_algo(Crypt::OpenSSL3::Timestamp::Imprint a)
+
+bool TS_MSG_IMPRINT_set_msg(Crypt::OpenSSL3::Timestamp::Imprint a, unsigned char *d, int length(d))
+
+Crypt::OpenSSL3::ASN1::String TS_MSG_IMPRINT_get_msg(Crypt::OpenSSL3::Timestamp::Imprint a)
+
+PrintRet TS_MSG_IMPRINT_print(Crypt::OpenSSL3::Timestamp::Imprint a, Crypt::OpenSSL3::BIO bio)
+
+Crypt::OpenSSL3::Timestamp::Imprint TS_MSG_IMPRINT_read_der(class, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool TS_MSG_IMPRINT_write_der(Crypt::OpenSSL3::Timestamp::Imprint x, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, x
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Timestamp::TokenInfo	PREFIX = TS_TST_INFO_
+
+Crypt::OpenSSL3::Timestamp::TokenInfo TS_TST_INFO_new(class)
+C_ARGS:
+
+bool TS_TST_INFO_set_version(Crypt::OpenSSL3::Timestamp::TokenInfo a, long version)
+
+long TS_TST_INFO_get_version(Crypt::OpenSSL3::Timestamp::TokenInfo a)
+
+bool TS_TST_INFO_set_policy_id(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::ASN1::Object policy_id)
+C_ARGS: a, (ASN1_OBJECT*)policy_id
+
+Crypt::OpenSSL3::ASN1::Object TS_TST_INFO_get_policy_id(Crypt::OpenSSL3::Timestamp::TokenInfo a)
+
+bool TS_TST_INFO_set_msg_imprint(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::Timestamp::Imprint msg_imprint)
+
+Crypt::OpenSSL3::Timestamp::Imprint TS_TST_INFO_get_msg_imprint(Crypt::OpenSSL3::Timestamp::TokenInfo a)
+
+bool TS_TST_INFO_set_serial(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::ASN1::Integer serial)
+
+Crypt::OpenSSL3::ASN1::Integer TS_TST_INFO_get_serial(Crypt::OpenSSL3::Timestamp::TokenInfo a)
+
+bool TS_TST_INFO_set_time(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::ASN1::Time::Generalized gtime)
+
+Crypt::OpenSSL3::ASN1::Time::Generalized TS_TST_INFO_get_time(Crypt::OpenSSL3::Timestamp::TokenInfo a)
+
+bool TS_TST_INFO_set_accuracy(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::Timestamp::Accuracy accuracy)
+
+Crypt::OpenSSL3::Timestamp::Accuracy TS_TST_INFO_get_accuracy(Crypt::OpenSSL3::Timestamp::TokenInfo a)
+
+bool TS_TST_INFO_set_ordering(Crypt::OpenSSL3::Timestamp::TokenInfo a, int ordering)
+
+int TS_TST_INFO_get_ordering(Crypt::OpenSSL3::Timestamp::TokenInfo a)
+
+bool TS_TST_INFO_set_nonce(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::ASN1::Integer nonce)
+
+Crypt::OpenSSL3::ASN1::Integer TS_TST_INFO_get_nonce(Crypt::OpenSSL3::Timestamp::TokenInfo a)
+
+bool TS_TST_INFO_set_tsa(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::X509::GeneralName tsa)
+
+Crypt::OpenSSL3::X509::GeneralName TS_TST_INFO_get_tsa(Crypt::OpenSSL3::Timestamp::TokenInfo a)
+
+int TS_TST_INFO_get_ext_count(Crypt::OpenSSL3::Timestamp::TokenInfo a)
+
+int TS_TST_INFO_get_ext_by_NID(Crypt::OpenSSL3::Timestamp::TokenInfo a, int nid, int lastpos)
+
+int TS_TST_INFO_get_ext_by_OBJ(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::ASN1::Object obj, int lastpos)
+
+int TS_TST_INFO_get_ext_by_critical(Crypt::OpenSSL3::Timestamp::TokenInfo a, int crit, int lastpos)
+
+Crypt::OpenSSL3::X509::Extension TS_TST_INFO_get_ext(Crypt::OpenSSL3::Timestamp::TokenInfo a, int loc)
+
+Crypt::OpenSSL3::X509::Extension TS_TST_INFO_delete_ext(Crypt::OpenSSL3::Timestamp::TokenInfo a, int loc)
+
+bool TS_TST_INFO_add_ext(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::X509::Extension ex, int loc)
+
+PrintRet TS_TST_INFO_print(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::BIO bio)
+
+Crypt::OpenSSL3::Timestamp::TokenInfo TS_TST_INFO_read_der(class, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool TS_TST_INFO_write_der(Crypt::OpenSSL3::Timestamp::TokenInfo x, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, x
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Timestamp::Response	PREFIX = TS_RESP_
+
+Crypt::OpenSSL3::Timestamp::Response TS_RESP_new(class)
+C_ARGS:
+
+bool TS_RESP_set_status_info(Crypt::OpenSSL3::Timestamp::Response a, Crypt::OpenSSL3::Timestamp::StatusInfo info)
+
+Crypt::OpenSSL3::Timestamp::StatusInfo TS_RESP_get_status_info(Crypt::OpenSSL3::Timestamp::Response a)
+
+Crypt::OpenSSL3::Timestamp::TokenInfo TS_RESP_get_tst_info(Crypt::OpenSSL3::Timestamp::Response a)
+
+PrintRet TS_RESP_print(Crypt::OpenSSL3::Timestamp::Response a, Crypt::OpenSSL3::BIO bio)
+
+Crypt::OpenSSL3::Timestamp::Response TS_RESP_read_der(class, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+bool TS_RESP_write_der(Crypt::OpenSSL3::Timestamp::Response x, Crypt::OpenSSL3::BIO bio)
+C_ARGS: bio, x
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Timestamp::StatusInfo	PREFIX = TS_STATUS_INFO_
+
+Crypt::OpenSSL3::Timestamp::StatusInfo TS_STATUS_INFO_new(class)
+C_ARGS:
+
+bool TS_STATUS_INFO_set_status(Crypt::OpenSSL3::Timestamp::StatusInfo a, int i)
+
+Crypt::OpenSSL3::ASN1::Integer TS_STATUS_INFO_get_status(Crypt::OpenSSL3::Timestamp::StatusInfo a)
+
+Crypt::OpenSSL3::ASN1::String TS_STATUS_INFO_get_failure_info(Crypt::OpenSSL3::Timestamp::StatusInfo a)
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Timestamp::Accuracy	PREFIX = TS_ACCURACY_
+
+Crypt::OpenSSL3::Timestamp::Accuracy TS_ACCURACY_new(class)
+C_ARGS:
+
+bool TS_ACCURACY_set_seconds(Crypt::OpenSSL3::Timestamp::Accuracy a, Crypt::OpenSSL3::ASN1::Integer seconds)
+
+Crypt::OpenSSL3::ASN1::Integer TS_ACCURACY_get_seconds(Crypt::OpenSSL3::Timestamp::Accuracy a)
+
+bool TS_ACCURACY_set_millis(Crypt::OpenSSL3::Timestamp::Accuracy a, Crypt::OpenSSL3::ASN1::Integer millis)
+
+Crypt::OpenSSL3::ASN1::Integer TS_ACCURACY_get_millis(Crypt::OpenSSL3::Timestamp::Accuracy a)
+
+bool TS_ACCURACY_set_micros(Crypt::OpenSSL3::Timestamp::Accuracy a, Crypt::OpenSSL3::ASN1::Integer micros)
+
+Crypt::OpenSSL3::ASN1::Integer TS_ACCURACY_get_micros(Crypt::OpenSSL3::Timestamp::Accuracy a)
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Timestamp::Verifier	PREFIX = TS_VERIFY_CTX_
+
+BOOT:
+{
+	HV* stash = gv_stashpvs("Crypt::OpenSSL3::Timestamp::Verifier", GV_ADD | GV_ADDMULTI);
+	CONSTANT2(TS_, VFY_SIGNATURE);
+	CONSTANT2(TS_, VFY_VERSION);
+	CONSTANT2(TS_, VFY_POLICY);
+	CONSTANT2(TS_, VFY_IMPRINT);
+	CONSTANT2(TS_, VFY_DATA);
+	CONSTANT2(TS_, VFY_NONCE);
+	CONSTANT2(TS_, VFY_SIGNER);
+	CONSTANT2(TS_, VFY_TSA_NAME);
+	CONSTANT2(TS_, VFY_ALL_IMPRINT);
+	CONSTANT2(TS_, VFY_ALL_DATA);
+}
+
+Crypt::OpenSSL3::Timestamp::Verifier TS_VERIFY_CTX_new()
+POSTCALL:
+	TS_VERIFY_CTX_init(RETVAL);
+
+bool TS_VERIFY_CTX_init_from_request(Crypt::OpenSSL3::Timestamp::Verifier ctx, Crypt::OpenSSL3::Timestamp::Request req)
+
+int TS_VERIFY_CTX_set_flags(Crypt::OpenSSL3::Timestamp::Verifier ctx, int f)
+
+int TS_VERIFY_CTX_add_flags(Crypt::OpenSSL3::Timestamp::Verifier ctx, int f)
+
+bool TS_VERIFY_CTX_set_data(Crypt::OpenSSL3::Timestamp::Verifier ctx, Crypt::OpenSSL3::BIO b)
+POSTCALL:
+	if (RETVAL)
+		BIO_up_ref(b);
+
+bool TS_VERIFY_CTX_set_imprint(Crypt::OpenSSL3::Timestamp::Verifier ctx, unsigned char *hexstr, long length(hexstr))
+INIT:
+	hexstr = OPENSSL_strndup(hexstr, XSauto_length_of_hexstr);
+
+bool TS_VERIFY_CTX_set_store(Crypt::OpenSSL3::Timestamp::Verifier ctx, Crypt::OpenSSL3::X509::Store s)
+POSTCALL:
+	if (RETVAL)
+		X509_STORE_up_ref(s);
+
+bool TS_VERIFY_CTX_set_certs(Crypt::OpenSSL3::Timestamp::Verifier ctx, Crypt::OpenSSL3::X509::Stack certs)
+INIT:
+	certs = sk_X509_dup(certs);
+
+bool TS_VERIFY_CTX_verify_response(Crypt::OpenSSL3::Timestamp::Verifier ctx, Crypt::OpenSSL3::Timestamp::Response response)
+
+Bool CLONE_SKIP(...)
+
+
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random	PREFIX = EVP_RAND_
 
 Crypt::OpenSSL3::Random EVP_RAND_fetch(classname, const char* algorithm, const char* properties = "")
@@ -3899,8 +4194,8 @@ OUTPUT: RETVAL
 
 #endif
 
-MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::HPKE::Context	PREFIX = OSSL_HPKE_CTX_
 
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::HPKE::Context	PREFIX = OSSL_HPKE_CTX_
 
 #if OPENSSL_VERSION_PREREQ(3, 2)
 
