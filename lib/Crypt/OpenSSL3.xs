@@ -153,6 +153,7 @@ DUPLICATING_TYPE(BN, BigNum, BigNum);
 #define BN_CTX_dup(old) BN_CTX_new()
 DUPLICATING_TYPE(BN_CTX, BigNum__Context, BigNum::Context)
 
+typedef int Crypt__OpenSSL3__NID;
 SIMPLE_TYPE(ASN1_OBJECT, ASN1__Object, ASN1::Object, const)
 DUPLICATING_TYPE(ASN1_INTEGER, ASN1__Integer, ASN1::Integer)
 #define ASN1_ENUMERATED_dup ASN1_INTEGER_dup
@@ -402,6 +403,16 @@ SV* S_OBJ_to_text(pTHX_ const ASN1_OBJECT* object, bool no_name) {
 #define SSL_SESSION_set_time SSL_SESSION_set_time_ex
 #endif
 
+#define NID_create OBJ_create
+#define NID_from_long_name OBJ_ln2nid
+#define NID_from_short_name OBJ_sn2nid
+#define NID_from_text OBJ_txt2nid
+#define NID_get_long_name OBJ_nid2ln
+#define NID_get_short_name OBJ_nid2sn
+#define NID_to_object OBJ_nid2obj
+#define NID_eq(left, right) (left == right)
+#define NID_raw(nid) nid
+#define NID_is_undef(nid) (nid == NID_undef)
 
 #define SSL_CIPHER_get_handshake_digest(c) (EVP_MD*)SSL_CIPHER_get_handshake_digest(c)
 
@@ -739,6 +750,7 @@ Crypt::OpenSSL3::SSL::Context T_MAGICEXT
 Crypt::OpenSSL3::SSL T_MAGICEXT
 Crypt::OpenSSL3::SSL::Session T_MAGICEXT
 Crypt::OpenSSL3::SSL::Cipher T_MAGICEXT
+Crypt::OpenSSL3::NID T_INTOBJ
 
 Crypt::OpenSSL3::HPKE T_MAGICBUF
 Crypt::OpenSSL3::HPKE::Context T_MAGICEXT
@@ -1185,19 +1197,13 @@ BOOT:
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::ASN1::Object	PREFIX = OBJ_
 
-int OBJ_create(class, const char *oid, const char *sn, const char *ln)
-C_ARGS: oid, sn, ln
-POSTCALL:
-	if (RETVAL == NID_undef)
-		XSRETURN_UNDEF;
-
 Crypt::OpenSSL3::ASN1::Object OBJ_from_text(const char *s, bool no_name = FALSE)
 
-Crypt::OpenSSL3::ASN1::Object OBJ_from_nid(int n)
+Crypt::OpenSSL3::ASN1::Object OBJ_from_nid(Crypt::OpenSSL3::NID n)
 
 int OBJ_cmp(Crypt::OpenSSL3::ASN1::Object a, Crypt::OpenSSL3::ASN1::Object b)
 
-int OBJ_to_nid(Crypt::OpenSSL3::ASN1::Object o)
+Crypt::OpenSSL3::NID OBJ_to_nid(Crypt::OpenSSL3::ASN1::Object o)
 
 size_t OBJ_length(Crypt::OpenSSL3::ASN1::Object obj)
 
@@ -1469,7 +1475,7 @@ POSTCALL:
 	psig = ASN1_STRING_dup(psig);
 	palg = X509_ALGOR_dup(palg);
 
-int X509_get_signature_nid(Crypt::OpenSSL3::X509 x)
+Crypt::OpenSSL3::NID X509_get_signature_nid(Crypt::OpenSSL3::X509 x)
 
 Crypt::OpenSSL3::X509::Algorithm X509_get_tbs_sigalg(Crypt::OpenSSL3::X509 x)
 POSTCALL:
@@ -1585,7 +1591,7 @@ int X509_get_ext_count(Crypt::OpenSSL3::X509 x)
 
 Crypt::OpenSSL3::X509::Extension X509_get_ext(Crypt::OpenSSL3::X509 x, int loc)
 
-int X509_get_ext_by_NID(Crypt::OpenSSL3::X509 x, int nid, int lastpos = -1)
+int X509_get_ext_by_NID(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::NID nid, int lastpos = -1)
 
 int X509_get_ext_by_OBJ(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::ASN1::Object obj, int lastpos = -1)
 
@@ -1767,10 +1773,10 @@ bool X509_ALGOR_copy(Crypt::OpenSSL3::X509::Algorithm dest, Crypt::OpenSSL3::X50
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Attribute	PREFIX = X509_ATTRIBUTE_
 
 
-Crypt::OpenSSL3::X509::Attribute X509_ATTRIBUTE_create(class, int nid, int atrtype, char *value)
+Crypt::OpenSSL3::X509::Attribute X509_ATTRIBUTE_create(class, Crypt::OpenSSL3::NID nid, int atrtype, char *value)
 C_ARGS: nid, atrtype, value
 
-Crypt::OpenSSL3::X509::Attribute X509_ATTRIBUTE_create_by_NID(class, int nid, int atrtype, const char *data, int length(data))
+Crypt::OpenSSL3::X509::Attribute X509_ATTRIBUTE_create_by_NID(class, Crypt::OpenSSL3::NID nid, int atrtype, const char *data, int length(data))
 C_ARGS: NULL, nid, atrtype, data, XSauto_length_of_data
 
 Crypt::OpenSSL3::X509::Attribute X509_ATTRIBUTE_create_by_OBJ(class, Crypt::OpenSSL3::ASN1::Object obj, int atrtype, const char *data, int length(data))
@@ -1804,7 +1810,7 @@ bool X509_EXTENSION_set_critical(Crypt::OpenSSL3::X509::Extension ex, bool crit)
 
 bool X509_EXTENSION_set_data(Crypt::OpenSSL3::X509::Extension ex, Crypt::OpenSSL3::ASN1::String data)
 
-Crypt::OpenSSL3::X509::Extension X509_EXTENSION_create_by_NID(int nid, bool crit, Crypt::OpenSSL3::ASN1::String data)
+Crypt::OpenSSL3::X509::Extension X509_EXTENSION_create_by_NID(Crypt::OpenSSL3::NID nid, bool crit, Crypt::OpenSSL3::ASN1::String data)
 C_ARGS: NULL, nid, crit, data
 
 Crypt::OpenSSL3::X509::Extension X509_EXTENSION_create_by_OBJ(Crypt::OpenSSL3::ASN1::Object obj, bool crit, Crypt::OpenSSL3::ASN1::String data)
@@ -1879,7 +1885,7 @@ Crypt::OpenSSL3::X509::Name X509_NAME_dup(Crypt::OpenSSL3::X509::Name self)
 
 int X509_NAME_cmp(Crypt::OpenSSL3::X509::Name a, Crypt::OpenSSL3::X509::Name b)
 
-int X509_NAME_get_index_by_NID(Crypt::OpenSSL3::X509::Name name, int nid, int lastpos)
+int X509_NAME_get_index_by_NID(Crypt::OpenSSL3::X509::Name name, Crypt::OpenSSL3::NID nid, int lastpos)
 
 int X509_NAME_get_index_by_OBJ(Crypt::OpenSSL3::X509::Name name, Crypt::OpenSSL3::ASN1::Object obj, int lastpos)
 
@@ -1908,7 +1914,7 @@ bool X509_NAME_add_entry_by_txt(Crypt::OpenSSL3::X509::Name name, const char *fi
 
 bool X509_NAME_add_entry_by_OBJ(Crypt::OpenSSL3::X509::Name name, Crypt::OpenSSL3::ASN1::Object obj, int type, const unsigned char *bytes, int length(bytes), int loc, int set)
 
-bool X509_NAME_add_entry_by_NID(Crypt::OpenSSL3::X509::Name name, int nid, int type, const unsigned char *bytes, int len, int loc, int set)
+bool X509_NAME_add_entry_by_NID(Crypt::OpenSSL3::X509::Name name, Crypt::OpenSSL3::NID nid, int type, const unsigned char *bytes, int len, int loc, int set)
 
 bool X509_NAME_add_entry(Crypt::OpenSSL3::X509::Name name, Crypt::OpenSSL3::X509::Name::Entry ne, int loc, int set)
 
@@ -1992,7 +1998,7 @@ C_ARGS: bio, x
 
 int X509_REQ_get_attr_count(Crypt::OpenSSL3::X509::Request req)
 
-int X509_REQ_get_attr_by_NID(Crypt::OpenSSL3::X509::Request req, int nid, int lastpos)
+int X509_REQ_get_attr_by_NID(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::NID nid, int lastpos)
 
 int X509_REQ_get_attr_by_OBJ(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::ASN1::Object obj, int lastpos)
 
@@ -2004,7 +2010,7 @@ int X509_REQ_add_attr(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::X509:
 
 int X509_REQ_add_attr_by_OBJ(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::ASN1::Object obj, int type, const unsigned char *bytes, int length(bytes))
 
-int X509_REQ_add_attr_by_NID(Crypt::OpenSSL3::X509::Request req, int nid, int type, const unsigned char *bytes, int len)
+int X509_REQ_add_attr_by_NID(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::NID nid, int type, const unsigned char *bytes, int len)
 
 int X509_REQ_add_attr_by_txt(Crypt::OpenSSL3::X509::Request req, const char *attrname, int type, const unsigned char *bytes, int len)
 
@@ -2046,7 +2052,7 @@ POSTCALL:
 	
 int X509_REQ_set_signature_algo(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::X509::Algorithm palg)
 
-int X509_REQ_get_signature_nid(Crypt::OpenSSL3::X509::Request req)
+Crypt::OpenSSL3::NID X509_REQ_get_signature_nid(Crypt::OpenSSL3::X509::Request req)
 
 long X509_REQ_get_version(Crypt::OpenSSL3::X509::Request req)
 
@@ -2727,9 +2733,9 @@ POSTCALL:
 	if (RETVAL)
 		set_buffer_length(description, strlen(ptr));
 
-int SSL_CIPHER_get_cipher_nid(Crypt::OpenSSL3::SSL::Cipher c)
+Crypt::OpenSSL3::NID SSL_CIPHER_get_cipher_nid(Crypt::OpenSSL3::SSL::Cipher c)
 
-int SSL_CIPHER_get_digest_nid(Crypt::OpenSSL3::SSL::Cipher c)
+Crypt::OpenSSL3::NID SSL_CIPHER_get_digest_nid(Crypt::OpenSSL3::SSL::Cipher c)
 
 Crypt::OpenSSL3::MD SSL_CIPHER_get_handshake_digest(Crypt::OpenSSL3::SSL::Cipher c)
 POSTCALL:
@@ -2738,9 +2744,9 @@ POSTCALL:
 	else
 		XSRETURN_UNDEF;
 
-int SSL_CIPHER_get_kx_nid(Crypt::OpenSSL3::SSL::Cipher c)
+Crypt::OpenSSL3::NID SSL_CIPHER_get_kx_nid(Crypt::OpenSSL3::SSL::Cipher c)
 
-int SSL_CIPHER_get_auth_nid(Crypt::OpenSSL3::SSL::Cipher c)
+Crypt::OpenSSL3::NID SSL_CIPHER_get_auth_nid(Crypt::OpenSSL3::SSL::Cipher c)
 
 bool SSL_CIPHER_is_aead(Crypt::OpenSSL3::SSL::Cipher c)
 
@@ -2867,7 +2873,7 @@ int TS_REQ_get_cert_req(Crypt::OpenSSL3::Timestamp::Request a)
 
 int TS_REQ_get_ext_count(Crypt::OpenSSL3::Timestamp::Request a)
 
-int TS_REQ_get_ext_by_NID(Crypt::OpenSSL3::Timestamp::Request a, int nid, int lastpos)
+int TS_REQ_get_ext_by_NID(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::NID nid, int lastpos)
 
 int TS_REQ_get_ext_by_OBJ(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::ASN1::Object obj, int lastpos)
 
@@ -2960,7 +2966,7 @@ Crypt::OpenSSL3::X509::GeneralName TS_TST_INFO_get_tsa(Crypt::OpenSSL3::Timestam
 
 int TS_TST_INFO_get_ext_count(Crypt::OpenSSL3::Timestamp::TokenInfo a)
 
-int TS_TST_INFO_get_ext_by_NID(Crypt::OpenSSL3::Timestamp::TokenInfo a, int nid, int lastpos)
+int TS_TST_INFO_get_ext_by_NID(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::NID nid, int lastpos)
 
 int TS_TST_INFO_get_ext_by_OBJ(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::ASN1::Object obj, int lastpos)
 
@@ -3085,6 +3091,36 @@ bool TS_VERIFY_CTX_verify_response(Crypt::OpenSSL3::Timestamp::Verifier ctx, Cry
 Bool CLONE_SKIP(...)
 
 
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::NID PREFIX = NID_
+
+Crypt::OpenSSL3::NID NID_create(class, const char *oid, const char *sn, const char *ln)
+C_ARGS: oid, sn, ln
+POSTCALL:
+	if (RETVAL == NID_undef)
+		XSRETURN_UNDEF;
+
+Crypt::OpenSSL3::NID NID_from_long_name(class, const char* name)
+C_ARGS: name
+
+Crypt::OpenSSL3::NID NID_from_short_name(class, const char* name)
+C_ARGS: name
+
+Crypt::OpenSSL3::NID NID_from_text(class, const char* name)
+C_ARGS: name
+
+const char *NID_get_long_name(Crypt::OpenSSL3::NID n)
+
+const char *NID_get_short_name(Crypt::OpenSSL3::NID n)
+
+Crypt::OpenSSL3::ASN1::Object NID_to_object(Crypt::OpenSSL3::NID n)
+
+bool NID_eq(Crypt::OpenSSL3::NID left, Crypt::OpenSSL3::NID right)
+
+int NID_raw(Crypt::OpenSSL3::NID n)
+
+bool NID_is_undef(Crypt::OpenSSL3::NID n)
+
+
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Random	PREFIX = EVP_RAND_
 
 Crypt::OpenSSL3::Random EVP_RAND_fetch(classname, const char* algorithm, const char* properties = "")
@@ -3191,7 +3227,7 @@ POSTCALL:
 	if (RETVAL == NULL)
 		XSRETURN_UNDEF;
 
-int EVP_CIPHER_get_nid(Crypt::OpenSSL3::Cipher e)
+Crypt::OpenSSL3::NID EVP_CIPHER_get_nid(Crypt::OpenSSL3::Cipher e)
 
 int EVP_CIPHER_get_block_size(Crypt::OpenSSL3::Cipher e)
 
@@ -3270,7 +3306,7 @@ CODE:
 OUTPUT: RETVAL
 
 
-int EVP_CIPHER_CTX_get_nid(Crypt::OpenSSL3::Cipher::Context e)
+Crypt::OpenSSL3::NID EVP_CIPHER_CTX_get_nid(Crypt::OpenSSL3::Cipher::Context e)
 
 int EVP_CIPHER_CTX_get_block_size(Crypt::OpenSSL3::Cipher::Context e)
 
@@ -3752,9 +3788,12 @@ bool EVP_PKEY_write_der_public_key(Crypt::OpenSSL3::PKey a, Crypt::OpenSSL3::BIO
 INTERFACE: EVP_PKEY_write_der_public_key EVP_PKEY_write_der_private_key
 C_ARGS: bio, a
 
-int EVP_PKEY_get_id(Crypt::OpenSSL3::PKey pkey)
+Crypt::OpenSSL3::NID EVP_PKEY_get_id(Crypt::OpenSSL3::PKey pkey)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
-int EVP_PKEY_get_base_id(Crypt::OpenSSL3::PKey pkey)
+Crypt::OpenSSL3::NID EVP_PKEY_get_base_id(Crypt::OpenSSL3::PKey pkey)
 
 int EVP_PKEY_type(int type)
 
@@ -3793,7 +3832,7 @@ POSTCALL:
 	if (RETVAL > 0)
 		set_buffer_length(mdname, strlen(SvPV_nolen(mdname)));
 
-NO_OUTPUT int EVP_PKEY_get_default_digest_nid(Crypt::OpenSSL3::PKey pkey, OUTLIST int pnid)
+NO_OUTPUT int EVP_PKEY_get_default_digest_nid(Crypt::OpenSSL3::PKey pkey, OUTLIST Crypt::OpenSSL3::NID pnid)
 POSTCALL:
 	if (RETVAL <= 0)
 		XSRETURN_UNDEF;
@@ -3862,7 +3901,7 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKey::Context	PREFIX = EVP_P
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new(classname, Crypt::OpenSSL3::PKey pkey)
 C_ARGS: pkey, NULL
 
-Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_id(classname, int id)
+Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_id(classname, Crypt::OpenSSL3::NID id)
 C_ARGS: id, NULL
 
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_from_name(classname, const char *name, const char *propquery = "")

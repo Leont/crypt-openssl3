@@ -5,6 +5,7 @@ Revision history for Crypt-OpenSSL3
           - Add Crypt::OpenSSL3::X509::Stack
           - Add PKCS7 support
           - Add Timestamp Protocol support
+          - Add NID class
 
 0.006     2026-06-04 14:59:23+02:00 Europe/Brussels
           - Add HPKE support

@@ -11,8 +11,6 @@ use Crypt::OpenSSL3;
 
 =method cmp
 
-=method create
-
 =method from_nid
 
 =method from_text
