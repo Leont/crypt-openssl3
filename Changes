@@ -1,6 +1,7 @@
 Revision history for Crypt-OpenSSL3
 
 {{$NEXT}}
+          - Increment ParseXS dependency to deal with INTERFACE issues
 
 0.007     2026-06-18 14:09:12+02:00 Europe/Brussels
           - Add more serialization methods

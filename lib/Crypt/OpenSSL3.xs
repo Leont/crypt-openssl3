@@ -677,7 +677,7 @@ typedef int PrintRet;
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3	PREFIX = OpenSSL_
 
-REQUIRE: 3.60
+REQUIRE: 3.63
 
 PROTOTYPES: DISABLE
 
