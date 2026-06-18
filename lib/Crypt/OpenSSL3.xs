@@ -172,6 +172,8 @@ DUPLICATING_TYPE(X509_ALGOR, X509__Algorithm, X509::Algorithm)
 DUPLICATING_TYPE(X509_EXTENSION, X509__Extension, X509::Extension)
 DUPLICATING_TYPE(X509_ATTRIBUTE, X509__Attribute, X509::Attribute)
 SIMPLE_TYPE(X509_VERIFY_PARAM, X509__VerifyParam, X509::VerifyParam, )
+#define X509_STORE_CTX_dup(ctx) NULL
+DUPLICATING_TYPE(X509_STORE_CTX, X509__Store__Context, X509::Store::Context)
 DUPLICATING_TYPE(GENERAL_NAME, X509__GeneralName, X509::GeneralName)
 typedef long Crypt__OpenSSL3__X509__VerifyResult;
 DUPLICATING_TYPE(PKCS7, PKCS7, PKCS7)
@@ -293,6 +295,18 @@ SV* S_OBJ_to_text(pTHX_ const ASN1_OBJECT* object, bool no_name) {
 #define X509_VERIFY_PARAM_get_ip_asc X509_VERIFY_PARAM_get1_ip_asc
 #define X509_VERIFY_PARAM_set_ip X509_VERIFY_PARAM_set1_ip
 #define X509_VERIFY_PARAM_set_ip_asc X509_VERIFY_PARAM_set1_ip_asc
+#define X509_STORE_CTX_new X509_STORE_CTX_new_ex
+#define X509_STORE_CTX_get_cert X509_STORE_CTX_get0_cert
+#undef X509_STORE_CTX_get_chain
+#define X509_STORE_CTX_get_chain X509_STORE_CTX_get1_chain
+#define X509_STORE_CTX_get_param X509_STORE_CTX_get0_param
+#define X509_STORE_CTX_get_rpk X509_STORE_CTX_get0_rpk
+#define X509_STORE_CTX_get_untrusted X509_STORE_CTX_get0_untrusted
+#define X509_STORE_CTX_set_param X509_STORE_CTX_set0_param
+#define X509_STORE_CTX_set_rpk X509_STORE_CTX_set0_rpk
+#define X509_STORE_CTX_set_trusted_stack X509_STORE_CTX_set0_trusted_stack
+#define X509_STORE_CTX_set_untrusted X509_STORE_CTX_set0_untrusted
+#define X509_STORE_CTX_set_verified_chain X509_STORE_CTX_set0_verified_chain
 #define X509_REQ_new X509_REQ_new_ex
 #define X509_REQ_read_der d2i_X509_REQ_bio
 #define X509_REQ_write_der i2d_X509_REQ_bio
@@ -725,6 +739,7 @@ Crypt::OpenSSL3::ASN1::Time::UTC	T_MAGICEXT
 Crypt::OpenSSL3::X509	T_MAGICEXT
 Crypt::OpenSSL3::X509::Stack	T_MAGICEXT
 Crypt::OpenSSL3::X509::Store	T_MAGICEXT
+Crypt::OpenSSL3::X509::Store::Context	T_MAGICEXT
 Crypt::OpenSSL3::X509::Name	T_MAGICEXT
 Crypt::OpenSSL3::X509::Name::Entry	T_MAGICEXT
 Crypt::OpenSSL3::X509::Algorithm	T_MAGICEXT
@@ -1970,6 +1985,91 @@ bool X509_STORE_load_path(Crypt::OpenSSL3::X509::Store xs, const char *dir)
 bool X509_STORE_load_store(Crypt::OpenSSL3::X509::Store xs, const char *uri, const char *propq = NULL)
 C_ARGS: xs, uri, NULL, propq
 
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Store::Context	PREFIX = X509_STORE_CTX_
+
+Crypt::OpenSSL3::X509::Store::Context X509_STORE_CTX_new(const char *propq = NULL)
+C_ARGS: NULL, propq
+
+bool X509_STORE_CTX_init(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Store trust_store, Crypt::OpenSSL3::X509 target, Crypt::OpenSSL3::X509::Stack untrusted)
+
+bool X509_STORE_CTX_init_rpk(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Store trust_store, Crypt::OpenSSL3::PKey rpk)
+
+void X509_STORE_CTX_set_trusted_stack(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Stack sk)
+INIT:
+	sk = sk_X509_dup(sk);
+
+void X509_STORE_CTX_set_cert(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509 target)
+
+void X509_STORE_CTX_set_rpk(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::PKey target)
+INIT:
+	EVP_PKEY_up_ref(target);
+
+Crypt::OpenSSL3::X509::VerifyParam X509_STORE_CTX_get_param(Crypt::OpenSSL3::X509::Store::Context ctx)
+
+void X509_STORE_CTX_set_param(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::VerifyParam param)
+
+Crypt::OpenSSL3::X509::Stack X509_STORE_CTX_get_untrusted(Crypt::OpenSSL3::X509::Store::Context ctx)
+POSTCALL:
+	if (RETVAL)
+		RETVAL = sk_X509_dup(RETVAL);
+	else
+		XSRETURN_UNDEF;
+
+void X509_STORE_CTX_set_untrusted(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Stack sk)
+INIT:
+	sk = sk_X509_dup(sk);
+
+int X509_STORE_CTX_get_num_untrusted(Crypt::OpenSSL3::X509::Store::Context ctx)
+
+Crypt::OpenSSL3::X509::Stack X509_STORE_CTX_get_chain(Crypt::OpenSSL3::X509::Store::Context ctx)
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
+
+void X509_STORE_CTX_set_verified_chain(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Stack chain)
+INIT:
+	chain = sk_X509_dup(chain);
+
+Crypt::OpenSSL3::PKey X509_STORE_CTX_get_rpk(Crypt::OpenSSL3::X509::Store::Context ctx)
+POSTCALL:
+	if (RETVAL)
+		EVP_PKEY_up_ref(RETVAL);
+	else
+		XSRETURN_UNDEF;
+
+bool X509_STORE_CTX_set_default(Crypt::OpenSSL3::X509::Store::Context ctx, const char *name)
+
+bool X509_STORE_CTX_set_purpose(Crypt::OpenSSL3::X509::Store::Context ctx, int purpose)
+
+bool X509_STORE_CTX_set_trust(Crypt::OpenSSL3::X509::Store::Context ctx, int trust)
+
+int X509_STORE_CTX_purpose_inherit(Crypt::OpenSSL3::X509::Store::Context ctx, int def_purpose, int purpose, int trust)
+
+void X509_STORE_CTX_set_time(Crypt::OpenSSL3::X509::Store::Context ctx, unsigned long flags, time_t t)
+
+int X509_STORE_CTX_verify(Crypt::OpenSSL3::X509::Store::Context ctx)
+
+int X509_STORE_CTX_get_error(Crypt::OpenSSL3::X509::Store::Context ctx)
+
+const char *X509_STORE_CTX_get_error_string(Crypt::OpenSSL3::X509::Store::Context ctx)
+CODE:
+	int code = X509_STORE_CTX_get_error(ctx);
+	RETVAL = X509_verify_cert_error_string(code);
+OUTPUT: RETVAL
+
+void X509_STORE_CTX_set_error(Crypt::OpenSSL3::X509::Store::Context ctx, int s)
+
+int X509_STORE_CTX_get_error_depth(Crypt::OpenSSL3::X509::Store::Context ctx)
+
+void X509_STORE_CTX_set_error_depth(Crypt::OpenSSL3::X509::Store::Context ctx, int depth)
+
+Crypt::OpenSSL3::X509 X509_STORE_CTX_get_cert(Crypt::OpenSSL3::X509::Store::Context ctx)
+POSTCALL:
+	if (RETVAL)
+		X509_up_ref(RETVAL);
+	else
+		XSRETURN_UNDEF;
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Request	PREFIX = X509_REQ_
 
