@@ -37,4 +37,6 @@ use Crypt::OpenSSL3;
 
 =method to_generalizedtime
 
+=method to_time_t
+
 =method to_tm

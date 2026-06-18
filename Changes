@@ -3,6 +3,7 @@ Revision history for Crypt-OpenSSL3
 {{$NEXT}}
           - Add Crypt::OpenSSL3::X509::Store::Context
           - Increment ParseXS dependency to deal with INTERFACE issues
+          - Add to_time_t to ASN1::Time
 
 0.007     2026-06-18 14:09:12+02:00 Europe/Brussels
           - Add more serialization methods

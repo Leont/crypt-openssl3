@@ -1375,6 +1375,15 @@ PPCODE:
 		mPUSHi(tm.tm_isdst);
 	}
 
+int ASN1_TIME_to_time_t(Crypt::OpenSSL3::ASN1::Time s)
+CODE:
+	struct tm tm;
+	if (ASN1_TIME_to_tm(s, &tm))
+		RETVAL = timegm(&tm);
+	else
+		XSRETURN_UNDEF;
+OUTPUT: RETVAL
+
 Crypt::OpenSSL3::ASN1::Time::Generalized ASN1_TIME_to_generalizedtime(Crypt::OpenSSL3::ASN1::Time t)
 C_ARGS: t, NULL
 POSTCALL:
