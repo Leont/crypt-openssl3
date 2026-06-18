@@ -235,8 +235,8 @@ SV* S_OBJ_to_text(pTHX_ const ASN1_OBJECT* object, bool no_name) {
 	SV* result = &PL_sv_undef;
 	int buf_len = OBJ_obj2txt(NULL, 0, object, no_name);
 	if (buf_len > 0) {
-		unsigned char* ptr = make_buffer(&result, buf_len);
-		if (OBJ_obj2txt((char*)ptr, buf_len, object, no_name) > 0)
+		unsigned char* ptr = make_buffer(&result, buf_len + 1);
+		if (OBJ_obj2txt((char*)ptr, buf_len + 1, object, no_name) > 0)
 			set_buffer_length(result, buf_len);
 	}
 	return result;
