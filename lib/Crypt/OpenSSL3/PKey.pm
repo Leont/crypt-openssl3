@@ -7,7 +7,7 @@ use Crypt::OpenSSL3;
 
 1;
 
-# ABSTRACT: An assymetrical key
+# ABSTRACT: An asymmetric key
 
 =head1 SYNOPSIS
 
@@ -20,7 +20,7 @@ use Crypt::OpenSSL3;
 
 =head1 DESCRIPTION
 
-A PKey can be any kind of assymetrical key. This is a fat interface: no single key type supports all possible operations, and most operations aren't supported by all key types. At its core the operations are:
+A C<PKey> can be any kind of asymmetric key. This is a fat interface: no single key type supports all possible operations, and most operations aren't supported by all key types. At its core the operations are:
 
 =over 4
 
