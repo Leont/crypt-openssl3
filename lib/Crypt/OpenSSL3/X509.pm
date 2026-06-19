@@ -43,6 +43,10 @@ use Crypt::OpenSSL3;
 
 =method get_authority_serial
 
+=method get_ct_cert_scts
+
+=method get_ct_precert_scts
+
 =method get_default_cert_dir
 
 =method get_default_cert_dir_env
@@ -67,6 +71,8 @@ use Crypt::OpenSSL3;
 
 =method get_extension_flags
 
+=method get_issuer_alt_names
+
 =method get_issuer_name
 
 =method get_key_usage
@@ -86,6 +92,8 @@ use Crypt::OpenSSL3;
 =method get_signature
 
 =method get_signature_nid
+
+=method get_subject_alt_names
 
 =method get_subject_key_id
 

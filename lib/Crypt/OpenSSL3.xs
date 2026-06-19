@@ -533,6 +533,17 @@ static int EVP_PKEY_verify_init_ex2(EVP_PKEY_CTX *ctx, EVP_SIGNATURE *algo, cons
 
 #define CONSTANT2(PREFIX, VALUE) newCONSTSUB(stash, #VALUE, newSVuv(PREFIX##VALUE))
 
+#define STACK_TO_STACK(TYPE, stack) \
+	if (stack) {\
+		int num = sk_ ## TYPE ## _num(stack);\
+		EXTEND(SP, num);\
+		for (int i = 0; i < num; ++i) {\
+			TYPE* value = sk_ ## TYPE ## _delete(stack, i);\
+			mPUSHs(make_ ## TYPE(aTHX_ value));\
+		}\
+		sk_ ## TYPE ## _free(stack);\
+	}
+
 static OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* input) {
 	if (!SvROK(input) || SvTYPE(SvRV(input)) != SVt_PVHV)
 		return NULL;
@@ -1515,6 +1526,16 @@ INTERFACE:
 	X509_get_subject_name  X509_get_issuer_name
 POSTCALL:
 	RETVAL = X509_NAME_dup(RETVAL);
+
+void X509_get_subject_alt_names(Crypt::OpenSSL3::X509 x)
+PPCODE:
+	STACK_OF(GENERAL_NAME)* gens = X509_get_ext_d2i(x, NID_subject_alt_name, NULL, NULL);
+	STACK_TO_STACK(GENERAL_NAME, gens);
+
+void X509_get_issuer_alt_names(Crypt::OpenSSL3::X509 x)
+PPCODE:
+	STACK_OF(GENERAL_NAME)* gens = X509_get_ext_d2i(x, NID_issuer_alt_name, NULL, NULL);
+	STACK_TO_STACK(GENERAL_NAME, gens);
 
 bool X509_set_subject_name(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::X509::Name name)
 
