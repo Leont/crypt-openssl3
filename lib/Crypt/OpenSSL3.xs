@@ -154,7 +154,8 @@ DUPLICATING_TYPE(BN, BigNum, BigNum);
 DUPLICATING_TYPE(BN_CTX, BigNum__Context, BigNum::Context)
 
 typedef int Crypt__OpenSSL3__NID;
-SIMPLE_TYPE(ASN1_OBJECT, ASN1__Object, ASN1::Object, const)
+#define ASN1_OBJECT_dup OBJ_dup
+DUPLICATING_TYPE(ASN1_OBJECT, ASN1__Object, ASN1::Object)
 DUPLICATING_TYPE(ASN1_INTEGER, ASN1__Integer, ASN1::Integer)
 #define ASN1_ENUMERATED_dup ASN1_INTEGER_dup
 DUPLICATING_TYPE(ASN1_ENUMERATED, ASN1__Enumerated, ASN1::Enumerated)
@@ -268,7 +269,6 @@ SV* S_OBJ_to_text(pTHX_ const ASN1_OBJECT* object, bool no_name) {
 #define X509_get_distinguishing_id(c) ASN1_OCTET_STRING_dup(X509_get0_distinguishing_id(c))
 #define X509_set_distinguishing_id X509_set0_distinguishing_id
 #define X509_get_ext(c, loc) X509_EXTENSION_dup(X509_get_ext(c, loc))
-#define X509_EXTENSION_get_object(e) X509_EXTENSION_get_object(e)
 #define X509_EXTENSION_get_data(e) ASN1_OCTET_STRING_dup(X509_EXTENSION_get_data(e))
 #define X509_ATTRIBUTE_get_data X509_ATTRIBUTE_get0_data
 #define X509_ATTRIBUTE_set_data X509_ATTRIBUTE_set1_data
@@ -1610,6 +1610,9 @@ long X509_get_proxy_pathlen(Crypt::OpenSSL3::X509 x)
 int X509_get_ext_count(Crypt::OpenSSL3::X509 x)
 
 Crypt::OpenSSL3::X509::Extension X509_get_ext(Crypt::OpenSSL3::X509 x, int loc)
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
 
 int X509_get_ext_by_NID(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::NID nid, int lastpos = -1)
 
@@ -1694,7 +1697,7 @@ void X509_VERIFY_PARAM_set_time(Crypt::OpenSSL3::X509::VerifyParam param, time_t
 time_t X509_VERIFY_PARAM_get_time(Crypt::OpenSSL3::X509::VerifyParam param)
 
 bool X509_VERIFY_PARAM_add_policy(Crypt::OpenSSL3::X509::VerifyParam param, Crypt::OpenSSL3::ASN1::Object policy)
-C_ARGS: param, (ASN1_OBJECT*)policy
+C_ARGS: param, ASN1_OBJECT_dup(policy)
 
 #if 0
 bool X509_VERIFY_PARAM_set1_policies(Crypt::OpenSSL3::X509::VerifyParam param, Crypt::OpenSSL3::ASN1::Object policies)
@@ -1818,7 +1821,7 @@ C_ARGS:
 Crypt::OpenSSL3::X509::Algorithm X509_ALGOR_dup(Crypt::OpenSSL3::X509::Algorithm alg)
 
 bool X509_ALGOR_set(Crypt::OpenSSL3::X509::Algorithm alg, Crypt::OpenSSL3::ASN1::Object aobj)
-C_ARGS: alg, (ASN1_OBJECT*)aobj, V_ASN1_UNDEF, NULL
+C_ARGS: alg, ASN1_OBJECT_dup(aobj), V_ASN1_UNDEF, NULL
 
 void X509_ALGOR_get(Crypt::OpenSSL3::X509::Algorithm alg, OUTLIST Crypt::OpenSSL3::ASN1::Object paobj)
 C_ARGS: (const ASN1_OBJECT**)&paobj, NULL, NULL, alg
@@ -1855,6 +1858,8 @@ C_ARGS: attr, idx, atrtype, NULL
 PrintRet X509_ATTRIBUTE_count(Crypt::OpenSSL3::X509::Attribute attr)
 
 Crypt::OpenSSL3::ASN1::Object X509_ATTRIBUTE_get_object(Crypt::OpenSSL3::X509::Attribute attr)
+POSTCALL:
+	RETVAL = ASN1_OBJECT_dup(RETVAL);
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Extension	PREFIX = X509_EXTENSION_
@@ -1877,6 +1882,8 @@ Crypt::OpenSSL3::X509::Extension X509_EXTENSION_create_by_OBJ(Crypt::OpenSSL3::A
 C_ARGS: NULL, obj, crit, data
 
 Crypt::OpenSSL3::ASN1::Object X509_EXTENSION_get_object(Crypt::OpenSSL3::X509::Extension ex)
+POSTCALL:
+	RETVAL = ASN1_OBJECT_dup(RETVAL);
 
 bool X509_EXTENSION_get_critical(Crypt::OpenSSL3::X509::Extension ex)
 
@@ -1992,6 +1999,11 @@ Crypt::OpenSSL3::X509::Name::Entry X509_NAME_ENTRY_new(class)
 C_ARGS:
 
 Crypt::OpenSSL3::ASN1::Object X509_NAME_ENTRY_get_object(Crypt::OpenSSL3::X509::Name::Entry ne)
+POSTCALL:
+	if (RETVAL)
+		RETVAL = ASN1_OBJECT_dup(RETVAL);
+	else
+		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::ASN1::String X509_NAME_ENTRY_get_data(Crypt::OpenSSL3::X509::Name::Entry ne)
 
@@ -3015,9 +3027,14 @@ POSTCALL:
 		XSRETURN_UNDEF;
 
 bool TS_REQ_set_policy_id(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::ASN1::Object policy)
-C_ARGS: a, OBJ_dup(policy)
+C_ARGS: a, ASN1_OBJECT_dup(policy)
 
 Crypt::OpenSSL3::ASN1::Object TS_REQ_get_policy_id(Crypt::OpenSSL3::Timestamp::Request a)
+POSTCALL:
+	if (RETVAL)
+		RETVAL = ASN1_OBJECT_dup(RETVAL);
+	else
+		XSRETURN_UNDEF;
 
 bool TS_REQ_set_nonce(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::ASN1::Integer nonce)
 C_ARGS: a, ASN1_INTEGER_dup(nonce)
@@ -3111,12 +3128,12 @@ bool TS_TST_INFO_set_version(Crypt::OpenSSL3::Timestamp::TokenInfo a, long versi
 long TS_TST_INFO_get_version(Crypt::OpenSSL3::Timestamp::TokenInfo a)
 
 bool TS_TST_INFO_set_policy_id(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::ASN1::Object policy_id)
-C_ARGS: a, OBJ_dup(policy_id)
+C_ARGS: a, ASN1_OBJECT_dup(policy_id)
 
 Crypt::OpenSSL3::ASN1::Object TS_TST_INFO_get_policy_id(Crypt::OpenSSL3::Timestamp::TokenInfo a)
 POSTCALL:
 	if (RETVAL)
-		RETVAL = OBJ_dup(RETVAL);
+		RETVAL = ASN1_OBJECT_dup(RETVAL);
 	else
 		XSRETURN_UNDEF;
 
