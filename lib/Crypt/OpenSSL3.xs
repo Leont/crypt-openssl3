@@ -177,6 +177,12 @@ SIMPLE_TYPE(X509_VERIFY_PARAM, X509__VerifyParam, X509::VerifyParam, )
 DUPLICATING_TYPE(X509_STORE_CTX, X509__Store__Context, X509::Store::Context)
 DUPLICATING_TYPE(GENERAL_NAME, X509__GeneralName, X509::GeneralName)
 typedef long Crypt__OpenSSL3__X509__VerifyResult;
+#define CTLOG_STORE_dup(s) NULL
+DUPLICATING_TYPE(CTLOG_STORE, X509__Transparency__LogStore, X509::Transparency::LogStore)
+#define CT_POLICY_EVAL_CTX_dup(s) NULL
+DUPLICATING_TYPE(CT_POLICY_EVAL_CTX, X509__Transparency__Evaluator, X509::Transparency::Evaluator)
+#define SCT_dup(s) NULL
+DUPLICATING_TYPE(SCT, X509__Transparency__Timestamp, X509::Transparency::Timestamp)
 DUPLICATING_TYPE(PKCS7, PKCS7, PKCS7)
 
 DUPLICATING_TYPE(TS_REQ, Timestamp__Request, Timestamp::Request)
@@ -323,6 +329,20 @@ SV* S_OBJ_to_text(pTHX_ const ASN1_OBJECT* object, bool no_name) {
 #define X509_REQ_set_signature X509_REQ_set0_signature
 #define X509_REQ_set_signature_algo X509_REQ_set1_signature_algo
 #define X509_REQ_verify X509_REQ_verify_ex
+
+#define CTLOG_STORE_new CTLOG_STORE_new_ex
+#define CT_POLICY_EVAL_CTX_new CT_POLICY_EVAL_CTX_new_ex
+#define CT_POLICY_EVAL_CTX_get_cert CT_POLICY_EVAL_CTX_get0_cert
+#define CT_POLICY_EVAL_CTX_set_cert CT_POLICY_EVAL_CTX_set1_cert
+#define CT_POLICY_EVAL_CTX_get_issuer CT_POLICY_EVAL_CTX_get0_issuer
+#define CT_POLICY_EVAL_CTX_set_issuer CT_POLICY_EVAL_CTX_set1_issuer
+#define CT_POLICY_EVAL_CTX_set_log_store CT_POLICY_EVAL_CTX_set_shared_CTLOG_STORE
+#define SCT_get_log_id SCT_get0_log_id
+#define SCT_get_signature SCT_get0_signature
+#define SCT_get_extensions SCT_get0_extensions
+#define SCT_set_log_id SCT_set1_log_id
+#define SCT_set_signature SCT_set1_signature
+#define SCT_set_extensions SCT_set1_extensions
 
 #define PKCS7_new PKCS7_new_ex
 #define PKCS7_read_pem PEM_read_bio_PKCS7
@@ -756,6 +776,10 @@ Crypt::OpenSSL3::X509::Extension	T_MAGICEXT
 Crypt::OpenSSL3::X509::Attribute	T_MAGICEXT
 Crypt::OpenSSL3::X509::VerifyParam	T_MAGICEXT
 Crypt::OpenSSL3::X509::Request	T_MAGICEXT
+
+Crypt::OpenSSL3::X509::Transparency::Timestamp	T_MAGICEXT
+Crypt::OpenSSL3::X509::Transparency::LogStore	T_MAGICEXT
+Crypt::OpenSSL3::X509::Transparency::Evaluator	T_MAGICEXT
 
 Crypt::OpenSSL3::PKCS7	T_MAGICEXT
 
@@ -1545,6 +1569,16 @@ unsigned long X509_subject_name_hash(Crypt::OpenSSL3::X509 x)
 
 unsigned long X509_issuer_name_hash(Crypt::OpenSSL3::X509 x)
 
+void X509_get_ct_precert_scts(Crypt::OpenSSL3::X509 x)
+PPCODE:
+	STACK_OF(SCT)* scts = X509_get_ext_d2i(x, NID_ct_precert_scts, NULL, NULL);
+	STACK_TO_STACK(SCT, scts);
+
+void X509_get_ct_cert_scts(Crypt::OpenSSL3::X509 x)
+PPCODE:
+	STACK_OF(SCT)* scts = X509_get_ext_d2i(x, NID_ct_cert_scts, NULL, NULL);
+	STACK_TO_STACK(SCT, scts);
+
 NO_OUTPUT Bool X509_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::MD type, OUTLIST SV* digest)
 INTERFACE: X509_digest  X509_pubkey_digest
 INIT:
@@ -2267,6 +2301,121 @@ int X509_REQ_sign(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::PKey pkey, 
 
 int X509_REQ_sign_ctx(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::MD::Context ctx)
 
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Transparency::LogStore	PREFIX = CTLOG_STORE_
+
+Crypt::OpenSSL3::X509::Transparency::LogStore CTLOG_STORE_new(const char *propq = NULL)
+C_ARGS: NULL, propq
+
+#if OPENSSL_VERSION_PREREQ(4, 1)
+bool CTLOG_STORE_add_log(Crypt::OpenSSL3::X509::Transparency::LogStore store, Crypt::OpenSSL3::PKey pkey, const char* name, const char* propq = NULL)
+CODE:
+	CTLOG* log = CTLOG_new_ex(pkey, name, NULL, propq);
+	RETVAL = CTLOG_STORE_add0_log(store, log);
+OUTPUT: RETVAL
+
+bool CTLOG_STORE_add_log_base64(Crypt::OpenSSL3::X509::Transparency::LogStore store, const char* base64, const char* name, const char* propq = NULL)
+CODE:
+	CTLOG* log = CTLOG_new_from_base64_ex(base64, name, NULL, propq);
+	RETVAL = CTLOG_STORE_add0_log(store, log);
+OUTPUT: RETVAL
+#endif
+
+bool CTLOG_STORE_load_default_file(Crypt::OpenSSL3::X509::Transparency::LogStore store)
+
+bool CTLOG_STORE_load_file(Crypt::OpenSSL3::X509::Transparency::LogStore store, const char *file)
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Transparency::Evaluator	PREFIX = CT_POLICY_EVAL_CTX_
+
+Crypt::OpenSSL3::X509::Transparency::Evaluator CT_POLICY_EVAL_CTX_new(const char *propq = NULL)
+C_ARGS: NULL, propq
+
+Crypt::OpenSSL3::X509 CT_POLICY_EVAL_CTX_get_cert(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx)
+POSTCALL:
+	X509_up_ref(RETVAL);
+
+bool CT_POLICY_EVAL_CTX_set_cert(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx, Crypt::OpenSSL3::X509 cert)
+
+Crypt::OpenSSL3::X509 CT_POLICY_EVAL_CTX_get_issuer(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx)
+POSTCALL:
+	X509_up_ref(RETVAL);
+
+bool CT_POLICY_EVAL_CTX_set_issuer(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx, Crypt::OpenSSL3::X509 issuer)
+
+void CT_POLICY_EVAL_CTX_set_log_store(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx, Crypt::OpenSSL3::X509::Transparency::LogStore log_store)
+
+uint64_t CT_POLICY_EVAL_CTX_get_time(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx)
+
+void CT_POLICY_EVAL_CTX_set_time(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx, uint64_t time_in_ms)
+
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Transparency::Timestamp	PREFIX = SCT_
+
+BOOT:
+{
+	HV* stash = gv_stashpvs("Crypt::OpenSSL3::Transparency::Timestamp", GV_ADD | GV_ADDMULTI);
+	CONSTANT2(CT_LOG_, ENTRY_TYPE_NOT_SET);
+	CONSTANT2(CT_LOG_, ENTRY_TYPE_X509);
+	CONSTANT2(CT_LOG_, ENTRY_TYPE_PRECERT);
+
+	CONSTANT2(SCT_, VERSION_NOT_SET);
+	CONSTANT2(SCT_, VERSION_V1);
+
+	CONSTANT2(SCT_, SOURCE_UNKNOWN);
+	CONSTANT2(SCT_, SOURCE_TLS_EXTENSION);
+	CONSTANT2(SCT_, SOURCE_X509V3_EXTENSION);
+	CONSTANT2(SCT_, SOURCE_OCSP_STAPLED_RESPONSE);
+
+	CONSTANT2(SCT_, VALIDATION_STATUS_NOT_SET);
+	CONSTANT2(SCT_, VALIDATION_STATUS_UNKNOWN_LOG);
+	CONSTANT2(SCT_, VALIDATION_STATUS_VALID);
+	CONSTANT2(SCT_, VALIDATION_STATUS_INVALID);
+	CONSTANT2(SCT_, VALIDATION_STATUS_UNVERIFIED);
+	CONSTANT2(SCT_, VALIDATION_STATUS_UNKNOWN_VERSION);
+}
+
+Crypt::OpenSSL3::X509::Transparency::Timestamp SCT_new()
+
+Crypt::OpenSSL3::X509::Transparency::Timestamp SCT_new_from_base64(unsigned char version, const char *logid_base64, int entry_type, uint64_t timestamp, const char *extensions_base64, const char *signature_base64)
+
+int SCT_get_version(Crypt::OpenSSL3::X509::Transparency::Timestamp sct)
+
+bool SCT_set_version(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, int version)
+
+int SCT_get_log_entry_type(Crypt::OpenSSL3::X509::Transparency::Timestamp sct)
+
+bool SCT_set_log_entry_type(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, int entry_type)
+
+NO_OUTPUT size_t SCT_get_log_id(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, OUTLIST SV* out)
+INTERFACE: SCT_get_log_id SCT_get_signature SCT_get_extensions
+INIT:
+	unsigned char* buffer;
+C_ARGS: sct, &buffer
+POSTCALL:
+	out = newSVpvn(buffer, RETVAL);
+
+bool SCT_set_log_id(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, const unsigned char *log_id, size_t length(log_id))
+
+uint64_t SCT_get_timestamp(Crypt::OpenSSL3::X509::Transparency::Timestamp sct)
+
+void SCT_set_timestamp(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, uint64_t timestamp)
+
+Crypt::OpenSSL3::NID SCT_get_signature_nid(Crypt::OpenSSL3::X509::Transparency::Timestamp sct)
+
+bool SCT_set_signature_nid(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, Crypt::OpenSSL3::NID nid)
+
+bool SCT_set_signature(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, const unsigned char *sig, size_t length(sig))
+
+bool SCT_set_extensions(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, const unsigned char *ext, size_t length(ext))
+
+int SCT_get_source(Crypt::OpenSSL3::X509::Transparency::Timestamp sct)
+
+bool SCT_set_source(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, int source)
+
+Success SCT_validate(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, Crypt::OpenSSL3::X509::Transparency::Evaluator ctx)
+
+int SCT_get_validation_status(Crypt::OpenSSL3::X509::Transparency::Timestamp sct)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKCS7	PREFIX = PKCS7_
 
