@@ -1615,10 +1615,19 @@ POSTCALL:
 		XSRETURN_UNDEF;
 
 int X509_get_ext_by_NID(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::NID nid, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
 int X509_get_ext_by_OBJ(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::ASN1::Object obj, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
 int X509_get_ext_by_critical(Crypt::OpenSSL3::X509 x, int crit, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::X509::Extension X509_delete_ext(Crypt::OpenSSL3::X509 x, int loc)
 
@@ -1952,9 +1961,15 @@ Crypt::OpenSSL3::X509::Name X509_NAME_dup(Crypt::OpenSSL3::X509::Name self)
 
 int X509_NAME_cmp(Crypt::OpenSSL3::X509::Name a, Crypt::OpenSSL3::X509::Name b)
 
-int X509_NAME_get_index_by_NID(Crypt::OpenSSL3::X509::Name name, Crypt::OpenSSL3::NID nid, int lastpos)
+int X509_NAME_get_index_by_NID(Crypt::OpenSSL3::X509::Name name, Crypt::OpenSSL3::NID nid, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
-int X509_NAME_get_index_by_OBJ(Crypt::OpenSSL3::X509::Name name, Crypt::OpenSSL3::ASN1::Object obj, int lastpos)
+int X509_NAME_get_index_by_OBJ(Crypt::OpenSSL3::X509::Name name, Crypt::OpenSSL3::ASN1::Object obj, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
 int X509_NAME_entry_count(Crypt::OpenSSL3::X509::Name name)
 
@@ -2155,11 +2170,20 @@ C_ARGS: bio, x
 
 int X509_REQ_get_attr_count(Crypt::OpenSSL3::X509::Request req)
 
-int X509_REQ_get_attr_by_NID(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::NID nid, int lastpos)
+int X509_REQ_get_attr_by_NID(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::NID nid, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
-int X509_REQ_get_attr_by_OBJ(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::ASN1::Object obj, int lastpos)
+int X509_REQ_get_attr_by_OBJ(Crypt::OpenSSL3::X509::Request req, Crypt::OpenSSL3::ASN1::Object obj, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::X509::Attribute X509_REQ_get_attr(Crypt::OpenSSL3::X509::Request req, int loc)
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::X509::Attribute X509_REQ_delete_attr(Crypt::OpenSSL3::X509::Request req, int loc)
 
@@ -3054,11 +3078,20 @@ int TS_REQ_get_cert_req(Crypt::OpenSSL3::Timestamp::Request a)
 
 int TS_REQ_get_ext_count(Crypt::OpenSSL3::Timestamp::Request a)
 
-int TS_REQ_get_ext_by_NID(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::NID nid, int lastpos)
+int TS_REQ_get_ext_by_NID(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::NID nid, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
-int TS_REQ_get_ext_by_OBJ(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::ASN1::Object obj, int lastpos)
+int TS_REQ_get_ext_by_OBJ(Crypt::OpenSSL3::Timestamp::Request a, Crypt::OpenSSL3::ASN1::Object obj, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
-int TS_REQ_get_ext_by_critical(Crypt::OpenSSL3::Timestamp::Request a, int crit, int lastpos)
+int TS_REQ_get_ext_by_critical(Crypt::OpenSSL3::Timestamp::Request a, int crit, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::X509::Extension TS_REQ_get_ext(Crypt::OpenSSL3::Timestamp::Request a, int loc)
 POSTCALL:
@@ -3183,11 +3216,20 @@ POSTCALL:
 
 int TS_TST_INFO_get_ext_count(Crypt::OpenSSL3::Timestamp::TokenInfo a)
 
-int TS_TST_INFO_get_ext_by_NID(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::NID nid, int lastpos)
+int TS_TST_INFO_get_ext_by_NID(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::NID nid, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
-int TS_TST_INFO_get_ext_by_OBJ(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::ASN1::Object obj, int lastpos)
+int TS_TST_INFO_get_ext_by_OBJ(Crypt::OpenSSL3::Timestamp::TokenInfo a, Crypt::OpenSSL3::ASN1::Object obj, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
-int TS_TST_INFO_get_ext_by_critical(Crypt::OpenSSL3::Timestamp::TokenInfo a, int crit, int lastpos)
+int TS_TST_INFO_get_ext_by_critical(Crypt::OpenSSL3::Timestamp::TokenInfo a, int crit, int lastpos = -1)
+POSTCALL:
+	if (RETVAL == -1)
+		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::X509::Extension TS_TST_INFO_get_ext(Crypt::OpenSSL3::Timestamp::TokenInfo a, int loc)
 POSTCALL:
