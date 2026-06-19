@@ -27,6 +27,8 @@ use Crypt::OpenSSL3;
 
 =method verify_response
 
+=method verify_token
+
 =head2 CONSTANTS
 
 =over 4

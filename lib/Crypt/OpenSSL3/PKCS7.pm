@@ -59,7 +59,17 @@ use Crypt::OpenSSL3;
 
 =item * NOCERTS
 
+=item * NOCHAIN
+
+=item * NOCRL
+
+=item * NOINTERN
+
+=item * NOSIGS
+
 =item * NOSMIMECAP
+
+=item * NOVERIFY
 
 =item * STREAM
 

@@ -13,6 +13,8 @@ use Crypt::OpenSSL3;
 
 =method get_status_info
 
+=method get_token
+
 =method get_tst_info
 
 =method print
