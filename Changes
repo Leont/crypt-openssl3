@@ -1,6 +1,7 @@
 Revision history for Crypt-OpenSSL3
 
 {{$NEXT}}
+          - [BREAKING] Remove ASN1 value classes
 
 0.008     2026-06-20 18:57:07+02:00 Europe/Brussels
           - Add Crypt::OpenSSL3::X509::Store::Context
