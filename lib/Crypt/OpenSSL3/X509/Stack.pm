@@ -13,15 +13,11 @@ use Crypt::OpenSSL3;
 
 =method delete
 
-=method delete_ptr
-
 =method find
 
 =method find_all
 
 =method find_ex
-
-=method free
 
 =method insert
 

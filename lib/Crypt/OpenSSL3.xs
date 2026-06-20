@@ -1956,22 +1956,18 @@ Crypt::OpenSSL3::ASN1::String X509_EXTENSION_get_data(Crypt::OpenSSL3::X509::Ext
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Stack	PREFIX = sk_X509_
 
+Crypt::OpenSSL3::X509::Stack sk_X509_new(class)
+C_ARGS: NULL
+
 int sk_X509_num(Crypt::OpenSSL3::X509::Stack sk)
 
 Crypt::OpenSSL3::X509 sk_X509_value(Crypt::OpenSSL3::X509::Stack sk, int idx)
 
-Crypt::OpenSSL3::X509::Stack sk_X509_new(class)
-C_ARGS: NULL
-
 int sk_X509_reserve(Crypt::OpenSSL3::X509::Stack sk, int n)
-
-void sk_X509_free(Crypt::OpenSSL3::X509::Stack sk)
 
 void sk_X509_zero(Crypt::OpenSSL3::X509::Stack sk)
 
 Crypt::OpenSSL3::X509 sk_X509_delete(Crypt::OpenSSL3::X509::Stack sk, int i)
-
-Crypt::OpenSSL3::X509 sk_X509_delete_ptr(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr)
 
 int sk_X509_push(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr)
 
