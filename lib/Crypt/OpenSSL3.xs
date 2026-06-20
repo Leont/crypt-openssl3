@@ -2321,6 +2321,8 @@ bool CTLOG_STORE_load_default_file(Crypt::OpenSSL3::X509::Transparency::LogStore
 
 bool CTLOG_STORE_load_file(Crypt::OpenSSL3::X509::Transparency::LogStore store, const char *file)
 
+Bool CLONE_SKIP(...)
+
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Transparency::Evaluator	PREFIX = CT_POLICY_EVAL_CTX_
 
@@ -2344,6 +2346,8 @@ void CT_POLICY_EVAL_CTX_set_log_store(Crypt::OpenSSL3::X509::Transparency::Evalu
 uint64_t CT_POLICY_EVAL_CTX_get_time(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx)
 
 void CT_POLICY_EVAL_CTX_set_time(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx, uint64_t time_in_ms)
+
+Bool CLONE_SKIP(...)
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Transparency::Timestamp	PREFIX = SCT_
@@ -2412,6 +2416,8 @@ bool SCT_set_source(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, int sour
 Success SCT_validate(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, Crypt::OpenSSL3::X509::Transparency::Evaluator ctx)
 
 int SCT_get_validation_status(Crypt::OpenSSL3::X509::Transparency::Timestamp sct)
+
+Bool CLONE_SKIP(...)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKCS7	PREFIX = PKCS7_
 
