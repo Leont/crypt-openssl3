@@ -8,7 +8,6 @@
 #include <stdbool.h>
 #endif
 
-#define NEED_mg_findext
 #include "ppport.h"
 
 #include <openssl/ssl.h>
@@ -814,11 +813,11 @@ CTX_PARAMS(EVP_SIGNATURE) T_CTX_PARAMS
 
 INPUT
 T_PARAMS
-	const OSSL_PARAM* settable = ${ (my $settable = $type) =~ s/ PARAMS \( (\w+) \) /$1_settable_params(ctx)/x; \$settable };
+	const OSSL_PARAM* settable = ${ \($type =~ s/ PARAMS \( (\w+) \) /$1_settable_params(ctx)/xr) };
 	$var = params_for(settable, $arg);
 
 T_CTX_PARAMS
-	const OSSL_PARAM* settable = ${ (my $settable = $type) =~ s/ CTX_PARAMS \( (\w+) \) /$1_settable_ctx_params(type)/x; \$settable };
+	const OSSL_PARAM* settable = ${ \($type =~ s/ CTX_PARAMS \( (\w+) \) /$1_settable_ctx_params(type)/xr) };
 	$var = params_for(settable, $arg);
 
 OUTPUT
