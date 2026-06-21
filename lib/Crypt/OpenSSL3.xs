@@ -2211,7 +2211,7 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Transparency::Timestam
 
 BOOT:
 {
-	HV* stash = gv_stashpvs("Crypt::OpenSSL3::Transparency::Timestamp", GV_ADD | GV_ADDMULTI);
+	HV* stash = gv_stashpvs("Crypt::OpenSSL3::X509::Transparency::Timestamp", GV_ADD | GV_ADDMULTI);
 	CONSTANT2(CT_LOG_, ENTRY_TYPE_NOT_SET);
 	CONSTANT2(CT_LOG_, ENTRY_TYPE_X509);
 	CONSTANT2(CT_LOG_, ENTRY_TYPE_PRECERT);
