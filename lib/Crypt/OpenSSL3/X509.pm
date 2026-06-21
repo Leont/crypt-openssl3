@@ -59,6 +59,8 @@ use Crypt::OpenSSL3;
 
 =method get_ext
 
+=method get_extensions
+
 =method get_ext_by_NID
 
 =method get_ext_by_OBJ

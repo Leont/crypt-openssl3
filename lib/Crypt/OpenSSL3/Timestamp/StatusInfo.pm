@@ -16,3 +16,5 @@ use Crypt::OpenSSL3;
 =method get_status
 
 =method set_status
+
+=method get_text

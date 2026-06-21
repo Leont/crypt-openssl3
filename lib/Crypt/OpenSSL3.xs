@@ -50,7 +50,7 @@ static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## _magic = {\
 };
 
 #define TYPE_COMMON(c_type, xs_type, p_type)\
-static inline SV* make_ ## c_type(pTHX_ void* var) {\
+static inline SV* make_ ## c_type(pTHX_ c_type* var) {\
 	SV* result = newSV(0);\
 	const char* classname = "Crypt::OpenSSL3::" #p_type;\
 	const MGVTBL* mgvtbl = &Crypt__OpenSSL3__## xs_type ##_magic;\
@@ -288,7 +288,6 @@ ASN1_INTEGER* S_ASN1_INTEGER_from_SV(pTHX_ SV* value) {
 #define X509_get_tbs_sigalg(c) (X509_ALGOR*)X509_get0_tbs_sigalg(c)
 #define X509_get_signature X509_get0_signature
 #define X509_get_subject_key_id X509_get0_subject_key_id
-#define X509_get_authority_issuer(c) (GENERAL_NAME*)X509_get0_authority_issuer(c)
 #define X509_get_authority_key_id X509_get0_authority_key_id
 #define X509_get_authority_serial X509_get0_authority_serial
 #define X509_set_notAfter X509_set1_notAfter
@@ -371,7 +370,6 @@ ASN1_INTEGER* S_ASN1_INTEGER_from_SV(pTHX_ SV* value) {
 #define PKCS7_read_der d2i_PKCS7_bio
 #define PKCS7_write_der i2d_PKCS7_bio
 #define PKCS7_sign PKCS7_sign_ex
-#define PKCS7_get_signers PKCS7_get0_signers
 #define PKCS7_encrypt PKCS7_encrypt_ex
 
 #define TS_REQ_print(t, b) TS_REQ_print_bio(b, t)
@@ -582,6 +580,17 @@ static int EVP_PKEY_verify_init_ex2(EVP_PKEY_CTX *ctx, EVP_SIGNATURE *algo, cons
 			mPUSHs(make_ ## TYPE(aTHX_ value));\
 		}\
 		sk_ ## TYPE ## _free(stack);\
+	}
+
+#define CSTACK_TO_STACK(TYPE, stack) \
+	if (stack) {\
+		int num = sk_ ## TYPE ## _num(stack);\
+		EXTEND(SP, num);\
+		for (int i = 0; i < num; ++i) {\
+			TYPE* orig = sk_ ## TYPE ## _value(stack, i);\
+			TYPE* value = TYPE ## _dup(orig);\
+			mPUSHs(make_ ## TYPE(aTHX_ value));\
+		}\
 	}
 
 static OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* input) {
@@ -1486,11 +1495,9 @@ POSTCALL:
 		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::X509::GeneralName X509_get_authority_issuer(Crypt::OpenSSL3::X509 x)
-POSTCALL:
-	if (RETVAL)
-		RETVAL = GENERAL_NAME_dup(RETVAL);
-	else
-		XSRETURN_UNDEF;
+PPCODE:
+	const STACK_OF(GENERAL_NAME)* gns = X509_get0_authority_issuer(x);
+	CSTACK_TO_STACK(GENERAL_NAME, gns);
 
 const ASN1_INTEGER* X509_get_authority_serial(Crypt::OpenSSL3::X509 x)
 POSTCALL:
@@ -1504,6 +1511,11 @@ void X509_set_proxy_pathlen(Crypt::OpenSSL3::X509 x, int l)
 long X509_get_proxy_pathlen(Crypt::OpenSSL3::X509 x)
 
 int X509_get_ext_count(Crypt::OpenSSL3::X509 x)
+
+void X509_get_extensions(Crypt::OpenSSL3::X509 x)
+PPCODE:
+	const STACK_OF(X509_EXTENSION)* exts = X509_get0_extensions(x);
+	CSTACK_TO_STACK(X509_EXTENSION, exts);
 
 Crypt::OpenSSL3::X509::Extension X509_get_ext(Crypt::OpenSSL3::X509 x, int loc)
 POSTCALL:
@@ -2312,10 +2324,10 @@ C_ARGS: signcert, pkey, certs, data, flags, NULL, propq
 
 bool PKCS7_verify(Crypt::OpenSSL3::PKCS7 p7, Crypt::OpenSSL3::X509::Stack certs, Crypt::OpenSSL3::X509::Store store, Crypt::OpenSSL3::BIO indata, Crypt::OpenSSL3::BIO out, int flags)
 
-Crypt::OpenSSL3::X509::Stack PKCS7_get_signers(Crypt::OpenSSL3::PKCS7 p7, Crypt::OpenSSL3::X509::Stack certs, int flags)
-POSTCALL:
-	if (RETVAL)
-		sk_X509_dup(RETVAL);
+Crypt::OpenSSL3::X509::Stack PKCS7_get_signers(Crypt::OpenSSL3::PKCS7 p7, Crypt::OpenSSL3::X509::Stack certs, int flags = 0)
+PPCODE:
+	STACK_OF(X509)* stack = PKCS7_get0_signers(p7, certs, flags);
+	CSTACK_TO_STACK(X509, stack);
 
 Crypt::OpenSSL3::PKCS7 PKCS7_encrypt(class, Crypt::OpenSSL3::X509::Stack certs, Crypt::OpenSSL3::BIO in, Crypt::OpenSSL3::Cipher cipher, int flags, const char* propq = NULL)
 C_ARGS: certs, in, cipher, flags, NULL, propq
@@ -3088,7 +3100,10 @@ bool TS_REQ_set_cert_req(Crypt::OpenSSL3::Timestamp::Request a, int cert_req)
 
 int TS_REQ_get_cert_req(Crypt::OpenSSL3::Timestamp::Request a)
 
-# STACK_OF(X509_EXTENSION) *TS_REQ_get_exts(Crypt::OpenSSL3::Timestamp::Request a)
+void TS_REQ_get_exts(Crypt::OpenSSL3::Timestamp::Request a)
+PPCODE:
+	STACK_OF(X509_EXTENSION)* exts = TS_REQ_get_exts(a);
+	CSTACK_TO_STACK(X509_EXTENSION, exts);
 
 int TS_REQ_get_ext_count(Crypt::OpenSSL3::Timestamp::Request a)
 
@@ -3300,6 +3315,18 @@ C_ARGS:
 bool TS_STATUS_INFO_set_status(Crypt::OpenSSL3::Timestamp::StatusInfo a, int i)
 
 const ASN1_INTEGER* TS_STATUS_INFO_get_status(Crypt::OpenSSL3::Timestamp::StatusInfo a)
+
+void TS_STATUS_INFO_get_text(Crypt::OpenSSL3::Timestamp::StatusInfo a)
+PPCODE:
+	const STACK_OF(ASN1_UTF8STRING)* stack = TS_STATUS_INFO_get0_text(a);
+	if (stack) {
+		int num = sk_ASN1_UTF8STRING_num(stack);
+		EXTEND(SP, num);
+		for (int i = 0; i < num; ++i) {
+			ASN1_UTF8STRING* orig = sk_ASN1_UTF8STRING_value(stack, i);
+			mPUSHs(ASN1_STRING_to_SV(V_ASN1_UTF8STRING, orig));
+		}
+	}
 
 const ASN1_OCTET_STRING* TS_STATUS_INFO_get_failure_info(Crypt::OpenSSL3::Timestamp::StatusInfo a)
 
