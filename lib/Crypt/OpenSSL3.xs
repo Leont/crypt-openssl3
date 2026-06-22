@@ -100,23 +100,6 @@ TYPE_TYPE(modifier c_type, xs_type)\
 MAGIC_TABLE(xs_type, NULL, NULL)\
 TYPE_COMMON(c_type, xs_type, p_type)
 
-#define STACK_TYPE(c_prefix, xs_type)\
-typedef STACK_OF(c_prefix) * Crypt__OpenSSL3__ ## xs_type ## __Stack;\
-static int c_prefix ## __Stack_magic_dup(pTHX_ MAGIC* mg, CLONE_PARAMS* params) {\
-	PERL_UNUSED_VAR(params);\
-	mg->mg_ptr = (char*)sk_ ## c_prefix ## _dup((STACK_OF(c_prefix)*)mg->mg_ptr);\
-	return 0;\
-}\
-static int c_prefix ## __Stack_magic_free(pTHX_ SV* sv, MAGIC* mg) {\
-	PERL_UNUSED_VAR(sv);\
-	sk_ ## c_prefix ## _free((STACK_OF(c_prefix)*)mg->mg_ptr);\
-	return 0;\
-}\
-static const MGVTBL Crypt__OpenSSL3__ ## xs_type ## __Stack_magic = {\
-	.svt_dup = c_prefix ## __Stack_magic_dup,\
-	.svt_free = c_prefix ## __Stack_magic_free,\
-};
-
 #if !OPENSSL_VERSION_PREREQ(3, 2)
 static EVP_MD_CTX *EVP_MD_CTX_dup(const EVP_MD_CTX *in) {
 	EVP_MD_CTX* result = EVP_MD_CTX_new();
@@ -156,7 +139,6 @@ typedef int Crypt__OpenSSL3__NID;
 #define ASN1_OBJECT_dup OBJ_dup
 DUPLICATING_TYPE(ASN1_OBJECT, ASN1__Object, ASN1::Object)
 DUPLICATING_TYPE(X509, X509, X509)
-STACK_TYPE(X509, X509)
 COUNTING_TYPE(X509_STORE, X509__Store, X509::Store)
 DUPLICATING_TYPE(X509_NAME, X509__Name, X509::Name)
 DUPLICATING_TYPE(X509_NAME_ENTRY, X509__Name__Entry, X509::Name::Entry)
@@ -593,6 +575,15 @@ static int EVP_PKEY_verify_init_ex2(EVP_PKEY_CTX *ctx, EVP_SIGNATURE *algo, cons
 		}\
 	}
 
+#define STACK_FROM_ARRAY(TYPE, var, arg)\
+	var = sk_ ## TYPE ## _new(NULL);\
+	if (SvROK(arg) && SvTYPE(SvRV(arg)) == SVt_PVAV) {\
+		for (int i = 0; i < av_count((AV*)SvRV(arg)); ++i) {\
+			TYPE* value = get_ ## TYPE(aTHX_ *av_fetch((AV*)SvRV(arg), i, FALSE));\
+			sk_ ## TYPE ## _push(var, value);\
+		}\
+	}
+
 static OSSL_PARAM* S_params_for(pTHX_ const OSSL_PARAM* settable, SV* input) {
 	if (!SvROK(input) || SvTYPE(SvRV(input)) != SVt_PVHV)
 		return NULL;
@@ -810,6 +801,8 @@ Crypt::OpenSSL3::X509::Attribute	T_MAGICEXT
 Crypt::OpenSSL3::X509::VerifyParam	T_MAGICEXT
 Crypt::OpenSSL3::X509::Request	T_MAGICEXT
 
+STACK_OF(X509)*	T_STACK
+
 Crypt::OpenSSL3::X509::Transparency::Timestamp	T_MAGICEXT
 Crypt::OpenSSL3::X509::Transparency::LogStore	T_MAGICEXT
 Crypt::OpenSSL3::X509::Transparency::Evaluator	T_MAGICEXT
@@ -863,6 +856,9 @@ T_ASN1_TIME
 	$var = ASN1_TIME_set(NULL, SvIV($arg));
 T_ASN1_GENERALIZEDTIME
 	$var = ASN1_GENERALIZEDTIME_set(NULL, SvIV($arg));
+
+T_STACK
+	STACK_FROM_ARRAY(${ \( $type =~ s/ STACK_OF \( (\w+) \) \s* \* /$1/xr) }, $var, $arg);
 
 OUTPUT
 T_ASN1_STRING
@@ -1811,47 +1807,6 @@ bool X509_EXTENSION_get_critical(Crypt::OpenSSL3::X509::Extension ex)
 ASN1_OCTET_STRING* X509_EXTENSION_get_data(Crypt::OpenSSL3::X509::Extension ne)
 
 
-MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Stack	PREFIX = sk_X509_
-
-Crypt::OpenSSL3::X509::Stack sk_X509_new(class)
-C_ARGS: NULL
-
-int sk_X509_num(Crypt::OpenSSL3::X509::Stack sk)
-
-Crypt::OpenSSL3::X509 sk_X509_value(Crypt::OpenSSL3::X509::Stack sk, int idx)
-
-int sk_X509_reserve(Crypt::OpenSSL3::X509::Stack sk, int n)
-
-void sk_X509_zero(Crypt::OpenSSL3::X509::Stack sk)
-
-Crypt::OpenSSL3::X509 sk_X509_delete(Crypt::OpenSSL3::X509::Stack sk, int i)
-
-int sk_X509_push(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr)
-
-int sk_X509_unshift(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr)
-
-Crypt::OpenSSL3::X509 sk_X509_pop(Crypt::OpenSSL3::X509::Stack sk)
-
-Crypt::OpenSSL3::X509 sk_X509_shift(Crypt::OpenSSL3::X509::Stack sk)
-
-void sk_X509_pop_free(Crypt::OpenSSL3::X509::Stack sk)
-C_ARGS: sk, X509_free
-
-int sk_X509_insert(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr, int idx)
-
-Crypt::OpenSSL3::X509 sk_X509_set(Crypt::OpenSSL3::X509::Stack sk, int idx, Crypt::OpenSSL3::X509 ptr)
-
-int sk_X509_find(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr)
-
-int sk_X509_find_ex(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr)
-
-int sk_X509_find_all(Crypt::OpenSSL3::X509::Stack sk, Crypt::OpenSSL3::X509 ptr, OUT int pnum)
-
-void sk_X509_sort(Crypt::OpenSSL3::X509::Stack sk)
-
-int sk_X509_is_sorted(Crypt::OpenSSL3::X509::Stack sk)
-
-
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::VerifyResult	PREFIX = X509_verify_cert_
 
 IV X509_verify_cert_error_code(Crypt::OpenSSL3::X509::VerifyResult result)
@@ -1974,13 +1929,11 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Store::Context	PREFIX 
 Crypt::OpenSSL3::X509::Store::Context X509_STORE_CTX_new(const char *propq = NULL)
 C_ARGS: NULL, propq
 
-bool X509_STORE_CTX_init(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Store trust_store, Crypt::OpenSSL3::X509 target, Crypt::OpenSSL3::X509::Stack untrusted)
+bool X509_STORE_CTX_init(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Store trust_store, Crypt::OpenSSL3::X509 target, STACK_OF(X509)* untrusted = NULL)
 
 bool X509_STORE_CTX_init_rpk(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Store trust_store, Crypt::OpenSSL3::PKey rpk)
 
-void X509_STORE_CTX_set_trusted_stack(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Stack sk)
-INIT:
-	sk = sk_X509_dup(sk);
+void X509_STORE_CTX_set_trusted_stack(Crypt::OpenSSL3::X509::Store::Context ctx, STACK_OF(X509)* sk)
 
 void X509_STORE_CTX_set_cert(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509 target)
 
@@ -1992,27 +1945,21 @@ Crypt::OpenSSL3::X509::VerifyParam X509_STORE_CTX_get_param(Crypt::OpenSSL3::X50
 
 void X509_STORE_CTX_set_param(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::VerifyParam param)
 
-Crypt::OpenSSL3::X509::Stack X509_STORE_CTX_get_untrusted(Crypt::OpenSSL3::X509::Store::Context ctx)
-POSTCALL:
-	if (RETVAL)
-		RETVAL = sk_X509_dup(RETVAL);
-	else
-		XSRETURN_UNDEF;
+void X509_STORE_CTX_get_untrusted(Crypt::OpenSSL3::X509::Store::Context ctx)
+PPCODE:
+	STACK_OF(X509)* stack = X509_STORE_CTX_get0_untrusted(ctx);
+	CSTACK_TO_STACK(X509, stack);
 
-void X509_STORE_CTX_set_untrusted(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Stack sk)
-INIT:
-	sk = sk_X509_dup(sk);
+void X509_STORE_CTX_set_untrusted(Crypt::OpenSSL3::X509::Store::Context ctx, STACK_OF(X509)* sk)
 
 int X509_STORE_CTX_get_num_untrusted(Crypt::OpenSSL3::X509::Store::Context ctx)
 
-Crypt::OpenSSL3::X509::Stack X509_STORE_CTX_get_chain(Crypt::OpenSSL3::X509::Store::Context ctx)
-POSTCALL:
-	if (!RETVAL)
-		XSRETURN_UNDEF;
+void X509_STORE_CTX_get_chain(Crypt::OpenSSL3::X509::Store::Context ctx)
+PPCODE:
+	STACK_OF(X509)* stack = X509_STORE_CTX_get0_chain(ctx);
+	CSTACK_TO_STACK(X509, stack);
 
-void X509_STORE_CTX_set_verified_chain(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Stack chain)
-INIT:
-	chain = sk_X509_dup(chain);
+void X509_STORE_CTX_set_verified_chain(Crypt::OpenSSL3::X509::Store::Context ctx, STACK_OF(X509)* chain)
 
 Crypt::OpenSSL3::PKey X509_STORE_CTX_get_rpk(Crypt::OpenSSL3::X509::Store::Context ctx)
 POSTCALL:
@@ -2319,17 +2266,17 @@ C_ARGS: bio, p7
 
 bool PKCS7_add_certificate(Crypt::OpenSSL3::PKCS7 p7, Crypt::OpenSSL3::X509 cert)
 
-Crypt::OpenSSL3::PKCS7 PKCS7_sign(class, Crypt::OpenSSL3::X509 signcert, Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::X509::Stack certs, Crypt::OpenSSL3::BIO data, int flags, const char *propq = NULL)
+Crypt::OpenSSL3::PKCS7 PKCS7_sign(class, Crypt::OpenSSL3::X509 signcert, Crypt::OpenSSL3::PKey pkey, STACK_OF(X509)* certs, Crypt::OpenSSL3::BIO data, int flags, const char *propq = NULL)
 C_ARGS: signcert, pkey, certs, data, flags, NULL, propq
 
-bool PKCS7_verify(Crypt::OpenSSL3::PKCS7 p7, Crypt::OpenSSL3::X509::Stack certs, Crypt::OpenSSL3::X509::Store store, Crypt::OpenSSL3::BIO indata, Crypt::OpenSSL3::BIO out, int flags)
+bool PKCS7_verify(Crypt::OpenSSL3::PKCS7 p7, STACK_OF(X509)* certs, Crypt::OpenSSL3::X509::Store store, Crypt::OpenSSL3::BIO indata, Crypt::OpenSSL3::BIO out, int flags)
 
-Crypt::OpenSSL3::X509::Stack PKCS7_get_signers(Crypt::OpenSSL3::PKCS7 p7, Crypt::OpenSSL3::X509::Stack certs, int flags = 0)
+void PKCS7_get_signers(Crypt::OpenSSL3::PKCS7 p7, STACK_OF(X509)* certs, int flags = 0)
 PPCODE:
 	STACK_OF(X509)* stack = PKCS7_get0_signers(p7, certs, flags);
 	CSTACK_TO_STACK(X509, stack);
 
-Crypt::OpenSSL3::PKCS7 PKCS7_encrypt(class, Crypt::OpenSSL3::X509::Stack certs, Crypt::OpenSSL3::BIO in, Crypt::OpenSSL3::Cipher cipher, int flags, const char* propq = NULL)
+Crypt::OpenSSL3::PKCS7 PKCS7_encrypt(class, STACK_OF(X509)* certs, Crypt::OpenSSL3::BIO in, Crypt::OpenSSL3::Cipher cipher, int flags, const char* propq = NULL)
 C_ARGS: certs, in, cipher, flags, NULL, propq
 
 bool PKCS7_decrypt(Crypt::OpenSSL3::PKCS7 p7, Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::X509 cert, Crypt::OpenSSL3::BIO data, int flags)
@@ -3388,9 +3335,7 @@ POSTCALL:
 	if (RETVAL)
 		X509_STORE_up_ref(s);
 
-bool TS_VERIFY_CTX_set_certs(Crypt::OpenSSL3::Timestamp::Verifier ctx, Crypt::OpenSSL3::X509::Stack certs)
-INIT:
-	certs = sk_X509_dup(certs);
+bool TS_VERIFY_CTX_set_certs(Crypt::OpenSSL3::Timestamp::Verifier ctx, STACK_OF(X509)* certs)
 
 int TS_VERIFY_CTX_verify_response(Crypt::OpenSSL3::Timestamp::Verifier ctx, Crypt::OpenSSL3::Timestamp::Response response)
 
