@@ -4208,15 +4208,27 @@ MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKey::Context	PREFIX = EVP_P
 
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new(classname, Crypt::OpenSSL3::PKey pkey)
 C_ARGS: pkey, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_id(classname, Crypt::OpenSSL3::NID id)
 C_ARGS: id, NULL
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_from_name(classname, const char *name, const char *propquery = "")
 C_ARGS: NULL, name, propquery
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_new_from_pkey(classname, Crypt::OpenSSL3::PKey pkey, const char *propquery = "")
 C_ARGS: NULL, pkey, propquery
+POSTCALL:
+	if (!RETVAL)
+		XSRETURN_UNDEF;
 
 Crypt::OpenSSL3::PKey::Context EVP_PKEY_CTX_dup(Crypt::OpenSSL3::PKey::Context ctx)
 
