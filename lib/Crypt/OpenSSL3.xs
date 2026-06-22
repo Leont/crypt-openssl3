@@ -4080,13 +4080,13 @@ POSTCALL:
 bool EVP_PKEY_write_pem_public_key(Crypt::OpenSSL3::PKey pkey, Crypt::OpenSSL3::BIO bio, const char* propq = "")
 C_ARGS: bio, pkey, NULL, propq
 
-Crypt::OpenSSL3::PKey EVP_PKEY_read_der_public_key(Crypt::OpenSSL3::BIO bio, const char* propq = NULL)
+Crypt::OpenSSL3::PKey EVP_PKEY_read_der_public_key(class, Crypt::OpenSSL3::BIO bio, const char* propq = NULL)
 C_ARGS: bio, NULL, NULL, propq
 POSTCALL:
 	if (!RETVAL)
 		XSRETURN_UNDEF;
 
-Crypt::OpenSSL3::PKey EVP_PKEY_read_der_private_key(Crypt::OpenSSL3::BIO bio, const char* propq = NULL)
+Crypt::OpenSSL3::PKey EVP_PKEY_read_der_private_key(class, Crypt::OpenSSL3::BIO bio, const char* propq = NULL)
 C_ARGS: bio, NULL, NULL, propq
 POSTCALL:
 	if (!RETVAL)
