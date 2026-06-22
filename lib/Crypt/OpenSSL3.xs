@@ -3695,9 +3695,9 @@ PPCODE:
 	EVP_MD_do_all_provided(NULL, EVP_MD_provided_callback, iTHX);
 	SPAGAIN;
 
-int EVP_MD_get_type(Crypt::OpenSSL3::MD md)
+Crypt::OpenSSL3::NID EVP_MD_get_type(Crypt::OpenSSL3::MD md)
 
-int EVP_MD_get_pkey_type(Crypt::OpenSSL3::MD md)
+Crypt::OpenSSL3::NID EVP_MD_get_pkey_type(Crypt::OpenSSL3::MD md)
 
 int EVP_MD_get_size(Crypt::OpenSSL3::MD md)
 
