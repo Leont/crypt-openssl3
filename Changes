@@ -4,6 +4,7 @@ Revision history for Crypt-OpenSSL3
           - [BREAKING] Remove ASN1 value classes
           - Remove X509::Stack
           - Add Timestamp Protocol responder
+          - Add various missing version guards
           - Fix class argument in read_der_{public,private}_key
 
 0.008     2026-06-20 18:57:07+02:00 Europe/Brussels

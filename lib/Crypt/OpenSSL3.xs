@@ -1606,7 +1606,9 @@ BOOT:
 	CONSTANT2(X509_, PURPOSE_ANY);
 	CONSTANT2(X509_, PURPOSE_OCSP_HELPER);
 	CONSTANT2(X509_, PURPOSE_TIMESTAMP_SIGN);
+#if OPENSSL_VERSION_PREREQ(3, 1)
 	CONSTANT2(X509_, PURPOSE_CODE_SIGN);
+#endif
 
 	CONSTANT2(X509_, V_FLAG_USE_CHECK_TIME);
 	CONSTANT2(X509_, V_FLAG_CRL_CHECK);
@@ -1629,8 +1631,10 @@ BOOT:
 	CONSTANT2(X509_, V_FLAG_PARTIAL_CHAIN);
 	CONSTANT2(X509_, V_FLAG_NO_ALT_CHAINS);
 	CONSTANT2(X509_, V_FLAG_NO_CHECK_TIME);
+#if OPENSSL_VERSION_PREREQ(3, 4)
 	CONSTANT2(X509_, V_FLAG_OCSP_RESP_CHECK);
 	CONSTANT2(X509_, V_FLAG_OCSP_RESP_CHECK_ALL);
+#endif
 }
 
 Crypt::OpenSSL3::X509::VerifyParam X509_VERIFY_PARAM_new(class)
@@ -1978,15 +1982,26 @@ C_ARGS: NULL, propq
 
 bool X509_STORE_CTX_init(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Store trust_store, Crypt::OpenSSL3::X509 target, STACK_OF(X509)* untrusted = NULL)
 
+#if OPENSSL_VERSION_PREREQ(3, 2)
+
 bool X509_STORE_CTX_init_rpk(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509::Store trust_store, Crypt::OpenSSL3::PKey rpk)
-
-void X509_STORE_CTX_set_trusted_stack(Crypt::OpenSSL3::X509::Store::Context ctx, STACK_OF(X509)* sk)
-
-void X509_STORE_CTX_set_cert(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509 target)
 
 void X509_STORE_CTX_set_rpk(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::PKey target)
 INIT:
 	EVP_PKEY_up_ref(target);
+
+Crypt::OpenSSL3::PKey X509_STORE_CTX_get_rpk(Crypt::OpenSSL3::X509::Store::Context ctx)
+POSTCALL:
+	if (RETVAL)
+		EVP_PKEY_up_ref(RETVAL);
+	else
+		XSRETURN_UNDEF;
+
+#endif
+
+void X509_STORE_CTX_set_trusted_stack(Crypt::OpenSSL3::X509::Store::Context ctx, STACK_OF(X509)* sk)
+
+void X509_STORE_CTX_set_cert(Crypt::OpenSSL3::X509::Store::Context ctx, Crypt::OpenSSL3::X509 target)
 
 Crypt::OpenSSL3::X509::VerifyParam X509_STORE_CTX_get_param(Crypt::OpenSSL3::X509::Store::Context ctx)
 
@@ -2007,13 +2022,6 @@ PPCODE:
 	CSTACK_TO_STACK(X509, stack);
 
 void X509_STORE_CTX_set_verified_chain(Crypt::OpenSSL3::X509::Store::Context ctx, STACK_OF(X509)* chain)
-
-Crypt::OpenSSL3::PKey X509_STORE_CTX_get_rpk(Crypt::OpenSSL3::X509::Store::Context ctx)
-POSTCALL:
-	if (RETVAL)
-		EVP_PKEY_up_ref(RETVAL);
-	else
-		XSRETURN_UNDEF;
 
 bool X509_STORE_CTX_set_default(Crypt::OpenSSL3::X509::Store::Context ctx, const char *name)
 
