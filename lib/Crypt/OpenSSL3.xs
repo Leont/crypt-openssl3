@@ -2155,7 +2155,7 @@ Crypt::OpenSSL3::X509::Transparency::LogStore CTLOG_STORE_new(const char *propq 
 C_ARGS: NULL, propq
 
 #if OPENSSL_VERSION_PREREQ(4, 1)
-bool CTLOG_STORE_add_log(Crypt::OpenSSL3::X509::Transparency::LogStore store, Crypt::OpenSSL3::PKey pkey, const char* name, const char* propq = NULL)
+bool CTLOG_STORE_add_log_key(Crypt::OpenSSL3::X509::Transparency::LogStore store, Crypt::OpenSSL3::PKey pkey, const char* name, const char* propq = NULL)
 CODE:
 	CTLOG* log = CTLOG_new_ex(pkey, name, NULL, propq);
 	RETVAL = CTLOG_STORE_add0_log(store, log);
