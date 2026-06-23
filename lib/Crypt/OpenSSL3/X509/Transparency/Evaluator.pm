@@ -7,7 +7,7 @@ use Crypt::OpenSSL3;
 
 1;
 
-# ABSTRACT: An X509 certificate
+# ABSTRACT: An X509 transparency evaluation context
 
 =method new
 
