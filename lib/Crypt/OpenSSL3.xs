@@ -294,6 +294,7 @@ ASN1_INTEGER* S_ASN1_INTEGER_from_SV(pTHX_ SV* value) {
 #define X509_verify_cert_error_code(value) value
 #define X509_verify_cert_ok(value) (value == X509_V_OK)
 #define X509_VERIFY_PARAM_add_policy X509_VERIFY_PARAM_add0_policy
+#define X509_VERIFY_PARAM_set_policies X509_VERIFY_PARAM_set1_policies
 #define X509_VERIFY_PARAM_get_host X509_VERIFY_PARAM_get0_host
 #define X509_VERIFY_PARAM_set_host X509_VERIFY_PARAM_set1_host
 #define X509_VERIFY_PARAM_add_host X509_VERIFY_PARAM_add1_host
@@ -802,6 +803,7 @@ Crypt::OpenSSL3::X509::VerifyParam	T_MAGICEXT
 Crypt::OpenSSL3::X509::Request	T_MAGICEXT
 
 STACK_OF(X509)*	T_STACK
+STACK_OF(ASN1_OBJECT)*	T_STACK
 
 Crypt::OpenSSL3::X509::Transparency::Timestamp	T_MAGICEXT
 Crypt::OpenSSL3::X509::Transparency::LogStore	T_MAGICEXT
@@ -1614,9 +1616,9 @@ time_t X509_VERIFY_PARAM_get_time(Crypt::OpenSSL3::X509::VerifyParam param)
 bool X509_VERIFY_PARAM_add_policy(Crypt::OpenSSL3::X509::VerifyParam param, Crypt::OpenSSL3::ASN1::Object policy)
 C_ARGS: param, ASN1_OBJECT_dup(policy)
 
-#if 0
-bool X509_VERIFY_PARAM_set1_policies(Crypt::OpenSSL3::X509::VerifyParam param, Crypt::OpenSSL3::ASN1::Object policies)
-#endif
+bool X509_VERIFY_PARAM_set_policies(Crypt::OpenSSL3::X509::VerifyParam param, STACK_OF(ASN1_OBJECT)* policies)
+POSTCALL:
+	sk_ASN1_OBJECT_free(policies);
 
 void X509_VERIFY_PARAM_set_depth(Crypt::OpenSSL3::X509::VerifyParam param, int depth)
 
