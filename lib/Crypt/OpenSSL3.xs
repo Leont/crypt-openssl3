@@ -155,7 +155,17 @@ typedef long Crypt__OpenSSL3__X509__VerifyResult;
 DUPLICATING_TYPE(CTLOG_STORE, X509__Transparency__LogStore, X509::Transparency::LogStore)
 #define CT_POLICY_EVAL_CTX_dup(s) NULL
 DUPLICATING_TYPE(CT_POLICY_EVAL_CTX, X509__Transparency__Evaluator, X509::Transparency::Evaluator)
-#define SCT_dup(s) NULL
+static SCT* S_SCT_dup(pTHX_ const SCT* input) {
+	unsigned char* serialized = NULL;
+	int size = i2o_SCT(input, &serialized);
+	if (size < 0)
+		return NULL;
+	const unsigned char* ptr = serialized;
+	SCT* output = o2i_SCT(NULL, &ptr, size);
+	OPENSSL_free(serialized);
+	return output;
+}
+#define SCT_dup(s) S_SCT_dup(aTHX_ s)
 DUPLICATING_TYPE(SCT, X509__Transparency__Timestamp, X509::Transparency::Timestamp)
 DUPLICATING_TYPE(PKCS7, PKCS7, PKCS7)
 
@@ -2276,7 +2286,6 @@ Success SCT_validate(Crypt::OpenSSL3::X509::Transparency::Timestamp sct, Crypt::
 
 int SCT_get_validation_status(Crypt::OpenSSL3::X509::Transparency::Timestamp sct)
 
-Bool CLONE_SKIP(...)
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::PKCS7	PREFIX = PKCS7_
 
