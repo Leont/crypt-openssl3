@@ -165,6 +165,8 @@ DUPLICATING_TYPE(TS_MSG_IMPRINT, Timestamp__Imprint, Timestamp::Imprint)
 DUPLICATING_TYPE(TS_TST_INFO, Timestamp__TokenInfo, Timestamp::TokenInfo)
 DUPLICATING_TYPE(TS_STATUS_INFO, Timestamp__StatusInfo, Timestamp::StatusInfo)
 DUPLICATING_TYPE(TS_ACCURACY, Timestamp__Accuracy, Timestamp::Accuracy)
+#define TS_RESP_CTX_dup(ctx) NULL
+DUPLICATING_TYPE(TS_RESP_CTX, Timestamp__Responder, Timestamp::Responder)
 #define TS_VERIFY_CTX_dup(ctx) NULL
 DUPLICATING_TYPE(TS_VERIFY_CTX, Timestamp__Verifier, Timestamp::Verifier)
 
@@ -370,6 +372,8 @@ ASN1_INTEGER* S_ASN1_INTEGER_from_SV(pTHX_ SV* value) {
 #define TS_MSG_IMPRINT_write_der i2d_TS_MSG_IMPRINT_bio
 #define TS_STATUS_INFO_get_status TS_STATUS_INFO_get0_status
 #define TS_STATUS_INFO_get_failure_info TS_STATUS_INFO_get0_failure_info
+#define TS_RESP_CTX_new TS_RESP_CTX_new_ex
+#define TS_RESP_CTX_create_response TS_RESP_create_response
 #define TS_VERIFY_CTX_init_from_request(ctx, req) TS_REQ_to_TS_VERIFY_CTX(req, ctx)
 #if OPENSSL_VERSION_PREREQ(3, 4)
 #define TS_VERIFY_CTX_set_data TS_VERIFY_CTX_set0_data
@@ -723,6 +727,46 @@ DEFINE_PROVIDED_CALLBACK(EVP_MAC)
 DEFINE_PROVIDED_CALLBACK(EVP_KDF)
 DEFINE_PROVIDED_CALLBACK(EVP_SIGNATURE)
 
+static ASN1_INTEGER* TS_RESP_CTX_serial_callback(struct TS_resp_ctx* ctx, void* data) {
+	dTHX;
+	dSP;
+
+	SV* callback = (SV*)data;
+	ENTER;
+	SAVETMPS;
+	PUSHMARK(sp);
+	int ret = call_sv(callback, G_SCALAR | G_EVAL);
+	if (ret != 1) {
+		TS_RESP_CTX_set_status_info(ctx, TS_STATUS_REJECTION, "Error during serial number generation");
+		return NULL;
+	}
+	SV* returnee = POPs;
+	ASN1_INTEGER* result = ASN1_INTEGER_from_SV(returnee);
+	FREETMPS;
+	LEAVE;
+	return result;
+}
+
+static int TS_RESP_CTX_time_callback(struct TS_resp_ctx* ctx, void* data, long *sec, long *usec) {
+	dTHX;
+	dSP;
+
+	SV* callback = (SV*)data;
+	ENTER;
+	SAVETMPS;
+	PUSHMARK(sp);
+	int ret = call_sv(callback, G_LIST | G_EVAL);
+	if (ret != 1 && ret != 2) {
+		TS_RESP_CTX_set_status_info(ctx, TS_STATUS_REJECTION, "Time is not available");
+		TS_RESP_CTX_add_failure_info(ctx, TS_INFO_TIME_NOT_AVAILABLE);
+		return 0;
+	}
+
+	*usec = ret == 2 ? POPi : 0;
+	*sec = POPi;
+	return 1;
+}
+
 typedef int Bool;
 typedef int Success;
 typedef int PrintRet;
@@ -817,6 +861,7 @@ Crypt::OpenSSL3::Timestamp::Imprint	T_MAGICEXT
 Crypt::OpenSSL3::Timestamp::TokenInfo	T_MAGICEXT
 Crypt::OpenSSL3::Timestamp::StatusInfo	T_MAGICEXT
 Crypt::OpenSSL3::Timestamp::Accuracy	T_MAGICEXT
+Crypt::OpenSSL3::Timestamp::Responder	T_MAGICEXT
 Crypt::OpenSSL3::Timestamp::Verifier	T_MAGICEXT
 
 Crypt::OpenSSL3::SSL::Method T_MAGICEXT
@@ -3293,6 +3338,54 @@ INTERFACE: TS_ACCURACY_get_seconds TS_ACCURACY_get_millis TS_ACCURACY_get_micros
 POSTCALL:
 	if (!RETVAL)
 		XSRETURN_UNDEF;
+
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Timestamp::Responder	PREFIX = TS_RESP_CTX_
+
+
+Crypt::OpenSSL3::Timestamp::Responder TS_RESP_CTX_new(class, const char *propq = NULL)
+C_ARGS: NULL, propq
+
+int TS_RESP_CTX_set_signer_cert(Crypt::OpenSSL3::Timestamp::Responder ctx, Crypt::OpenSSL3::X509 signer)
+
+int TS_RESP_CTX_set_signer_key(Crypt::OpenSSL3::Timestamp::Responder ctx, Crypt::OpenSSL3::PKey key)
+
+int TS_RESP_CTX_set_signer_digest(Crypt::OpenSSL3::Timestamp::Responder ctx, Crypt::OpenSSL3::MD signer_digest)
+
+int TS_RESP_CTX_set_ess_cert_id_digest(Crypt::OpenSSL3::Timestamp::Responder ctx, Crypt::OpenSSL3::MD md)
+
+int TS_RESP_CTX_set_def_policy(Crypt::OpenSSL3::Timestamp::Responder ctx, Crypt::OpenSSL3::ASN1::Object def_policy)
+
+int TS_RESP_CTX_set_certs(Crypt::OpenSSL3::Timestamp::Responder ctx, STACK_OF(X509) *certs)
+
+int TS_RESP_CTX_add_policy(Crypt::OpenSSL3::Timestamp::Responder ctx, Crypt::OpenSSL3::ASN1::Object policy)
+
+int TS_RESP_CTX_add_md(Crypt::OpenSSL3::Timestamp::Responder ctx, Crypt::OpenSSL3::MD md)
+
+int TS_RESP_CTX_set_accuracy(Crypt::OpenSSL3::Timestamp::Responder ctx, int secs, int millis, int micros)
+
+int TS_RESP_CTX_set_clock_precision_digits(Crypt::OpenSSL3::Timestamp::Responder ctx, unsigned clock_precision_digits)
+
+void TS_RESP_CTX_add_flags(Crypt::OpenSSL3::Timestamp::Responder ctx, int flags)
+
+void TS_RESP_CTX_set_serial_cb(Crypt::OpenSSL3::Timestamp::Responder ctx, SV *data)
+C_ARGS: ctx, TS_RESP_CTX_serial_callback, data
+
+void TS_RESP_CTX_set_time_cb(Crypt::OpenSSL3::Timestamp::Responder ctx, SV *data)
+C_ARGS: ctx, TS_RESP_CTX_time_callback, data
+
+# void TS_RESP_CTX_set_extension_cb(Crypt::OpenSSL3::Timestamp::Responder ctx, void *data)
+
+int TS_RESP_CTX_set_status_info(Crypt::OpenSSL3::Timestamp::Responder ctx, int status, const char *text)
+
+int TS_RESP_CTX_set_status_info_cond(Crypt::OpenSSL3::Timestamp::Responder ctx, int status, const char *text)
+
+int TS_RESP_CTX_add_failure_info(Crypt::OpenSSL3::Timestamp::Responder ctx, int failure)
+
+Crypt::OpenSSL3::Timestamp::Request TS_RESP_CTX_get_request(Crypt::OpenSSL3::Timestamp::Responder ctx)
+
+Crypt::OpenSSL3::Timestamp::TokenInfo TS_RESP_CTX_get_tst_info(Crypt::OpenSSL3::Timestamp::Responder ctx)
+
+Crypt::OpenSSL3::Timestamp::Response TS_RESP_CTX_create_response(Crypt::OpenSSL3::Timestamp::Responder ctx, Crypt::OpenSSL3::BIO req_bio)
 
 
 MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::Timestamp::Verifier	PREFIX = TS_VERIFY_CTX_
