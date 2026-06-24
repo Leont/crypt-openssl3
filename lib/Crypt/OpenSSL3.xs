@@ -152,7 +152,7 @@ DUPLICATING_TYPE(X509_STORE_CTX, X509__Store__Context, X509::Store::Context)
 DUPLICATING_TYPE(GENERAL_NAME, X509__GeneralName, X509::GeneralName)
 typedef long Crypt__OpenSSL3__X509__VerifyResult;
 #define CTLOG_STORE_dup(s) NULL
-DUPLICATING_TYPE(CTLOG_STORE, X509__Transparency__LogStore, X509::Transparency::LogStore)
+DUPLICATING_TYPE(CTLOG_STORE, X509__Transparency__Log__Store, X509::Transparency::Log::Store)
 #define CT_POLICY_EVAL_CTX_dup(s) NULL
 DUPLICATING_TYPE(CT_POLICY_EVAL_CTX, X509__Transparency__Evaluator, X509::Transparency::Evaluator)
 static SCT* S_SCT_dup(pTHX_ const SCT* input) {
@@ -860,7 +860,7 @@ STACK_OF(X509)*	T_STACK
 STACK_OF(ASN1_OBJECT)*	T_STACK
 
 Crypt::OpenSSL3::X509::Transparency::Timestamp	T_MAGICEXT
-Crypt::OpenSSL3::X509::Transparency::LogStore	T_MAGICEXT
+Crypt::OpenSSL3::X509::Transparency::Log::Store	T_MAGICEXT
 Crypt::OpenSSL3::X509::Transparency::Evaluator	T_MAGICEXT
 
 Crypt::OpenSSL3::PKCS7	T_MAGICEXT
@@ -2167,28 +2167,28 @@ int X509_REQ_sign(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::PKey pkey, 
 int X509_REQ_sign_ctx(Crypt::OpenSSL3::X509::Request x, Crypt::OpenSSL3::MD::Context ctx)
 
 
-MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Transparency::LogStore	PREFIX = CTLOG_STORE_
+MODULE = Crypt::OpenSSL3	PACKAGE = Crypt::OpenSSL3::X509::Transparency::Log::Store	PREFIX = CTLOG_STORE_
 
-Crypt::OpenSSL3::X509::Transparency::LogStore CTLOG_STORE_new(const char *propq = NULL)
+Crypt::OpenSSL3::X509::Transparency::Log::Store CTLOG_STORE_new(const char *propq = NULL)
 C_ARGS: NULL, propq
 
 #if OPENSSL_VERSION_PREREQ(4, 1)
-bool CTLOG_STORE_add_log_key(Crypt::OpenSSL3::X509::Transparency::LogStore store, Crypt::OpenSSL3::PKey pkey, const char* name, const char* propq = NULL)
+bool CTLOG_STORE_add_log_key(Crypt::OpenSSL3::X509::Transparency::Log::Store store, Crypt::OpenSSL3::PKey pkey, const char* name, const char* propq = NULL)
 CODE:
 	CTLOG* log = CTLOG_new_ex(pkey, name, NULL, propq);
 	RETVAL = CTLOG_STORE_add0_log(store, log);
 OUTPUT: RETVAL
 
-bool CTLOG_STORE_add_log_base64(Crypt::OpenSSL3::X509::Transparency::LogStore store, const char* base64, const char* name, const char* propq = NULL)
+bool CTLOG_STORE_add_log_base64(Crypt::OpenSSL3::X509::Transparency::Log::Store store, const char* base64, const char* name, const char* propq = NULL)
 CODE:
 	CTLOG* log = CTLOG_new_from_base64_ex(base64, name, NULL, propq);
 	RETVAL = CTLOG_STORE_add0_log(store, log);
 OUTPUT: RETVAL
 #endif
 
-bool CTLOG_STORE_load_default_file(Crypt::OpenSSL3::X509::Transparency::LogStore store)
+bool CTLOG_STORE_load_default_file(Crypt::OpenSSL3::X509::Transparency::Log::Store store)
 
-bool CTLOG_STORE_load_file(Crypt::OpenSSL3::X509::Transparency::LogStore store, const char *file)
+bool CTLOG_STORE_load_file(Crypt::OpenSSL3::X509::Transparency::Log::Store store, const char *file)
 
 Bool CLONE_SKIP(...)
 
@@ -2210,7 +2210,7 @@ POSTCALL:
 
 bool CT_POLICY_EVAL_CTX_set_issuer(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx, Crypt::OpenSSL3::X509 issuer)
 
-void CT_POLICY_EVAL_CTX_set_log_store(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx, Crypt::OpenSSL3::X509::Transparency::LogStore log_store)
+void CT_POLICY_EVAL_CTX_set_log_store(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx, Crypt::OpenSSL3::X509::Transparency::Log::Store log_store)
 
 uint64_t CT_POLICY_EVAL_CTX_get_time(Crypt::OpenSSL3::X509::Transparency::Evaluator ctx)
 

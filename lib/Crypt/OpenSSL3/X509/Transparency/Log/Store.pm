@@ -1,4 +1,4 @@
-package Crypt::OpenSSL3::X509::Transparency::LogStore;
+package Crypt::OpenSSL3::X509::Transparency::Log::Store;
 
 use strict;
 use warnings;
