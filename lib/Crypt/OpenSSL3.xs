@@ -288,13 +288,11 @@ ASN1_INTEGER* S_ASN1_INTEGER_from_SV(pTHX_ SV* value) {
 #define X509_set_notBefore X509_set1_notBefore
 #define X509_get_distinguishing_id X509_get0_distinguishing_id
 #define X509_set_distinguishing_id X509_set0_distinguishing_id
-#define X509_get_ext(c, loc) X509_EXTENSION_dup(X509_get_ext(c, loc))
 #define X509_EXTENSION_get_data X509_EXTENSION_get_data
 #define X509_ATTRIBUTE_get_data X509_ATTRIBUTE_get0_data
 #define X509_ATTRIBUTE_set_data X509_ATTRIBUTE_set1_data
 #define X509_ATTRIBUTE_get_object X509_ATTRIBUTE_get0_object
 #define X509_ATTRIBUTE_set_object X509_ATTRIBUTE_set1_object
-#define X509_NAME_get_entry(n, loc) X509_NAME_ENTRY_dup(X509_NAME_get_entry(n, loc))
 #undef X509_NAME_hash
 #define X509_NAME_hash X509_NAME_hash_ex
 #define X509_NAME_print X509_NAME_print_ex
@@ -1567,7 +1565,9 @@ PPCODE:
 
 Crypt::OpenSSL3::X509::Extension X509_get_ext(Crypt::OpenSSL3::X509 x, int loc)
 POSTCALL:
-	if (!RETVAL)
+	if (RETVAL)
+		RETVAL = X509_EXTENSION_dup(RETVAL);
+	else
 		XSRETURN_UNDEF;
 
 int X509_get_ext_by_NID(Crypt::OpenSSL3::X509 x, Crypt::OpenSSL3::NID nid, int lastpos = -1)
@@ -1894,7 +1894,10 @@ int X509_NAME_entry_count(Crypt::OpenSSL3::X509::Name name)
 
 Crypt::OpenSSL3::X509::Name::Entry X509_NAME_get_entry(Crypt::OpenSSL3::X509::Name name, int loc)
 POSTCALL:
-	RETVAL = X509_NAME_ENTRY_dup(RETVAL);
+	if (RETVAL)
+		RETVAL = X509_NAME_ENTRY_dup(RETVAL);
+	else
+		XSRETURN_UNDEF;
 
 char* X509_NAME_oneline(Crypt::OpenSSL3::X509::Name a)
 	C_ARGS: a, NULL, 0
