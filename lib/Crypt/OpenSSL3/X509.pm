@@ -43,8 +43,6 @@ use Crypt::OpenSSL3;
 
 =method get_authority_serial
 
-=method get_ct_cert_scts
-
 =method get_ct_precert_scts
 
 =method get_default_cert_dir

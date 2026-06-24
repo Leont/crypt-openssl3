@@ -1484,11 +1484,6 @@ PPCODE:
 	STACK_OF(SCT)* scts = X509_get_ext_d2i(x, NID_ct_precert_scts, NULL, NULL);
 	STACK_TO_STACK(SCT, scts);
 
-void X509_get_ct_cert_scts(Crypt::OpenSSL3::X509 x)
-PPCODE:
-	STACK_OF(SCT)* scts = X509_get_ext_d2i(x, NID_ct_cert_scts, NULL, NULL);
-	STACK_TO_STACK(SCT, scts);
-
 NO_OUTPUT Bool X509_digest(Crypt::OpenSSL3::X509 data, Crypt::OpenSSL3::MD type, OUTLIST SV* digest)
 INTERFACE: X509_digest  X509_pubkey_digest
 INIT:
