@@ -1,6 +1,8 @@
 Revision history for Crypt-OpenSSL3
 
 {{$NEXT}}
+
+0.009     2026-06-25 02:52:08+02:00 Europe/Brussels
           - [BREAKING] Remove ASN1 value classes
           - Remove X509::Stack
           - Add Timestamp Protocol responder
